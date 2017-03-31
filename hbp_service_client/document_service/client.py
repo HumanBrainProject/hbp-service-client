@@ -56,7 +56,7 @@ class Client(object):
     def _prep_params(params):
         '''Remove empty (None) valued keywords and self from function parameters'''
 
-        return {k: v for (k, v) in params.items() if v and k != 'self'}
+        return {k: v for (k, v) in params.items() if v is not None and k != 'self'}
 
     def get_entity_details(self, entity_id):
         '''Get generic entity by UUID.

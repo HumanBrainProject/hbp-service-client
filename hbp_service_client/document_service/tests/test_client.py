@@ -34,6 +34,13 @@ class TestClient(unittest.TestCase):
             equal_to({'foo':'bar'})
         )
 
+    def test_prep_params_does_not_remove_empty_strings(self):
+        assert_that(
+            self.client._prep_params(
+                {'self': 'blah', 'foo': 'bar', 'baz': ''}),
+            equal_to({'foo':'bar', 'baz': ''})
+        )
+
     #
     # Enntity endpoints
     #
