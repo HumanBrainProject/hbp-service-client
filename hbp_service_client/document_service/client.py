@@ -2,6 +2,7 @@
 import logging
 from os.path import join as joinp
 import json
+from validators import uuid as is_valid_uuid
 from hbp_service_client.document_service.requestor import Requestor
 from hbp_service_client.document_service.exceptions import (
     DocException, DocArgumentException)
@@ -80,10 +81,15 @@ class Client(object):
                  }
 
         Raises:
+            DocArgumentException: Invalid arguments
             DocForbiddenException: Server response code 403
             DocNotFoundException: Server response code 404
             DocException: other 400-600 error codes
         '''
+        if not is_valid_uuid(entity_id):
+            raise DocArgumentException(
+                'Invalid UUID for entity_id: {0}'.format(entity_id))
+
         return self._requestor.send_and_return_body(
             'GET', joinp('entity', entity_id))
 
@@ -99,10 +105,15 @@ class Client(object):
                 u'/12345/folder_1'
 
         Raises:
+            DocArgumentException: Invalid arguments
             DocForbiddenException: Server response code 403
             DocNotFoundException: Server response code 404
             DocException: other 400-600 error codes
         '''
+        if not is_valid_uuid(entity_id):
+            raise DocArgumentException(
+                'Invalid UUID for entity_id: {0}'.format(entity_id))
+
         return self._requestor.send_and_return_body(
             'GET', joinp('entity', entity_id, 'path'))["path"]
 
@@ -116,10 +127,15 @@ class Client(object):
             The id as interger of the Collebaration to which the entity belongs
 
         Raises:
+            DocArgumentException: Invalid arguments
             DocForbiddenException: Server response code 403
             DocNotFoundException: Server response code 404
             DocException: other 400-600 error codes
         '''
+        if not is_valid_uuid(entity_id):
+            raise DocArgumentException(
+                'Invalid UUID for entity_id: {0}'.format(entity_id))
+
         return self._requestor.send_and_return_body(
             'GET', joinp('entity', entity_id, 'collab'))["collab_id"]
 
@@ -149,13 +165,16 @@ class Client(object):
                 }
 
         Raises:
-            DocArgumentException: invalid parameters
+            DocArgumentException: Invalid arguments
             DocForbiddenException: Server response code 403
             DocNotFoundException: Server response code 404
             DocException: other 400-600 error codes
         '''
         if not (uuid or path or metadata):
             raise DocArgumentException('No parameter given for the query.')
+        if uuid and not is_valid_uuid(uuid):
+            raise DocArgumentException(
+                'Invalid UUID for uuid: {0}'.format(uuid))
         params = locals().copy()
         if metadata:
             if not isinstance(metadata, dict):
@@ -194,12 +213,14 @@ class Client(object):
                 }
 
         Raises:
-            DocArgumentException: The metadata was not provided in a dictionary
+            DocArgumentException: Invalid arguments
             DocForbiddenException: Server response code 403
             DocNotFoundException: Server response code 404
             DocException: other 400-600 error codes
         '''
-
+        if not is_valid_uuid(entity_id):
+            raise DocArgumentException(
+                'Invalid UUID for entity_id: {0}'.format(entity_id))
         if not isinstance(metadata, dict):
             raise DocArgumentException('The metadata was not provided as a '
                                        'dictionary')
@@ -226,8 +247,15 @@ class Client(object):
                 }
 
         Raises:
-            ?
+            DocArgumentException: Invalid arguments
+            DocForbiddenException: Server response code 403
+            DocNotFoundException: Server response code 404
+            DocException: other 400-600 error codes
         '''
+        if not is_valid_uuid(entity_id):
+            raise DocArgumentException(
+                'Invalid UUID for entity_id: {0}'.format(entity_id))
+
         return self._requestor.send_and_return_body(
             'GET', joinp(entity_type, entity_id, 'metadata'))
 
@@ -252,11 +280,14 @@ class Client(object):
                 }
 
         Raises:
-            DocArgumentException: The metadata was not provided in a dictionary
+            DocArgumentException: Invalid arguments
             DocForbiddenException: Server response code 403
             DocNotFoundException: Server response code 404
             DocException: other 400-600 error codes
         '''
+        if not is_valid_uuid(entity_id):
+            raise DocArgumentException(
+                'Invalid UUID for entity_id: {0}'.format(entity_id))
         if not isinstance(metadata, dict):
             raise DocArgumentException('The metadata was not provided as a '
                                        'dictionary')
@@ -286,11 +317,14 @@ class Client(object):
                 }
 
         Raises:
-            DocArgumentException: The metadata keys were not provided in list
+            DocArgumentException: Invalid arguments
             DocForbiddenException: Server response code 403
             DocNotFoundException: Server response code 404
             DocException: other 400-600 error codes
         '''
+        if not is_valid_uuid(entity_id):
+            raise DocArgumentException(
+                'Invalid UUID for entity_id: {0}'.format(entity_id))
         if not isinstance(metadata_keys, list):
             raise DocArgumentException('The metadata was not provided as a '
                                        'dictionary')
@@ -382,6 +416,10 @@ class Client(object):
             DocNotFoundException: Server response code 404
             DocException: other 400-600 error codes
         '''
+        if not is_valid_uuid(project_id):
+            raise DocArgumentException(
+                'Invalid UUID for project_id: {0}'.format(project_id))
+
         return self._requestor.send_and_return_body('GET', joinp('project', project_id))
 
     def list_project_content(self, project_id, name=None, entity_type=None,
@@ -426,10 +464,14 @@ class Client(object):
 
 
         Raises:
+            DocArgumentException: Ivalid parameters
             DocForbiddenException: Server response code 403
             DocNotFoundException: Server response code 404
             DocException: other 400-600 error codes
         '''
+        if not is_valid_uuid(project_id):
+            raise DocArgumentException(
+                'Invalid UUID for project_id: {0}'.format(project_id))
         params = self._prep_params(locals())
         del params['project_id'] # not a query parameter
         return self._requestor.send_and_return_body(
@@ -463,10 +505,14 @@ class Client(object):
                 }
 
         Raises:
+            DocArgumentException: Invalid arguments
             DocForbiddenException: Server response code 403
             DocNotFoundException: Server response code 404
             DocException: other 400-600 error codes
         '''
+        if not is_valid_uuid(parent):
+            raise DocArgumentException(
+                'Invalid UUID for parent: {0}'.format(parent))
         payload = self._prep_params(locals())
         return self._requestor.send_and_return_body(
             'POST', 'folder', data=json.dumps(payload),
@@ -494,10 +540,14 @@ class Client(object):
                 }
 
         Raises:
+            DocArgumentException: Invalid arguments
             DocForbiddenException: Server response code 403
             DocNotFoundException: Server response code 404
             DocException: other 400-600 error codes
         '''
+        if not is_valid_uuid(folder):
+            raise DocArgumentException(
+                'Invalid UUID for folder: {0}'.format(folder))
         return self._requestor.send_and_return_body('GET', joinp('folder', folder))
 
     def list_folder_content(self, folder, name=None, entity_type=None,
@@ -542,10 +592,14 @@ class Client(object):
                 }
 
         Raises:
+            DocArgumentException: Invalid arguments
             DocForbiddenException: Server response code 403
             DocNotFoundException: Server response code 404
             DocException: other 400-600 error codes
         '''
+        if not is_valid_uuid(folder):
+            raise DocArgumentException(
+                'Invalid UUID for folder: {0}'.format(folder))
         params = self._prep_params(locals())
         del params['folder'] # not a query parameter
         return self._requestor.send_and_return_body(
@@ -561,10 +615,14 @@ class Client(object):
             None
 
         Raises:
+            DocArgumentException: Invalid arguments
             DocForbiddenException: 403
             DocNotFoundException: 404
             HTTPError: other non-20x error codes
         '''
+        if not is_valid_uuid(folder):
+            raise DocArgumentException(
+                'Invalid UUID for folder: {0}'.format(folder))
         self._requestor.send_and_return_body('DELETE', joinp('folder', folder))
 
     #
@@ -597,8 +655,14 @@ class Client(object):
                 }
 
         Raises:
-            ?
+            DocArgumentException: Invalid arguments
+            DocForbiddenException: 403
+            DocNotFoundException: 404
+            HTTPError: other non-20x error codes
         '''
+        if not is_valid_uuid(parent):
+            raise DocArgumentException(
+                'Invalid UUID for parent: {0}'.format(parent))
         payload = self._prep_params(locals())
         return self._requestor.send_and_return_body(
             'POST', 'file', data=json.dumps(payload),
@@ -628,10 +692,14 @@ class Client(object):
                 }
 
         Raises:
+            DocArgumentException: Invalid arguments
             DocForbiddenException: Server response code 403
             DocNotFoundException: Server response code 404
             DocException: other 400-600 error codes
         '''
+        if not is_valid_uuid(file_id):
+            raise DocArgumentException(
+                'Invalid UUID for file_id: {0}'.format(file_id))
         return self._requestor.send_and_return_body('GET', joinp('file', file_id))
 
     def upload_file_content(self, file_id, etag=None, source=None, content=None):
@@ -661,15 +729,16 @@ class Client(object):
 
         Raises:
             IOError: The source cannot be opened.
-            DocArgumentException: Invalid arguments.
+            DocArgumentException: Invalid arguments
             DocForbiddenException: Server response code 403
             DocNotFoundException: Server response code 404
             DocException: other 400-600 error codes
         '''
-
+        if not is_valid_uuid(file_id):
+            raise DocArgumentException(
+                'Invalid UUID for file_id: {0}'.format(file_id))
         if not (source or content) or (source and content):
             raise DocArgumentException('Either one of source file or content has to be provided.')
-
         endpoint = joinp('file', file_id, 'content', 'upload')
         data = content or open(source, 'rb')
         headers = {}
@@ -692,8 +761,17 @@ class Client(object):
             None
 
         Raises:
-
+        DocArgumentException: Invalid arguments
+        DocForbiddenException: Server response code 403
+        DocNotFoundException: Server response code 404
+        DocException: other 400-600 error codes
         '''
+        if not is_valid_uuid(file_id):
+            raise DocArgumentException(
+                'Invalid UUID for file_id: {0}'.format(file_id))
+        if not is_valid_uuid(source_file):
+            raise DocArgumentException(
+                'Invalid UUID for source_file: {0}'.format(source_file))
         self._requestor.send_and_return_body(
             "PUT", joinp('file', file_id, 'content'),
             headers={'X-Copy-From': source_file})
@@ -721,11 +799,14 @@ class Client(object):
                 ('"71e1ed9ee52e565a56aec66bc648a32c"', 'Hello world!')
 
         Raises:
+            DocArgumentException: Invalid arguments
             DocForbiddenException: Server response code 403
             DocNotFoundException: Server response code 404
             DocException: other 400-600 error codes
         '''
-
+        if not is_valid_uuid(file_id):
+            raise DocArgumentException(
+                'Invalid UUID for file_id: {0}'.format(file_id))
         headers = {'Accept': '*/*'}
         if etag:
             headers['If-None-Match'] = etag
@@ -753,10 +834,14 @@ class Client(object):
             The signed url as a string
 
         Raises:
+            DocArgumentException: Invalid arguments
             DocForbiddenException: Server response code 403
             DocNotFoundException: Server response code 404
             DocException: other 400-600 error codes
         '''
+        if not is_valid_uuid(file_id):
+            raise DocArgumentException(
+                'Invalid UUID for file_id: {0}'.format(file_id))
         return self._requestor.send_and_return_body(
             "GET",
             joinp('file', file_id, 'content', 'secure_link'))['signed_url']
@@ -771,8 +856,12 @@ class Client(object):
             None
 
         Raises:
+            DocArgumentException: Invalid arguments
             DocForbiddenException: Server response code 403
             DocNotFoundException: Server response code 404
             DocException: other 400-600 error codes
         '''
+        if not is_valid_uuid(file_id):
+            raise DocArgumentException(
+                'Invalid UUID for file_id: {0}'.format(file_id))
         self._requestor.send_and_return_body('DELETE', joinp('file', file_id))
