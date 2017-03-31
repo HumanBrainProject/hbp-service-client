@@ -35,7 +35,7 @@ REQS = parse_reqs(os.path.join(BASEDIR, 'requirements.txt'))
 config = {
     'name': 'hbp-service-client',
     'description': ('Python client for the HumanBrainProject REST services.'),
-    'keywords': 'hbp, humanbrainproject, collaboratory',
+    'keywords': 'hbp, humanbrainproject, collaboratory, library',
     'classifiers': [
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
