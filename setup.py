@@ -36,6 +36,16 @@ config = {
     'name': 'hbp-service-client',
     'description': ('Python client for the HumanBrainProject REST services.'),
     'keywords': 'hbp, humanbrainproject, collaboratory',
+    'classifiers': [
+        'Development Status :: 4 - Beta',
+        'Intended Audience :: Developers',
+        'Intended Audience :: Science/Research',
+        'License :: OSI Approved :: Apache Software License',
+        'Operating System :: OS Independent',
+        'Programming Language :: Python',
+        'Topic :: Scientific/Engineering :: Bio-Informatics',
+        'Topic :: Software Development :: Libraries :: Python Modules'
+    ],
     'author': 'HBP Platform Team',
     'author_email': 'platform@humanbrainproject.eu',
     'url': 'https://github.com/HumanBrainProject/hbp-service-client',
