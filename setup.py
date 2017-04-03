@@ -46,7 +46,19 @@ config = {
         'Topic :: Scientific/Engineering :: Bio-Informatics',
         'Topic :: Software Development :: Libraries :: Python Modules'
     ],
-    'author': 'HBP Platform Team',
+    'author': (
+        'Akos Hencz (akos.hencz@epfl.ch),'
+        'Allan Francani (allan.francani@epfl.ch),'
+        'Genrich Ivaska (genrich.ivaska@epfl.ch),'
+        'James Dynes (james.dynes@epfl.ch),'
+        'Jean-Denis Courcol (jean-denis.courcol@epfl.ch),'
+        'Jeff Muller (jeffrey.muller@epfl.ch),'
+        'Juan Palacios (juan.palacios@epfl.ch),'
+        'Luis Riquelme (luis.riquelme@epfl.ch),'
+        'Mike Gevaert (michael.gevaert@epfl.ch),'
+        'Olivier Amblet (olivier.amblet@epfl.ch),'
+        'Stefano Zaninetta (stefano.zaninetta@epfl.ch),'
+        'Yury Brukau (yury.brukau@epfl.ch'),
     'author_email': 'platform@humanbrainproject.eu',
     'url': 'https://github.com/HumanBrainProject/hbp-service-client',
     'version': hbp_service_client.__version__,
