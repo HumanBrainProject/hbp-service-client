@@ -58,7 +58,7 @@ config = {
         'Mike Gevaert (michael.gevaert@epfl.ch),'
         'Olivier Amblet (olivier.amblet@epfl.ch),'
         'Stefano Zaninetta (stefano.zaninetta@epfl.ch),'
-        'Yury Brukau (yury.brukau@epfl.ch'),
+        'Yury Brukau (yury.brukau@epfl.ch)'),
     'author_email': 'platform@humanbrainproject.eu',
     'url': 'https://github.com/HumanBrainProject/hbp-service-client',
     'version': hbp_service_client.__version__,
