@@ -47,8 +47,10 @@ config = {
         'Topic :: Software Development :: Libraries :: Python Modules'
     ],
     'author': 'HBP Infrastructure Developers',
+    'author_email': 'platform@humanbrainproject.eu',
     'url': 'https://github.com/HumanBrainProject/hbp-service-client',
     'version': hbp_service_client.__version__,
+    'license': 'Apache License 2.0',
     'install_requires': REQS,
     'packages': find_packages(exclude=['doc', '*tests*']),
     'scripts': [],
