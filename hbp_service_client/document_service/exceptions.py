@@ -10,6 +10,7 @@ class DocArgumentException(DocException):
     '''Wrong arguments provided'''
     pass
 
+
 class DocForbiddenException(DocException):
     '''403 forbidden'''
     pass
