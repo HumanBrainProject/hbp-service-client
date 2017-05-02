@@ -34,14 +34,25 @@ REQS = parse_reqs(os.path.join(BASEDIR, 'requirements.txt'))
 
 config = {
     'name': 'hbp-service-client',
-    'description': ('Python client to HBP rest services, current;y including '
-                    'the documnt_service.'),
-    'author': 'HBP Platform Team',
-    'url': 'http://www.humanbrainproject.eu',
+    'description': ('Python client for the Human Brain Project REST services.'),
+    'keywords': 'hbp, human brain project, collaboratory, library, science',
+    'classifiers': [
+        'Development Status :: 4 - Beta',
+        'Intended Audience :: Developers',
+        'Intended Audience :: Science/Research',
+        'License :: OSI Approved :: Apache Software License',
+        'Operating System :: OS Independent',
+        'Programming Language :: Python',
+        'Topic :: Scientific/Engineering :: Bio-Informatics',
+        'Topic :: Software Development :: Libraries :: Python Modules'
+    ],
+    'author': 'HBP Infrastructure Developers',
     'author_email': 'platform@humanbrainproject.eu',
+    'url': 'https://github.com/HumanBrainProject/hbp-service-client',
     'version': hbp_service_client.__version__,
+    'license': 'Apache License 2.0',
     'install_requires': REQS,
-    'packages': find_packages(),
+    'packages': find_packages(exclude=['doc', '*tests*']),
     'scripts': [],
     'include_package_data': True
     }

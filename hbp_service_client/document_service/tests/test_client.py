@@ -2,6 +2,7 @@ import unittest
 import httpretty
 import re
 import json
+import uuid
 
 from mock import patch, Mock
 from hamcrest import *
@@ -22,6 +23,7 @@ class TestClient(unittest.TestCase):
             body=json.dumps({ 'document': {'v1': 'https://dummy.host/fake/document/service'} })
         )
         self.client = DC.new('access-token')
+        self.random_uuid = str(uuid.uuid4())
 
     def tearDown(self):
         httpretty.disable()
@@ -32,6 +34,13 @@ class TestClient(unittest.TestCase):
             self.client._prep_params(
                 {'self': 'blah', 'foo': 'bar', 'baz': None}),
             equal_to({'foo':'bar'})
+        )
+
+    def test_prep_params_does_not_remove_empty_strings(self):
+        assert_that(
+            self.client._prep_params(
+                {'self': 'blah', 'foo': 'bar', 'baz': ''}),
+            equal_to({'foo':'bar', 'baz': ''})
         )
 
     #
@@ -47,8 +56,14 @@ class TestClient(unittest.TestCase):
         )
 
         assert_that(
-            self.client.get_entity_details('1'),
+            self.client.get_entity_details(self.random_uuid),
             equal_to(some_json)
+        )
+
+    def test_get_entity_verifies_uuids(self):
+        assert_that(
+            calling(self.client.get_entity_details).with_args('1'),
+            raises(DocArgumentException)
         )
 
     def test_get_entity_path_extracts_path_from_response(self):
@@ -60,8 +75,14 @@ class TestClient(unittest.TestCase):
         )
 
         assert_that(
-            self.client.get_entity_path('1'),
+            self.client.get_entity_path(self.random_uuid),
             equal_to("foobar")
+        )
+
+    def test_get_entity_path_verifies_uuids(self):
+        assert_that(
+            calling(self.client.get_entity_path).with_args('1'),
+            raises(DocArgumentException)
         )
 
     def test_get_entity_collabid_extracts_id_from_response(self):
@@ -73,8 +94,14 @@ class TestClient(unittest.TestCase):
         )
 
         assert_that(
-            self.client.get_entity_collab_id('1'),
+            self.client.get_entity_collab_id(self.random_uuid),
             equal_to("123456")
+        )
+
+    def test_get_entity_collab_id_verifies_uuids(self):
+        assert_that(
+            calling(self.client.get_entity_collab_id).with_args('1'),
+            raises(DocArgumentException)
         )
 
     def test_get_entity_by_query_returns_response_body(self):
@@ -86,8 +113,14 @@ class TestClient(unittest.TestCase):
         )
 
         assert_that(
-            self.client.get_entity_by_query('1'),
+            self.client.get_entity_by_query(self.random_uuid),
             equal_to(some_json)
+        )
+
+    def test_get_entity_by_query_verifies_uuids(self):
+        assert_that(
+            calling(self.client.get_entity_by_query).with_args('1'),
+            raises(DocArgumentException)
         )
 
     def test_get_entity_by_query_requires_params(self):
@@ -123,6 +156,15 @@ class TestClient(unittest.TestCase):
     #
     # Metadata endpoints
     #
+    # set_metadata
+    #
+
+    def test_set_metadata_verifies_uuids(self):
+        assert_that(
+            calling(self.client.set_metadata).with_args(
+                'entity_type', '1', {}),
+            raises(DocArgumentException)
+        )
 
     def test_set_metadata_uses_the_right_method(self):
         metadata = {'foo': 'bar'}
@@ -132,7 +174,7 @@ class TestClient(unittest.TestCase):
             content_type="application/json"
         )
 
-        self.client.set_metadata('entity_type', 'entity_id', metadata)
+        self.client.set_metadata('entity_type', self.random_uuid, metadata)
 
         assert_that(
             httpretty.last_request().method,
@@ -148,7 +190,7 @@ class TestClient(unittest.TestCase):
         )
 
         assert_that(
-            self.client.set_metadata('entity_type', 'entity_id', metadata),
+            self.client.set_metadata('entity_type', self.random_uuid, metadata),
             equal_to(metadata)
         )
 
@@ -160,7 +202,7 @@ class TestClient(unittest.TestCase):
             content_type="application/json"
         )
 
-        self.client.set_metadata('entity_type', 'entity_id', metadata)
+        self.client.set_metadata('entity_type', self.random_uuid, metadata)
 
         assert_that(
             httpretty.last_request().headers,
@@ -177,6 +219,10 @@ class TestClient(unittest.TestCase):
             raises(DocArgumentException),
         )
 
+    #
+    # get_metadata
+    #
+
     def test_get_metadata_returns_the_response_body(self):
         metadata = {'foo': 'bar'}
         httpretty.register_uri(
@@ -185,9 +231,20 @@ class TestClient(unittest.TestCase):
             content_type="application/json"
         )
         assert_that(
-            self.client.get_metadata('entity_type', 'entity_id'),
+            self.client.get_metadata('entity_type', self.random_uuid),
             equal_to(metadata)
         )
+
+    def test_get_metadata_verifies_uuids(self):
+        assert_that(
+            calling(self.client.get_metadata).with_args(
+                'entity_type', '1'),
+            raises(DocArgumentException)
+        )
+
+    #
+    # update_metadata
+    #
 
     def test_update_metadata_uses_the_right_method(self):
         metadata = {'foo': 'bar'}
@@ -197,11 +254,18 @@ class TestClient(unittest.TestCase):
             content_type="application/json"
         )
 
-        self.client.update_metadata('entity_type', 'entity_id', metadata)
+        self.client.update_metadata('entity_type', self.random_uuid, metadata)
 
         assert_that(
             httpretty.last_request().method,
             equal_to('PUT')
+        )
+
+    def test_update_metadata_verifies_uuids(self):
+        assert_that(
+            calling(self.client.update_metadata).with_args(
+                'entity_type', '1', {}),
+            raises(DocArgumentException)
         )
 
     def test_update_metadata_returns_the_response_body(self):
@@ -213,7 +277,8 @@ class TestClient(unittest.TestCase):
         )
 
         assert_that(
-            self.client.update_metadata('entity_type', 'entity_id', metadata),
+            self.client.update_metadata(
+                'entity_type', self.random_uuid, metadata),
             equal_to(metadata)
         )
 
@@ -225,7 +290,7 @@ class TestClient(unittest.TestCase):
             content_type="application/json"
         )
 
-        self.client.update_metadata('entity_type', 'entity_id', metadata)
+        self.client.update_metadata('entity_type', self.random_uuid, metadata)
 
         assert_that(
             httpretty.last_request().headers,
@@ -236,22 +301,34 @@ class TestClient(unittest.TestCase):
         assert_that(
             calling(self.client.update_metadata).with_args(
                 'entity_type',
-                'entity_id',
+                self.random_uuid,
                 '{"foo": "bar"}'
             ),
             raises(DocArgumentException),
         )
+
+    #
+    # delete_metadata
+    #
 
     def test_delete_metadata_uses_the_right_method(self):
         httpretty.register_uri(
             httpretty.DELETE, re.compile('https://.*'),
         )
 
-        self.client.delete_metadata("ent_type", 'ent_id', ['foo', 'bar'])
+        self.client.delete_metadata(
+            "ent_type", self.random_uuid, ['foo', 'bar'])
 
         assert_that(
             httpretty.last_request().method,
             equal_to('DELETE')
+        )
+
+    def test_delete_metadata_verifies_uuids(self):
+        assert_that(
+            calling(self.client.delete_metadata).with_args(
+                'entity_type', '1', []),
+            raises(DocArgumentException)
         )
 
     def test_delete_metadata_sends_the_right_body(self):
@@ -259,7 +336,8 @@ class TestClient(unittest.TestCase):
             httpretty.DELETE, re.compile('https://.*'),
         )
 
-        self.client.delete_metadata("ent_type", 'ent_id', ['foo', 'bar'])
+        self.client.delete_metadata(
+            "ent_type", self.random_uuid, ['foo', 'bar'])
 
         assert_that(
             httpretty.last_request().parsed_body,
@@ -270,7 +348,7 @@ class TestClient(unittest.TestCase):
         assert_that(
             calling(self.client.delete_metadata).with_args(
                 'entity_type',
-                'entity_id',
+                self.random_uuid,
                 'i am not a list!'
             ),
             raises(DocArgumentException)
@@ -278,6 +356,8 @@ class TestClient(unittest.TestCase):
 
     #
     # Project endpoint
+    #
+    # list_projects
     #
 
     def test_list_projects_returns_the_response_body(self):
@@ -308,6 +388,10 @@ class TestClient(unittest.TestCase):
             equal_to({'name': ['foobar'], 'ordering': ['name']})
         )
 
+    #
+    # get_project_details
+    #
+
     def test_get_project_details_returns_the_response_body(self):
         some_json = {"a": "123456", "b": [2,3,4], "c": {"x":"y"}}
         httpretty.register_uri(
@@ -317,9 +401,19 @@ class TestClient(unittest.TestCase):
         )
 
         assert_that(
-            self.client.get_project_details('some_project_id'),
+            self.client.get_project_details(self.random_uuid),
             equal_to(some_json)
         )
+
+    def test_get_project_details_verifies_uuids(self):
+        assert_that(
+            calling(self.client.get_project_details).with_args('1'),
+            raises(DocArgumentException)
+        )
+
+    #
+    # list_project_content
+    #
 
     def test_list_project_content_returns_the_response_body(self):
         some_json = {"a": "123456", "b": [2,3,4], "c": {"x":"y"}}
@@ -330,8 +424,14 @@ class TestClient(unittest.TestCase):
         )
 
         assert_that(
-            self.client.list_project_content('some_project_id', ordering='name'),
+            self.client.list_project_content(self.random_uuid, ordering='name'),
             equal_to(some_json)
+        )
+
+    def test_list_project_content_verifies_uuids(self):
+        assert_that(
+            calling(self.client.list_project_content).with_args('1'),
+            raises(DocArgumentException)
         )
 
     def test_list_project_content_send_the_right_params(self):
@@ -342,7 +442,7 @@ class TestClient(unittest.TestCase):
             content_type="application/json"
         )
 
-        self.client.list_project_content('some_project_id', ordering='name')
+        self.client.list_project_content(self.random_uuid, ordering='name')
 
         assert_that(
             httpretty.last_request().querystring,
@@ -351,6 +451,8 @@ class TestClient(unittest.TestCase):
 
     #
     # Folder endpoint
+    #
+    # create_folder
     #
 
     def test_create_folder_uses_the_right_method(self):
@@ -361,11 +463,17 @@ class TestClient(unittest.TestCase):
             content_type="application/json"
         )
 
-        self.client.create_folder('name', 'parent_id')
+        self.client.create_folder('name', self.random_uuid)
 
         assert_that(
             httpretty.last_request().method,
             equal_to('POST')
+        )
+
+    def test_create_folder_verifies_uuids(self):
+        assert_that(
+            calling(self.client.create_folder).with_args('name', 'parent_id'),
+            raises(DocArgumentException)
         )
 
     def test_create_folder_returns_the_response_body(self):
@@ -376,7 +484,7 @@ class TestClient(unittest.TestCase):
             content_type="application/json"
         )
         assert_that(
-            self.client.create_folder('name', 'parent_id'),
+            self.client.create_folder('name', self.random_uuid),
             equal_to(some_json)
         )
 
@@ -388,12 +496,16 @@ class TestClient(unittest.TestCase):
             content_type="application/json"
         )
 
-        self.client.create_folder('name', 'parent_id')
+        self.client.create_folder('name', self.random_uuid)
 
         assert_that(
             httpretty.last_request().parsed_body,
-            equal_to({'name': 'name', 'parent': 'parent_id'})
+            equal_to({'name': 'name', 'parent': self.random_uuid})
         )
+
+    #
+    # get_folder
+    #
 
     def test_get_folder_details_returns_the_response_body(self):
         some_json = {"a": "123456", "b": [2,3,4], "c": {"x":"y"}}
@@ -404,9 +516,19 @@ class TestClient(unittest.TestCase):
         )
 
         assert_that(
-            self.client.get_folder_details('some_folder_id'),
+            self.client.get_folder_details(self.random_uuid),
             equal_to(some_json)
         )
+
+    def test_get_folder_details_verifies_uuids(self):
+        assert_that(
+            calling(self.client.get_folder_details).with_args('1'),
+            raises(DocArgumentException)
+        )
+
+    #
+    # list folder_content
+    #
 
     def test_list_folder_content_returns_the_response_body(self):
         some_json = {"a": "123456", "b": [2,3,4], "c": {"x":"y"}}
@@ -417,8 +539,14 @@ class TestClient(unittest.TestCase):
         )
 
         assert_that(
-            self.client.list_folder_content('some_folder_id', ordering='name'),
+            self.client.list_folder_content(self.random_uuid, ordering='name'),
             equal_to(some_json)
+        )
+
+    def test_list_folder_content_verifies_uuids(self):
+        assert_that(
+            calling(self.client.list_folder_content).with_args('1'),
+            raises(DocArgumentException)
         )
 
     def test_list_folder_content_sends_the_right_params(self):
@@ -429,23 +557,33 @@ class TestClient(unittest.TestCase):
             content_type="application/json"
         )
 
-        self.client.list_folder_content('some_folder_id', ordering='name')
+        self.client.list_folder_content(self.random_uuid, ordering='name')
 
         assert_that(
             httpretty.last_request().querystring,
             equal_to({'ordering': ['name']})  # folder_id excluded!
         )
 
+    #
+    # delete folder
+    #
+
     def test_delete_folder_uses_the_right_method(self):
         httpretty.register_uri(
             httpretty.DELETE, re.compile('https://.*'),
         )
 
-        self.client.delete_folder("folder")
+        self.client.delete_folder(self.random_uuid)
 
         assert_that(
             httpretty.last_request().method,
             'DELETE'
+        )
+
+    def test_delete_folder_verifies_uuids(self):
+        assert_that(
+            calling(self.client.delete_folder).with_args('1'),
+            raises(DocArgumentException)
         )
 
     def test_delete_folder_returns_none(self):
@@ -454,12 +592,14 @@ class TestClient(unittest.TestCase):
         )
 
         assert_that(
-            self.client.delete_folder("folder"),
+            self.client.delete_folder(self.random_uuid),
             none()
         )
 
     #
     # File endpoint
+    #
+    # create_file
     #
 
     def test_create_file_uses_the_right_method(self):
@@ -470,12 +610,19 @@ class TestClient(unittest.TestCase):
             content_type="application/json"
         )
         self.client.create_file(
-            'some_name', 'some_content_type', 'some_parent'
+            'some_name', 'some_content_type', self.random_uuid
         )
 
         assert_that(
             httpretty.last_request().method,
             equal_to('POST')
+        )
+
+    def test_create_file_verifies_uuids(self):
+        assert_that(
+            calling(self.client.create_file).with_args(
+                'some_name', 'some_content_type', 'parent_id'),
+            raises(DocArgumentException)
         )
 
     def test_create_file_return_the_response_body(self):
@@ -488,7 +635,7 @@ class TestClient(unittest.TestCase):
 
         assert_that(
             self.client.create_file(
-                'some_name', 'some_content_type', 'some_parent'
+                'some_name', 'some_content_type', self.random_uuid
             ),
             equal_to(some_json)
         )
@@ -501,14 +648,18 @@ class TestClient(unittest.TestCase):
             content_type="application/json"
         )
         self.client.create_file(
-            'some_name', 'some_content_type', 'some_parent'
+            'some_name', 'some_content_type', self.random_uuid
         )
 
         assert_that(
             httpretty.last_request().parsed_body,
-            equal_to({'name': 'some_name', 'parent': 'some_parent',
+            equal_to({'name': 'some_name', 'parent': self.random_uuid,
                 'content_type': 'some_content_type'})
         )
+
+    #
+    # get_file_details
+    #
 
     def test_get_file_details_returns_the_response_body(self):
         some_json = {"a": "123456", "b": [2,3,4], "c": {"x":"y"}}
@@ -520,20 +671,38 @@ class TestClient(unittest.TestCase):
 
         #method returns response body
         assert_that(
-            self.client.get_file_details('some_file_id'),
+            self.client.get_file_details(self.random_uuid),
             equal_to(some_json)
         )
+
+    def test_get_file_details_verifies_uuids(self):
+        assert_that(
+            calling(self.client.get_file_details).with_args('1'),
+            raises(DocArgumentException)
+        )
+
+    #
+    # upload_file_content
+    #
 
     def test_upload_file_content_uses_the_right_method(self):
         httpretty.register_uri(
             httpretty.POST, re.compile('https://.*'),
             adding_headers={'ETag':'some_other_etag'}
         )
-        self.client.upload_file_content('some_file_id', content='some_content')
+        self.client.upload_file_content(
+            self.random_uuid, content='some_content')
 
         assert_that(
             httpretty.last_request().method,
             equal_to('POST')
+        )
+
+    def test_upload_file_content_verifies_uuids(self):
+        assert_that(
+            calling(self.client.upload_file_content).with_args(
+                '1', content='content'),
+            raises(DocArgumentException)
         )
 
     def test_upload_file_content_sets_the_right_headers(self):
@@ -542,7 +711,7 @@ class TestClient(unittest.TestCase):
             adding_headers={'ETag':'some_other_etag'}
         )
         self.client.upload_file_content(
-            'some_file_id',
+            self.random_uuid,
             etag = 'some_etag',
             content = 'some_content'
         )
@@ -559,7 +728,7 @@ class TestClient(unittest.TestCase):
 
         assert_that(
             calling(self.client.upload_file_content).with_args(
-                'some_file_id',
+                self.random_uuid,
                 etag = 'some_etag',
                 content = 'some_content'
             ),
@@ -572,34 +741,51 @@ class TestClient(unittest.TestCase):
             adding_headers={'ETag':'some_other_etag'}
         )
         self.client.upload_file_content(
-            'some_file_id',
+            self.random_uuid,
             content = 'some_content'
         )
 
         assert_that(
             self.client.upload_file_content(
-                'some_file_id',
+                self.random_uuid,
                 content = 'some_content'
             ),
             equal_to('some_other_etag')
         )
 
+    #
+    # copy_file_content
+    #
+
     def test_copy_file_content_uses_the_right_method(self):
         httpretty.register_uri(httpretty.PUT, re.compile('https://.*'))
-        self.client.copy_file_content('destintation', 'source')
+        self.client.copy_file_content(self.random_uuid, str(uuid.uuid4()))
 
         assert_that(
             httpretty.last_request().method,
             equal_to('PUT')
         )
 
+    def test_copy_file_content_verifies_uuids(self):
+        assert_that(
+            calling(self.client.copy_file_content).with_args(
+                self.random_uuid, 'source'),
+            raises(DocArgumentException)
+        )
+
+        assert_that(
+            calling(self.client.copy_file_content).with_args(
+                'destination', self.random_uuid),
+            raises(DocArgumentException)
+        )
+
     def test_copy_file_content_sets_the_right_headers(self):
         httpretty.register_uri(httpretty.PUT, re.compile('https://.*'))
-        self.client.copy_file_content('destintation', 'source')
+        self.client.copy_file_content(str(uuid.uuid4()), self.random_uuid)
 
         assert_that(
             httpretty.last_request().headers,
-            has_entries({'X-Copy-From': 'source'})
+            has_entries({'X-Copy-From': self.random_uuid})
         )
 
     def test_copy_file_content_returns_None(self):
@@ -611,20 +797,30 @@ class TestClient(unittest.TestCase):
         )
 
         assert_that(
-            self.client.copy_file_content('destintation', 'source'),
+            self.client.copy_file_content(self.random_uuid, str(uuid.uuid4())),
             none()
         )
+
+    #
+    # download_file_content
+    #
 
     def test_download_file_conent_sets_the_right_headers(self):
         httpretty.register_uri(
             httpretty.GET, re.compile('https://.*'),
             adding_headers={'ETag':'some_other_etag'}
         )
-        self.client.download_file_content('some_file_id', 'some_etag')
+        self.client.download_file_content(self.random_uuid, 'some_etag')
 
         assert_that(
             httpretty.last_request().headers,
             has_entries({'Accept': '*/*', 'If-None-Match': 'some_etag'})
+        )
+
+    def test_download_file_content_verifies_uuids(self):
+        assert_that(
+            calling(self.client.download_file_content).with_args('1'),
+            raises(DocArgumentException)
         )
 
     def test_download_file_content_returns_tuple(self):
@@ -635,7 +831,7 @@ class TestClient(unittest.TestCase):
         )
 
         assert_that(
-            self.client.download_file_content('some_file_id'),
+            self.client.download_file_content(self.random_uuid),
             instance_of(tuple)
         )
 
@@ -647,7 +843,7 @@ class TestClient(unittest.TestCase):
         )
 
         assert_that(
-            self.client.download_file_content('some_file_id'),
+            self.client.download_file_content(self.random_uuid),
             instance_of(tuple)
         )
 
@@ -658,7 +854,8 @@ class TestClient(unittest.TestCase):
         )
 
         assert_that(
-            calling(self.client.download_file_content).with_args('some_file_id'),
+            calling(self.client.download_file_content).with_args(
+                self.random_uuid),
             raises(DocException)
         )
 
@@ -670,7 +867,7 @@ class TestClient(unittest.TestCase):
         )
 
         assert_that(
-            self.client.download_file_content('some_file_id')[1],
+            self.client.download_file_content(self.random_uuid)[1],
             equal_to('somecontent')
         )
 
@@ -682,9 +879,13 @@ class TestClient(unittest.TestCase):
         )
 
         assert_that(
-            self.client.download_file_content('some_file_id')[1],
+            self.client.download_file_content(self.random_uuid)[1],
             none()
         )
+
+    #
+    # get_signed_url
+    #
 
     def test_get_signed_url_extracts_url_from_response_body(self):
         some_json = {"signed_url": "foo://bar", "b": [2,3,4], "c": {"x":"y"}}
@@ -695,15 +896,31 @@ class TestClient(unittest.TestCase):
         )
 
         assert_that(
-            self.client.get_signed_url('some_file_id'),
+            self.client.get_signed_url(self.random_uuid),
             equal_to("foo://bar")
         )
 
+    def test_get_signed_url_verifies_uuids(self):
+        assert_that(
+            calling(self.client.get_signed_url).with_args('1'),
+            raises(DocArgumentException)
+        )
+
+    #
+    # delete_file
+    #
+
     def test_delete_file_uses_the_right_method(self):
         httpretty.register_uri(httpretty.DELETE, re.compile('https://.*'))
-        self.client.delete_file('some_file_id')
+        self.client.delete_file(self.random_uuid)
 
         assert_that(
             httpretty.last_request().method,
             equal_to('DELETE')
+        )
+
+    def test_delete_file_verifies_uuids(self):
+        assert_that(
+            calling(self.client.delete_file).with_args('1'),
+            raises(DocArgumentException)
         )
