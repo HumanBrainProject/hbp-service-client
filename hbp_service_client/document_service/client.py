@@ -819,7 +819,7 @@ class Client(object):
             etag = resp.headers['ETag']
         else:
             raise DocException('No ETag received from the service with the download')
-        return (etag, resp.text)
+        return (etag, resp.content)
 
     def get_signed_url(self, file_id):
         '''Get a signed unauthenticated URL.
