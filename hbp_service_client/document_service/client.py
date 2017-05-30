@@ -180,7 +180,8 @@ class Client(object):
             if not isinstance(metadata, dict):
                 raise DocArgumentException('The metadata needs to be provided'
                                            ' as a dictionary.')
-            params[metadata.keys()[0]] = metadata.values()[0]
+            k, v = next(iter(metadata.items()))
+            params[k] = v
             del params['metadata']
         params = self._prep_params(params)
 

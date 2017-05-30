@@ -868,7 +868,7 @@ class TestClient(unittest.TestCase):
 
         assert_that(
             self.client.download_file_content(self.random_uuid)[1],
-            equal_to('somecontent')
+            equal_to(b'somecontent')
         )
 
         # Also check with status 304 for consistency
