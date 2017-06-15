@@ -1,4 +1,5 @@
-'''Client for interacting with the documentation service'''
+'''Python wrapper for the HBP Document Service low-level REST API'''
+
 import logging
 from os.path import join as joinp
 import json
@@ -17,7 +18,7 @@ L = logging.getLogger(__name__)
 
 
 class Client(object):
-    '''Interface to the document service via python
+    '''Python wrapper for the HBP Document Service low-level REST API
 
         Example:
             >>> #you'll have to have an access token ready
