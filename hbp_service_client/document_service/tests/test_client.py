@@ -4,10 +4,8 @@ import re
 import json
 import uuid
 
-from mock import patch, Mock
 from hamcrest import *
 
-#from hbp_service_client.document_service.requestor import Requestor
 from hbp_service_client.document_service.client import Client as DC
 from hbp_service_client.document_service.exceptions import (
     DocException, DocArgumentException
@@ -44,7 +42,7 @@ class TestClient(unittest.TestCase):
         )
 
     #
-    # Enntity endpoints
+    # Entity endpoints
     #
 
     def test_get_entity_details_returns_response_body(self):
