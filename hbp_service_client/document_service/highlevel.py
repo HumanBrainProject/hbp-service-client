@@ -9,6 +9,7 @@ import os
 from os.path import join as joinp
 from validators import uuid as is_valid_uuid
 from hbp_service_client.document_service.client import Client
+from hbp_service_client.document_service.requestor import Requestor
 from hbp_service_client.document_service.exceptions import (
     DocException, DocArgumentException, DocNotFoundException)
 
@@ -36,7 +37,7 @@ class StorageClient(Client):
         Args:
            requestor: the requestor to send the requests with
         '''
-        super(Client, self).__init__(requestor)
+        super(StorageClient, self).__init__(requestor)
 
     @classmethod
     def new(cls, access_token, environment='prod'):
@@ -151,16 +152,16 @@ class StorageClient(Client):
 
 
     def md5_for_file(self, path, block_size=256*128, hr=False):
-    '''
-    from Stackoverflow: https://stackoverflow.com/questions/1131220/get-md5-hash-of-big-files-in-python
-    Block size directly depends on the block size of your filesystem
-    to avoid performances issues
-    Here I have blocks of 4096 octets (Default NTFS)
-    '''
-    md5 = hashlib.md5()
-    with open(path,'rb') as f:
-        for chunk in iter(lambda: f.read(block_size), b''):
-             md5.update(chunk)
-    if hr:
-        return md5.hexdigest()
-    return md5.digest()
+        '''
+        from Stackoverflow: https://stackoverflow.com/questions/1131220/get-md5-hash-of-big-files-in-python
+        Block size directly depends on the block size of your filesystem
+        to avoid performances issues
+        Here I have blocks of 4096 octets (Default NTFS)
+        '''
+        md5 = hashlib.md5()
+        with open(path,'rb') as f:
+            for chunk in iter(lambda: f.read(block_size), b''):
+                 md5.update(chunk)
+        if hr:
+            return md5.hexdigest()
+        return md5.digest()
