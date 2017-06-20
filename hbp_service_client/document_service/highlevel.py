@@ -65,7 +65,7 @@ class StorageClient(Client):
         more_pages = True
         page_number = 1
         while more_pages:
-            response = self.list_folder_content(project_uuid, page_size=100, entity_type='file', page=page_number)
+            response = self.list_folder_content(project_uuid, entity_type='file', page=page_number)
             more_pages = response['next'] is not None
             page_number += 1
             file_names.extend([f['name'] for f in response['results']])
@@ -74,7 +74,7 @@ class StorageClient(Client):
         more_pages = True
         page_number = 1
         while more_pages:
-            response = self.list_folder_content(project_uuid, page_size=100, entity_type='folder', page=page_number)
+            response = self.list_folder_content(project_uuid, entity_type='folder', page=page_number)
             more_pages = response['next'] is not None
             page_number += 1
             file_names.extend(['/' + f['name'] for f in response['results']])
