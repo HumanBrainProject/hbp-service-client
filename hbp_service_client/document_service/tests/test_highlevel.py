@@ -41,11 +41,7 @@ class TestStorageClient(unittest.TestCase):
             returns={'uuid': 'e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56'}
         )
         self.register_uri(
-            'https://document/service/folder/e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56/children/?page=1&entity_type=file',
-            returns={'next': None, 'results': []}
-        )
-        self.register_uri(
-            'https://document/service/folder/e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56/children/?page=1&entity_type=folder',
+            'https://document/service/folder/e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56/children/?page=1',
             returns={'next': None, 'results': []}
         )
 
@@ -63,12 +59,8 @@ class TestStorageClient(unittest.TestCase):
             returns={'uuid': 'e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56'}
         )
         self.register_uri(
-            'https://document/service/folder/e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56/children/?page=1&entity_type=file',
-            returns={'next': None, 'results': [{'name': 'file1'}, {'name': 'file2'}]}
-        )
-        self.register_uri(
-            'https://document/service/folder/e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56/children/?page=1&entity_type=folder',
-            returns={'next': None, 'results': []}
+            'https://document/service/folder/e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56/children/?page=1',
+            returns={'next': None, 'results': [{'name': 'file1', 'entity_type': 'file'}, {'name': 'file2', 'entity_type': 'file'}]}
         )
 
         # when
@@ -85,12 +77,8 @@ class TestStorageClient(unittest.TestCase):
             returns={'uuid': 'e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56'}
         )
         self.register_uri(
-            'https://document/service/folder/e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56/children/?page=1&entity_type=file',
-            returns={'next': None, 'results': []}
-        )
-        self.register_uri(
-            'https://document/service/folder/e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56/children/?page=1&entity_type=folder',
-            returns={'next': None, 'results': [{'name': 'folder1'}, {'name': 'folder2'}]}
+            'https://document/service/folder/e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56/children/?page=1',
+            returns={'next': None, 'results': [{'name': 'folder1', 'entity_type': 'folder'}, {'name': 'folder2', 'entity_type': 'folder'}]}
         )
 
         # when
@@ -107,54 +95,20 @@ class TestStorageClient(unittest.TestCase):
             returns={'uuid': 'e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56'}
         )
         self.register_uri(
-            'https://document/service/folder/e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56/children/?page=1&entity_type=file',
-            returns={'next': 'link.to.next.page', 'results': [{'name': 'file1'}, {'name': 'file2'}]}
+            'https://document/service/folder/e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56/children/?page=1',
+            returns={'next': 'link.to.next.page', 'results': [{'name': 'file1', 'entity_type': 'file'}, {'name': 'folder1', 'entity_type': 'folder'}]}
         )
         self.register_uri(
-            'https://document/service/folder/e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56/children/?page=2&entity_type=file',
-            returns={'next': 'link.to.next.page', 'results': [{'name': 'file3'}, {'name': 'file4'}]}
+            'https://document/service/folder/e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56/children/?page=2',
+            returns={'next': 'link.to.next.page', 'results': [{'name': 'file2', 'entity_type': 'file'}, {'name': 'folder2', 'entity_type': 'folder'}]}
         )
         self.register_uri(
-            'https://document/service/folder/e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56/children/?page=3&entity_type=file',
-            returns={'next': None, 'results': [{'name': 'file5'}, {'name': 'file6'}]}
-        )
-        self.register_uri(
-            'https://document/service/folder/e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56/children/?page=1&entity_type=folder',
-            returns={'next': None, 'results': []}
+            'https://document/service/folder/e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56/children/?page=3',
+            returns={'next': None, 'results': [{'name': 'file3', 'entity_type': 'file'}, {'name': 'folder3', 'entity_type': 'folder'}]}
         )
 
         # when
         file_names = self.client.ls('my_project')
 
         # then
-        assert_that(file_names, equal_to(['file1', 'file2', 'file3', 'file4', 'file5', 'file6']))
-
-
-    def test_ls_should_load_all_the_paginated_folders_of_the_project(self):
-        # given
-        self.register_uri(
-            'https://document/service/entity/?path=my_project',
-            returns={'uuid': 'e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56'}
-        )
-        self.register_uri(
-            'https://document/service/folder/e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56/children/?page=1&entity_type=file',
-            returns={'next': None, 'results': []}
-        )
-        self.register_uri(
-            'https://document/service/folder/e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56/children/?page=1&entity_type=folder',
-            returns={'next': 'link.to.next.page', 'results': [{'name': 'folder1'}, {'name': 'folder2'}]}
-        )
-        self.register_uri(
-            'https://document/service/folder/e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56/children/?page=2&entity_type=folder',
-            returns={'next': 'link.to.next.page', 'results': [{'name': 'folder3'}, {'name': 'folder4'}]}
-        )
-        self.register_uri(
-            'https://document/service/folder/e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56/children/?page=3&entity_type=folder',
-            returns={'next': None, 'results': [{'name': 'folder5'}, {'name': 'folder6'}]}
-        )
-
-        # when
-        file_names = self.client.ls('my_project')
-
-        # then
-        assert_that(file_names, equal_to(['/folder1', '/folder2', '/folder3', '/folder4', '/folder5', '/folder6']))
+        assert_that(file_names, equal_to(['file1', '/folder1', 'file2', '/folder2', 'file3', '/folder3']))
