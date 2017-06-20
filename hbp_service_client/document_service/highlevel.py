@@ -32,12 +32,13 @@ class StorageClient(Client):
             >>> my_project_contents = doc_client.list_project_content(my_project_id)
     '''
 
-    def __init__(self, requestor):
+    def __init__(self, requestor, client):
         '''
         Args:
            requestor: the requestor to send the requests with
         '''
         super(StorageClient, self).__init__(requestor)
+        self._client = client
 
     @classmethod
     def new(cls, access_token, environment='prod'):
@@ -53,19 +54,19 @@ class StorageClient(Client):
 
         '''
         requestor = Requestor.new(cls.SERVICE_NAME, cls.SERVICE_VERSION, access_token, environment)
-        return cls(requestor)
+        client = Client.new(access_token, environment)
+        return cls(requestor, client)
 
     def ls(self, path):
-        project = self.get_entity_by_query(path=path)
+        project = self._client.get_entity_by_query(path=path)
         project_uuid = project['uuid']
-        print project
         file_names = []
 
         #get files
         more_pages = True
         page_number = 1
         while more_pages:
-            response = self.list_folder_content(project_uuid, entity_type='file', page=page_number)
+            response = self._client.list_folder_content(project_uuid, entity_type='file', page=page_number)
             more_pages = response['next'] is not None
             page_number += 1
             file_names.extend([f['name'] for f in response['results']])
@@ -74,7 +75,7 @@ class StorageClient(Client):
         more_pages = True
         page_number = 1
         while more_pages:
-            response = self.list_folder_content(project_uuid, entity_type='folder', page=page_number)
+            response = self._client.list_folder_content(project_uuid, entity_type='folder', page=page_number)
             more_pages = response['next'] is not None
             page_number += 1
             file_names.extend(['/' + f['name'] for f in response['results']])
