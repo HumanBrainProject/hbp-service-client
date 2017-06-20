@@ -66,19 +66,12 @@ class StorageClient(Client):
         more_pages = True
         page_number = 1
         while more_pages:
-            response = self._client.list_folder_content(project_uuid, entity_type='file', page=page_number)
+            response = self._client.list_folder_content(project_uuid, page=page_number)
             more_pages = response['next'] is not None
             page_number += 1
-            file_names.extend([f['name'] for f in response['results']])
-
-        #get folder and prefix with a '/'
-        more_pages = True
-        page_number = 1
-        while more_pages:
-            response = self._client.list_folder_content(project_uuid, entity_type='folder', page=page_number)
-            more_pages = response['next'] is not None
-            page_number += 1
-            file_names.extend(['/' + f['name'] for f in response['results']])
+            for child in response['results']:
+                pattern = '/{name}' if child['entity_type'] == 'folder' else '{name}'
+                file_names.append(pattern.format(name=child['name']))
 
         return file_names
 
