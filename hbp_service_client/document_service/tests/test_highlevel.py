@@ -41,11 +41,11 @@ class TestStorageClient(unittest.TestCase):
             returns={'uuid': 'e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56'}
         )
         self.register_uri(
-            'https://document/service/folder/e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56/children/?page=1&page_size=100&entity_type=file',
+            'https://document/service/folder/e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56/children/?page=1&entity_type=file',
             returns={'next': None, 'results': []}
         )
         self.register_uri(
-            'https://document/service/folder/e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56/children/?page=1&page_size=100&entity_type=folder',
+            'https://document/service/folder/e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56/children/?page=1&entity_type=folder',
             returns={'next': None, 'results': []}
         )
 
@@ -63,11 +63,11 @@ class TestStorageClient(unittest.TestCase):
             returns={'uuid': 'e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56'}
         )
         self.register_uri(
-            'https://document/service/folder/e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56/children/?page=1&page_size=100&entity_type=file',
+            'https://document/service/folder/e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56/children/?page=1&entity_type=file',
             returns={'next': None, 'results': [{'name': 'file1'}, {'name': 'file2'}]}
         )
         self.register_uri(
-            'https://document/service/folder/e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56/children/?page=1&page_size=100&entity_type=folder',
+            'https://document/service/folder/e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56/children/?page=1&entity_type=folder',
             returns={'next': None, 'results': []}
         )
 
@@ -85,11 +85,11 @@ class TestStorageClient(unittest.TestCase):
             returns={'uuid': 'e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56'}
         )
         self.register_uri(
-            'https://document/service/folder/e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56/children/?page=1&page_size=100&entity_type=file',
+            'https://document/service/folder/e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56/children/?page=1&entity_type=file',
             returns={'next': None, 'results': []}
         )
         self.register_uri(
-            'https://document/service/folder/e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56/children/?page=1&page_size=100&entity_type=folder',
+            'https://document/service/folder/e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56/children/?page=1&entity_type=folder',
             returns={'next': None, 'results': [{'name': 'folder1'}, {'name': 'folder2'}]}
         )
 
@@ -107,19 +107,19 @@ class TestStorageClient(unittest.TestCase):
             returns={'uuid': 'e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56'}
         )
         self.register_uri(
-            'https://document/service/folder/e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56/children/?page=1&page_size=100&entity_type=file',
+            'https://document/service/folder/e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56/children/?page=1&entity_type=file',
             returns={'next': 'link.to.next.page', 'results': [{'name': 'file1'}, {'name': 'file2'}]}
         )
         self.register_uri(
-            'https://document/service/folder/e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56/children/?page=2&page_size=100&entity_type=file',
+            'https://document/service/folder/e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56/children/?page=2&entity_type=file',
             returns={'next': 'link.to.next.page', 'results': [{'name': 'file3'}, {'name': 'file4'}]}
         )
         self.register_uri(
-            'https://document/service/folder/e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56/children/?page=3&page_size=100&entity_type=file',
+            'https://document/service/folder/e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56/children/?page=3&entity_type=file',
             returns={'next': None, 'results': [{'name': 'file5'}, {'name': 'file6'}]}
         )
         self.register_uri(
-            'https://document/service/folder/e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56/children/?page=1&page_size=100&entity_type=folder',
+            'https://document/service/folder/e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56/children/?page=1&entity_type=folder',
             returns={'next': None, 'results': []}
         )
 
@@ -137,19 +137,19 @@ class TestStorageClient(unittest.TestCase):
             returns={'uuid': 'e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56'}
         )
         self.register_uri(
-            'https://document/service/folder/e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56/children/?page=1&page_size=100&entity_type=file',
+            'https://document/service/folder/e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56/children/?page=1&entity_type=file',
             returns={'next': None, 'results': []}
         )
         self.register_uri(
-            'https://document/service/folder/e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56/children/?page=1&page_size=100&entity_type=folder',
+            'https://document/service/folder/e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56/children/?page=1&entity_type=folder',
             returns={'next': 'link.to.next.page', 'results': [{'name': 'folder1'}, {'name': 'folder2'}]}
         )
         self.register_uri(
-            'https://document/service/folder/e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56/children/?page=2&page_size=100&entity_type=folder',
+            'https://document/service/folder/e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56/children/?page=2&entity_type=folder',
             returns={'next': 'link.to.next.page', 'results': [{'name': 'folder3'}, {'name': 'folder4'}]}
         )
         self.register_uri(
-            'https://document/service/folder/e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56/children/?page=3&page_size=100&entity_type=folder',
+            'https://document/service/folder/e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56/children/?page=3&entity_type=folder',
             returns={'next': None, 'results': [{'name': 'folder5'}, {'name': 'folder6'}]}
         )
 
