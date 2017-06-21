@@ -80,8 +80,7 @@ class StorageClient(Client):
         assert entity['entity_type'] == 'file'
 
         signed_url = self.get_signed_url(entity['uuid'])
-        print 'downloading: ' + self.document_service_url + signed_url
-        response = requests.get(self.document_service_url + signed_url, stream=True)
+        response = requests.get('https://document/service' + signed_url, stream=True)
 
         with open(target_path, "wb") as output:
             for chunk in response.iter_content(chunk_size=1024):
