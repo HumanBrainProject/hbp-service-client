@@ -3,6 +3,7 @@ from mock import Mock
 import httpretty
 import json
 import re
+import mock
 
 from hamcrest import *
 
@@ -130,3 +131,28 @@ class TestStorageClient(unittest.TestCase):
             calling(self.client.download_file).with_args('path-to-something', 'path/to/target'),
             raises(AssertionError)
         )
+
+
+    @mock.patch('hbp_service_client.document_service.highlevel.open', create=True)
+    def test_download_file_should_download_file_content_into_a_local_file(self, mock_open):
+        # given
+        self.register_uri(
+            'https://document/service/entity/?path=path-to-file',
+            returns={'entity_type': 'file', 'uuid': 'e2c25c1b-1234-4cf6-b8d2-271e628a9a56'}
+        )
+        self.register_uri(
+            'https://document/service/file/e2c25c1b-1234-4cf6-b8d2-271e628a9a56/content/secure_link/',
+            returns={'signed_url':'/signed/url/to/the/file'}
+        )
+        httpretty.register_uri(
+            httpretty.GET, 'https://document/service/signed/url/to/the/file',
+            body='some content'
+        )
+
+        # when
+        self.client.download_file('path-to-file', 'target.file')
+
+        # then
+        mock_open.assert_called_once_with('target.file', 'wb')
+        file_handle = mock_open.return_value.__enter__.return_value
+        file_handle.write.assert_called_once_with('some content')
