@@ -112,3 +112,21 @@ class TestStorageClient(unittest.TestCase):
 
         # then
         assert_that(file_names, equal_to(['file1', '/folder1', 'file2', '/folder2', 'file3', '/folder3']))
+
+
+    #
+    # download_file
+    #
+
+    def test_download_file_checks_entity_is_a_file(self):
+        # given
+        self.register_uri(
+            'https://document/service/entity/?path=path-to-something',
+            returns={'entity_type': 'not a file'}
+        )
+
+        # then
+        assert_that(
+            calling(self.client.download_file).with_args('path-to-something', 'path/to/target'),
+            raises(AssertionError)
+        )
