@@ -88,3 +88,36 @@ class TestRequestBuilder(unittest.TestCase):
 
         # then
         assert_that(response.text, equal_to('the put response'))
+
+
+    def test_should_send_a_request_with_the_given_headers(self):
+        # given
+        httpretty.register_uri(
+            httpretty.GET, 'http://a.url'
+        )
+
+        # when
+        response = self.request \
+            .to('http://a.url') \
+            .with_headers({'my_header': 'its value'}) \
+            .get()
+
+        # then
+        assert_that(httpretty.last_request().headers, has_entry('my_header', 'its value'))
+
+    def test_should_accumulate_headers(self):
+        # given
+        httpretty.register_uri(
+            httpretty.GET, 'http://a.url'
+        )
+
+        # when
+        response = self.request \
+            .to('http://a.url') \
+            .with_headers({'first_header': 'its value'}) \
+            .with_headers({'second_header': 'its value'}) \
+            .get()
+
+        # then
+        assert_that(httpretty.last_request().headers, has_entry('first_header', 'its value'))
+        assert_that(httpretty.last_request().headers, has_entry('second_header', 'its value'))
