@@ -29,7 +29,7 @@ class TestRequestBuilder(unittest.TestCase):
         )
 
         # when
-        response = self.builder.a_get_request().to('http://a.url').send()
+        response = self.builder.to('http://a.url').get()
 
         # then
         assert_that(response.text, equal_to('the url response'))
@@ -43,10 +43,9 @@ class TestRequestBuilder(unittest.TestCase):
 
         # when
         response = self.builder \
-            .a_get_request() \
             .to_service('my_service', 'v3') \
             .to_endpoint('to/endpoint') \
-            .send()
+            .get()
 
         # then
         assert_that(response.text, equal_to('the endpoint response'))
