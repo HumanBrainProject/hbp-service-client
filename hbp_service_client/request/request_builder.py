@@ -44,13 +44,21 @@ class RequestBuilder(object):
     def to_endpoint(self, endpoint):
         return self._copy_and_set('endpoint', endpoint)
 
-    def set_endpoint(self, endpoint):
-        self._endpoint
-        return self
-
     def get(self):
+        return self._send('GET')
+
+    def post(self):
+        return self._send('POST')
+
+    def delete(self):
+        return self._send('DELETE')
+
+    def put(self):
+        return self._send('PUT')
+
+    def _send(self, method):
         url = self._url if self._url else '{service_url}/{endpoint}/'.format(service_url=self._service_url, endpoint=self._endpoint)
         return requests.request(
-            'GET',
+            method,
             url
         )
