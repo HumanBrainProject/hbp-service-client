@@ -4,7 +4,7 @@ from hbp_service_client.document_service.service_locator import ServiceLocator
 class RequestBuilder(object):
     '''A builder to create requests'''
 
-    def __init__(self, service_locator, method='GET', url=None, service_url=None, endpoint=None):
+    def __init__(self, service_locator=None, url=None, service_url=None, endpoint=None):
         '''
         Args:
            service_locator: collaborator which gets the collab services urls
@@ -12,13 +12,12 @@ class RequestBuilder(object):
            url: the url to send a request to
         '''
         self._service_locator = service_locator
-        self._method = method
         self._url = url
         self._service_url = service_url
         self._endpoint = endpoint
 
     @classmethod
-    def new(cls, environment='prod'):
+    def request(cls, environment='prod'):
         '''Create new request builder
 
             Arguments:
@@ -28,12 +27,12 @@ class RequestBuilder(object):
                 A request builder instance
 
         '''
-        return cls(ServiceLocator.new(environment))
+        return cls(service_locator=ServiceLocator.new(environment))
 
     def _copy_and_set(self, attribute, value):
-        params = {'method': self._method, 'url': self._url, 'service_url': self._service_url, 'endpoint': self._endpoint}
+        params = {'service_locator': self._service_locator, 'url': self._url, 'service_url': self._service_url, 'endpoint': self._endpoint}
         params[attribute] = value
-        return RequestBuilder(self._service_locator, **params)
+        return RequestBuilder(**params)
 
     def to(self, url):
         return self._copy_and_set('url', url)
