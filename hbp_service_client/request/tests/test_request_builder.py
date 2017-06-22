@@ -49,3 +49,42 @@ class TestRequestBuilder(unittest.TestCase):
 
         # then
         assert_that(response.text, equal_to('the endpoint response'))
+
+    def test_should_send_a_post_request_to_the_given_url(self):
+        # given
+        httpretty.register_uri(
+            httpretty.POST, 'http://a.url',
+            body='the post response'
+        )
+
+        # when
+        response = self.builder.to('http://a.url').post()
+
+        # then
+        assert_that(response.text, equal_to('the post response'))
+
+    def test_should_send_a_delete_request_to_the_given_url(self):
+        # given
+        httpretty.register_uri(
+            httpretty.DELETE, 'http://a.url',
+            body='the delete response'
+        )
+
+        # when
+        response = self.builder.to('http://a.url').delete()
+
+        # then
+        assert_that(response.text, equal_to('the delete response'))
+
+    def test_should_send_a_put_request_to_the_given_url(self):
+        # given
+        httpretty.register_uri(
+            httpretty.PUT, 'http://a.url',
+            body='the put response'
+        )
+
+        # when
+        response = self.builder.to('http://a.url').put()
+
+        # then
+        assert_that(response.text, equal_to('the put response'))
