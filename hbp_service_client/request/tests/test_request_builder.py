@@ -33,3 +33,20 @@ class TestRequestBuilder(unittest.TestCase):
 
         # then
         assert_that(response.text, equal_to('the url response'))
+
+    def test_should_send_a_get_request_to_the_given_service_endpoint(self):
+        # given
+        httpretty.register_uri(
+            httpretty.GET, 'https://my/service/v3/to/endpoint/',
+            body='the endpoint response'
+        )
+
+        # when
+        response = self.builder \
+            .a_get_request() \
+            .to_service('my_service', 'v3') \
+            .to_endpoint('to/endpoint') \
+            .send()
+
+        # then
+        assert_that(response.text, equal_to('the endpoint response'))
