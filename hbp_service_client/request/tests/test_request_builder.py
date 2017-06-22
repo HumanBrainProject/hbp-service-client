@@ -15,7 +15,7 @@ class TestRequestBuilder(unittest.TestCase):
             httpretty.GET, 'https://collab.humanbrainproject.eu/services.json',
             body=json.dumps({ 'my_service': {'v3': 'https://my/service/v3'} })
         )
-        self.builder = RequestBuilder.new()
+        self.request = RequestBuilder.request()
 
     def tearDown(self):
         httpretty.disable()
@@ -29,7 +29,7 @@ class TestRequestBuilder(unittest.TestCase):
         )
 
         # when
-        response = self.builder.to('http://a.url').get()
+        response = self.request.to('http://a.url').get()
 
         # then
         assert_that(response.text, equal_to('the url response'))
@@ -42,7 +42,7 @@ class TestRequestBuilder(unittest.TestCase):
         )
 
         # when
-        response = self.builder \
+        response = self.request \
             .to_service('my_service', 'v3') \
             .to_endpoint('to/endpoint') \
             .get()
@@ -58,7 +58,7 @@ class TestRequestBuilder(unittest.TestCase):
         )
 
         # when
-        response = self.builder.to('http://a.url').post()
+        response = self.request.to('http://a.url').post()
 
         # then
         assert_that(response.text, equal_to('the post response'))
@@ -71,7 +71,7 @@ class TestRequestBuilder(unittest.TestCase):
         )
 
         # when
-        response = self.builder.to('http://a.url').delete()
+        response = self.request.to('http://a.url').delete()
 
         # then
         assert_that(response.text, equal_to('the delete response'))
@@ -84,7 +84,7 @@ class TestRequestBuilder(unittest.TestCase):
         )
 
         # when
-        response = self.builder.to('http://a.url').put()
+        response = self.request.to('http://a.url').put()
 
         # then
         assert_that(response.text, equal_to('the put response'))
