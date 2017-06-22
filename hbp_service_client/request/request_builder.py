@@ -35,9 +35,6 @@ class RequestBuilder(object):
         params[attribute] = value
         return RequestBuilder(self._service_locator, **params)
 
-    def a_get_request(self):
-        return self._copy_and_set('method', 'GET')
-
     def to(self, url):
         return self._copy_and_set('url', url)
 
@@ -47,9 +44,13 @@ class RequestBuilder(object):
     def to_endpoint(self, endpoint):
         return self._copy_and_set('endpoint', endpoint)
 
-    def send(self):
+    def set_endpoint(self, endpoint):
+        self._endpoint
+        return self
+
+    def get(self):
         url = self._url if self._url else '{service_url}/{endpoint}/'.format(service_url=self._service_url, endpoint=self._endpoint)
         return requests.request(
-            self._method,
+            'GET',
             url
         )
