@@ -10,6 +10,8 @@ class RequestBuilder(object):
            service_locator: collaborator which gets the collab services urls
            method: the http method (GET, POST...)
            url: the url to send a request to
+           service_url: if url is not set, will be used in conjonction to `endpoint` to create the url
+           endpoint: is concatenated to `service_url` to create the url
         '''
         self._service_locator = service_locator
         self._url = url
@@ -30,7 +32,12 @@ class RequestBuilder(object):
         return cls(service_locator=ServiceLocator.new(environment))
 
     def _copy_and_set(self, attribute, value):
-        params = {'service_locator': self._service_locator, 'url': self._url, 'service_url': self._service_url, 'endpoint': self._endpoint}
+        params = {
+            'service_locator':  self._service_locator,
+            'url':              self._url,
+            'service_url':      self._service_url,
+            'endpoint':         self._endpoint
+        }
         params[attribute] = value
         return RequestBuilder(**params)
 
@@ -56,7 +63,7 @@ class RequestBuilder(object):
         return self._send('PUT')
 
     def _send(self, method):
-        url = self._url if self._url else '{service_url}/{endpoint}/'.format(service_url=self._service_url, endpoint=self._endpoint)
+        url = self._url if self._url else '{}/{}/'.format(self._service_url, self._endpoint)
         return requests.request(
             method,
             url
