@@ -4,7 +4,7 @@ from hbp_service_client.document_service.service_locator import ServiceLocator
 class RequestBuilder(object):
     '''A builder to create requests'''
 
-    def __init__(self, service_locator=None, url=None, service_url=None, endpoint=None, headers={}):
+    def __init__(self, service_locator=None, url=None, service_url=None, endpoint=None, headers={}, return_body=False):
         '''
         Args:
            service_locator: collaborator which gets the collab services urls
@@ -13,12 +13,14 @@ class RequestBuilder(object):
            service_url: if url is not set, will be used in conjonction to `endpoint` to create the url
            endpoint: is concatenated to `service_url` to create the url
            headers: headers to add to the request as key/value pairs
+           return_body: True if the body of the response should be returned, False if the response should be returned
         '''
         self._service_locator = service_locator
         self._url = url
         self._service_url = service_url
         self._endpoint = endpoint
         self._headers = headers
+        self._return_body = return_body
 
     @classmethod
     def request(cls, environment='prod'):
@@ -39,7 +41,8 @@ class RequestBuilder(object):
             'url'             : self._url,
             'service_url'     : self._service_url,
             'endpoint'        : self._endpoint,
-            'headers'         : self._headers
+            'headers'         : self._headers,
+            'return_body'     : self._return_body
         }
         params[attribute] = value
         return RequestBuilder(**params)
@@ -62,6 +65,9 @@ class RequestBuilder(object):
     def with_token(self, token):
         return self.with_headers({'Authorization': 'Bearer {}'.format(token)})
 
+    def return_body(self):
+        return self._copy_and_set('return_body', True)
+
     def get(self):
         return self._send('GET')
 
@@ -76,8 +82,18 @@ class RequestBuilder(object):
 
     def _send(self, method):
         url = self._url if self._url else '{}/{}/'.format(self._service_url, self._endpoint)
-        return requests.request(
+        response = requests.request(
             method,
             url,
             headers=self._headers
         )
+
+        if self._return_body:
+             return self._extract_body(response)
+             
+        return response
+
+    def _extract_body(self, response):
+        if response.headers.get('Content-Type', None) == 'application/json':
+            return response.json()
+        return response.text
