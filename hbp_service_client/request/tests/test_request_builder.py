@@ -181,3 +181,48 @@ class TestRequestBuilder(unittest.TestCase):
 
         # then
         assert_that(response, equal_to({ 'some_key': {'another_one': 'some value'} }))
+
+    def test_should_add_the_given_params_to_the_query_string(self):
+        # given
+        httpretty.register_uri(
+            httpretty.GET, 'http://a.url'
+        )
+
+        # when
+        response = self.request \
+            .to('http://a.url') \
+            .with_params({'a_param': 'its value', 'another_one': 'another value'}) \
+            .get()
+
+        # then
+        assert_that(
+            httpretty.last_request().querystring,
+            has_entries(a_param=['its value'])
+        )
+        assert_that(
+            httpretty.last_request().querystring,
+            has_entries(another_one=['another value'])
+        )
+
+    def test_should_accumulate_params(self):
+        # given
+        httpretty.register_uri(
+            httpretty.GET, 'http://a.url'
+        )
+
+        # when
+        response = self.request \
+            .to('http://a.url') \
+            .with_params({'a_param': 'its value'}) \
+            .with_params({'another_one': 'another value'}) \
+            .get()
+
+        # then
+        assert_that(
+            httpretty.last_request().querystring,
+            has_entries(a_param=['its value'])
+        )
+        assert_that(
+            httpretty.last_request().querystring,
+            has_entries(another_one=['another value'])
+        )
