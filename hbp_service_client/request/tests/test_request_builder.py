@@ -148,3 +148,36 @@ class TestRequestBuilder(unittest.TestCase):
             httpretty.last_request().headers,
             has_entries(Authorization='Bearer my-token')
         )
+
+    def test_should_return_the_body_of_the_response(self):
+        # given
+        httpretty.register_uri(
+            httpretty.GET, 'http://a.url',
+            body='some content'
+        )
+
+        # when
+        response = self.request \
+            .to('http://a.url') \
+            .return_body() \
+            .get()
+
+        # then
+        assert_that(response, equal_to('some content'))
+
+    def test_should_return_the_body_of_the_response_as_json(self):
+        # given
+        httpretty.register_uri(
+            httpretty.GET, 'http://a.url',
+            body=json.dumps({ 'some_key': {'another_one': 'some value'} }),
+            content_type="application/json"
+        )
+
+        # when
+        response = self.request \
+            .to('http://a.url') \
+            .return_body() \
+            .get()
+
+        # then
+        assert_that(response, equal_to({ 'some_key': {'another_one': 'some value'} }))
