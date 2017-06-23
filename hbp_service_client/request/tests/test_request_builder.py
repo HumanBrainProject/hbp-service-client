@@ -103,7 +103,10 @@ class TestRequestBuilder(unittest.TestCase):
             .get()
 
         # then
-        assert_that(httpretty.last_request().headers, has_entry('my_header', 'its value'))
+        assert_that(
+            httpretty.last_request().headers,
+            has_entries(my_header='its value')
+        )
 
     def test_should_accumulate_headers(self):
         # given
@@ -119,5 +122,29 @@ class TestRequestBuilder(unittest.TestCase):
             .get()
 
         # then
-        assert_that(httpretty.last_request().headers, has_entry('first_header', 'its value'))
-        assert_that(httpretty.last_request().headers, has_entry('second_header', 'its value'))
+        assert_that(
+            httpretty.last_request().headers,
+            has_entries(first_header='its value')
+        )
+        assert_that(
+            httpretty.last_request().headers,
+            has_entries(second_header='its value')
+        )
+
+    def test_should_add_the_access_token_header(self):
+        # given
+        httpretty.register_uri(
+            httpretty.GET, 'http://a.url'
+        )
+
+        # when
+        response = self.request \
+            .to('http://a.url') \
+            .with_token('my-token') \
+            .get()
+
+        # then
+        assert_that(
+            httpretty.last_request().headers,
+            has_entries(Authorization='Bearer my-token')
+        )

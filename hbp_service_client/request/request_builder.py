@@ -59,6 +59,9 @@ class RequestBuilder(object):
         copy.update(self._headers)
         return self._copy_and_set('headers', copy)
 
+    def with_token(self, token):
+        return self.with_headers({'Authorization': 'Bearer {}'.format(token)})
+
     def get(self):
         return self._send('GET')
 
