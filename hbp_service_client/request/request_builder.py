@@ -4,7 +4,7 @@ from hbp_service_client.document_service.service_locator import ServiceLocator
 class RequestBuilder(object):
     '''A builder to create requests'''
 
-    def __init__(self, service_locator=None, url=None, service_url=None, endpoint=None, headers={}, return_body=False, params={}):
+    def __init__(self, service_locator=None, url=None, service_url=None, endpoint=None, headers={}, return_body=False, params={}, body=None):
         '''
         Args:
            service_locator: collaborator which gets the collab services urls
@@ -15,6 +15,7 @@ class RequestBuilder(object):
            headers: headers to add to the request as key/value pairs
            return_body: True if the body of the response should be returned, False if the response should be returned
            params: params to add to the request as key/value pairs
+           body: the body of the request
         '''
         self._service_locator = service_locator
         self._url = url
@@ -23,6 +24,7 @@ class RequestBuilder(object):
         self._headers = headers
         self._return_body = return_body
         self._params = params
+        self._body = body
 
     @classmethod
     def request(cls, environment='prod'):
@@ -45,7 +47,8 @@ class RequestBuilder(object):
             'endpoint'        : self._endpoint,
             'headers'         : self._headers,
             'return_body'     : self._return_body,
-            'params'          : self._params
+            'params'          : self._params,
+            'body'            : self._body
         }
         params[attribute] = value
         return RequestBuilder(**params)
@@ -76,6 +79,9 @@ class RequestBuilder(object):
     def return_body(self):
         return self._copy_and_set('return_body', True)
 
+    def with_body(self, body):
+        return self._copy_and_set('body', body)
+
     def get(self):
         return self._send('GET')
 
@@ -94,7 +100,8 @@ class RequestBuilder(object):
             method,
             url,
             headers=self._headers,
-            params=self._params
+            params=self._params,
+            data=self._body
         )
 
         if self._return_body:
