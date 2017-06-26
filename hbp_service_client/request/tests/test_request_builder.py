@@ -244,3 +244,39 @@ class TestRequestBuilder(unittest.TestCase):
             httpretty.last_request().body,
             equal_to('some content')
         )
+
+    def test_should_set_the_body_of_the_request_with_provided_json(self):
+        # given
+        httpretty.register_uri(
+            httpretty.POST, 'http://a.url'
+        )
+
+        # when
+        response = self.request \
+            .to('http://a.url') \
+            .with_json_body({'a-key': 'its value', 'another-key': {'some-key': 'some value'}}) \
+            .post()
+
+        # then
+        assert_that(
+            httpretty.last_request().body,
+            equal_to('{"another-key": {"some-key": "some value"}, "a-key": "its value"}')
+        )
+
+    def test_should_set_the_content_type_when_sending_json(self):
+        # given
+        httpretty.register_uri(
+            httpretty.POST, 'http://a.url'
+        )
+
+        # when
+        response = self.request \
+            .to('http://a.url') \
+            .with_json_body({'a-key': 'its value'}) \
+            .post()
+
+        # then
+        assert_that(
+            httpretty.last_request().headers,
+            has_entries({'Content-Type': 'application/json'})
+        )
