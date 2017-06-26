@@ -4,7 +4,7 @@ from hbp_service_client.document_service.service_locator import ServiceLocator
 class RequestBuilder(object):
     '''A builder to create requests'''
 
-    def __init__(self, service_locator=None, url=None, service_url=None, endpoint=None, headers={}, return_body=False, params={}, body=None):
+    def __init__(self, service_locator=None, url=None, service_url=None, endpoint=None, headers={}, return_body=False, params={}, body=None, json_body=None):
         '''
         Args:
            service_locator: collaborator which gets the collab services urls
@@ -16,6 +16,7 @@ class RequestBuilder(object):
            return_body: True if the body of the response should be returned, False if the response should be returned
            params: params to add to the request as key/value pairs
            body: the body of the request
+           json_body: the body of the request as a json object
         '''
         self._service_locator = service_locator
         self._url = url
@@ -25,6 +26,7 @@ class RequestBuilder(object):
         self._return_body = return_body
         self._params = params
         self._body = body
+        self._json_body = json_body
 
     @classmethod
     def request(cls, environment='prod'):
@@ -48,7 +50,8 @@ class RequestBuilder(object):
             'headers'         : self._headers,
             'return_body'     : self._return_body,
             'params'          : self._params,
-            'body'            : self._body
+            'body'            : self._body,
+            'json_body'       : self._json_body
         }
         params[attribute] = value
         return RequestBuilder(**params)
@@ -82,6 +85,9 @@ class RequestBuilder(object):
     def with_body(self, body):
         return self._copy_and_set('body', body)
 
+    def with_json_body(self, json_body):
+        return self._copy_and_set('json_body', json_body)
+
     def get(self):
         return self._send('GET')
 
@@ -101,7 +107,8 @@ class RequestBuilder(object):
             url,
             headers=self._headers,
             params=self._params,
-            data=self._body
+            data=self._body,
+            json=self._json_body
         )
 
         if self._return_body:
