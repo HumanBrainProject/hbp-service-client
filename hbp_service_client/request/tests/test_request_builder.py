@@ -226,3 +226,21 @@ class TestRequestBuilder(unittest.TestCase):
             httpretty.last_request().querystring,
             has_entries(another_one=['another value'])
         )
+
+    def test_should_set_the_body_of_the_request(self):
+        # given
+        httpretty.register_uri(
+            httpretty.POST, 'http://a.url'
+        )
+
+        # when
+        response = self.request \
+            .to('http://a.url') \
+            .with_body('some content') \
+            .post()
+
+        # then
+        assert_that(
+            httpretty.last_request().body,
+            equal_to('some content')
+        )
