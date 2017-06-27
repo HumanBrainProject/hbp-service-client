@@ -5,6 +5,7 @@ from os.path import join as joinp
 import json
 from validators import uuid as is_valid_uuid
 from hbp_service_client.document_service.requestor import Requestor
+from hbp_service_client.request.request_builder import RequestBuilder
 from hbp_service_client.document_service.exceptions import (
     DocException, DocArgumentException)
 
@@ -31,12 +32,13 @@ class Client(object):
     SERVICE_NAME = 'document'
     SERVICE_VERSION = 'v1'
 
-    def __init__(self, requestor):
+    def __init__(self, requestor, request=None):
         '''
         Args:
            requestor: the requestor to send the requests with
         '''
         self._requestor = requestor
+        self._request = request
 
     @classmethod
     def new(cls, access_token, environment='prod'):
@@ -51,8 +53,12 @@ class Client(object):
                 A document_service.Client instance
 
         '''
+        request = RequestBuilder \
+            .request(environment) \
+            .to_service(cls.SERVICE_NAME, cls.SERVICE_VERSION) \
+            .with_token(access_token)
         requestor = Requestor.new(cls.SERVICE_NAME, cls.SERVICE_VERSION, access_token, environment)
-        return cls(requestor)
+        return cls(requestor, request=request)
 
     @staticmethod
     def _prep_params(params):
@@ -90,9 +96,10 @@ class Client(object):
         if not is_valid_uuid(entity_id):
             raise DocArgumentException(
                 'Invalid UUID for entity_id: {0}'.format(entity_id))
-
-        return self._requestor.send_and_return_body(
-            'GET', joinp('entity', entity_id))
+        return self._request \
+            .to_endpoint(joinp('entity', entity_id)) \
+            .return_body() \
+            .get()
 
     def get_entity_path(self, entity_id):
         '''Retrieve entity path.
@@ -115,8 +122,10 @@ class Client(object):
             raise DocArgumentException(
                 'Invalid UUID for entity_id: {0}'.format(entity_id))
 
-        return self._requestor.send_and_return_body(
-            'GET', joinp('entity', entity_id, 'path'))["path"]
+        return self._request \
+            .to_endpoint(joinp('entity', entity_id, 'path')) \
+            .return_body() \
+            .get()["path"]
 
     def get_entity_collab_id(self, entity_id):
         '''Retrieve entity Collab ID.
@@ -137,8 +146,10 @@ class Client(object):
             raise DocArgumentException(
                 'Invalid UUID for entity_id: {0}'.format(entity_id))
 
-        return self._requestor.send_and_return_body(
-            'GET', joinp('entity', entity_id, 'collab'))["collab_id"]
+        return self._request \
+            .to_endpoint(joinp('entity', entity_id, 'collab')) \
+            .return_body() \
+            .get()["collab_id"]
 
     def get_entity_by_query(self, uuid=None, path=None, metadata=None):
         '''Retrieve entity by query param which can be either uuid/path/metadata.
@@ -186,8 +197,11 @@ class Client(object):
             del params['metadata']
         params = self._prep_params(params)
 
-        return self._requestor.send_and_return_body(
-            'GET', 'entity', params=params)
+        return self._request \
+            .to_endpoint('entity') \
+            .with_params(params) \
+            .return_body() \
+            .get()
 
     #
     # Generic metadata
@@ -227,10 +241,11 @@ class Client(object):
             raise DocArgumentException('The metadata was not provided as a '
                                        'dictionary')
 
-        return self._requestor.send_and_return_body(
-            'POST', joinp(entity_type, entity_id, 'metadata'),
-            data=json.dumps(metadata),
-            headers={'Content-Type': 'application/json'})
+        return self._request \
+            .to_endpoint(joinp(entity_type, entity_id, 'metadata')) \
+            .with_json_body(metadata) \
+            .return_body() \
+            .post()
 
     def get_metadata(self, entity_type, entity_id):
         '''Get metadata of an entity.
@@ -258,8 +273,10 @@ class Client(object):
             raise DocArgumentException(
                 'Invalid UUID for entity_id: {0}'.format(entity_id))
 
-        return self._requestor.send_and_return_body(
-            'GET', joinp(entity_type, entity_id, 'metadata'))
+        return self._request \
+            .to_endpoint(joinp(entity_type, entity_id, 'metadata')) \
+            .return_body() \
+            .get()
 
     def update_metadata(self, entity_type, entity_id, metadata):
         '''Update the metadata of an entity.
@@ -294,10 +311,11 @@ class Client(object):
             raise DocArgumentException('The metadata was not provided as a '
                                        'dictionary')
 
-        return self._requestor.send_and_return_body(
-            'PUT', joinp(entity_type, entity_id, 'metadata'),
-            data=json.dumps(metadata),
-            headers={'Content-Type': 'application/json'})
+        return self._request \
+            .to_endpoint(joinp(entity_type, entity_id, 'metadata')) \
+            .with_json_body(metadata) \
+            .return_body() \
+            .put()
 
     def delete_metadata(self, entity_type, entity_id, metadata_keys):
         '''Delete the selected metadata entries of an entity.
@@ -331,11 +349,11 @@ class Client(object):
             raise DocArgumentException('The metadata was not provided as a '
                                        'dictionary')
 
-        payload = {'keys': metadata_keys}
-        return self._requestor.send_and_return_body(
-            'DELETE', joinp(entity_type, entity_id, 'metadata'),
-            data=json.dumps(payload),
-            headers={'Content-Type': 'application/json'})
+        return self._request \
+            .to_endpoint(joinp(entity_type, entity_id, 'metadata')) \
+            .with_json_body({'keys': metadata_keys}) \
+            .return_body() \
+            .delete()
 
     #
     # Project endpoint
@@ -387,10 +405,11 @@ class Client(object):
             DocNotFoundException: Server response code 404
             DocException: other 400-600 error codes
         '''
-
-        params = self._prep_params(locals())
-
-        return self._requestor.send_and_return_body('GET', 'project', params=params)
+        return self._request \
+            .to_endpoint('project') \
+            .with_params(self._prep_params(locals())) \
+            .return_body() \
+            .get()
 
     def get_project_details(self, project_id):
         '''Get information on a given project
@@ -422,7 +441,10 @@ class Client(object):
             raise DocArgumentException(
                 'Invalid UUID for project_id: {0}'.format(project_id))
 
-        return self._requestor.send_and_return_body('GET', joinp('project', project_id))
+        return self._request \
+            .to_endpoint(joinp('project', project_id)) \
+            .return_body() \
+            .get()
 
     def list_project_content(self, project_id, name=None, entity_type=None,
                              content_type=None, page_size=DEFAULT_PAGE_SIZE,
@@ -476,8 +498,11 @@ class Client(object):
                 'Invalid UUID for project_id: {0}'.format(project_id))
         params = self._prep_params(locals())
         del params['project_id'] # not a query parameter
-        return self._requestor.send_and_return_body(
-            'GET', joinp('project', project_id, 'children'), params=params)
+        return self._request \
+            .to_endpoint(joinp('project', project_id, 'children')) \
+            .with_params(params) \
+            .return_body() \
+            .get()
 
     #
     # Folder endpoint
@@ -515,10 +540,12 @@ class Client(object):
         if not is_valid_uuid(parent):
             raise DocArgumentException(
                 'Invalid UUID for parent: {0}'.format(parent))
-        payload = self._prep_params(locals())
-        return self._requestor.send_and_return_body(
-            'POST', 'folder', data=json.dumps(payload),
-            headers={'Content-Type': 'application/json'})
+
+        return self._request \
+            .to_endpoint('folder') \
+            .with_json_body(self._prep_params(locals())) \
+            .return_body() \
+            .post()
 
     def get_folder_details(self, folder):
         '''Get information on a given folder.
@@ -550,7 +577,10 @@ class Client(object):
         if not is_valid_uuid(folder):
             raise DocArgumentException(
                 'Invalid UUID for folder: {0}'.format(folder))
-        return self._requestor.send_and_return_body('GET', joinp('folder', folder))
+        return self._request \
+            .to_endpoint(joinp('folder', folder)) \
+            .return_body() \
+            .get()
 
     def list_folder_content(self, folder, name=None, entity_type=None,
                             content_type=None, page_size=DEFAULT_PAGE_SIZE,
@@ -604,8 +634,11 @@ class Client(object):
                 'Invalid UUID for folder: {0}'.format(folder))
         params = self._prep_params(locals())
         del params['folder'] # not a query parameter
-        return self._requestor.send_and_return_body(
-            'GET', joinp('folder', folder, 'children'), params=params)
+        return self._request \
+            .to_endpoint(joinp('folder', folder, 'children')) \
+            .with_params(params) \
+            .return_body() \
+            .get()
 
     def delete_folder(self, folder):
         '''Delete a folder. It will recursively delete all the content.
@@ -625,7 +658,9 @@ class Client(object):
         if not is_valid_uuid(folder):
             raise DocArgumentException(
                 'Invalid UUID for folder: {0}'.format(folder))
-        self._requestor.send_and_return_body('DELETE', joinp('folder', folder))
+        self._request \
+            .to_endpoint(joinp('folder', folder)) \
+            .delete()
 
     #
     # File endpoint
@@ -665,11 +700,11 @@ class Client(object):
         if not is_valid_uuid(parent):
             raise DocArgumentException(
                 'Invalid UUID for parent: {0}'.format(parent))
-        payload = self._prep_params(locals())
-        return self._requestor.send_and_return_body(
-            'POST', 'file', data=json.dumps(payload),
-            headers={'Content-Type': 'application/json'}
-            )
+        return self._request \
+            .to_endpoint('file') \
+            .with_json_body(self._prep_params(locals())) \
+            .return_body() \
+            .post()
 
     def get_file_details(self, file_id):
         '''Get information on a given file.
@@ -702,7 +737,10 @@ class Client(object):
         if not is_valid_uuid(file_id):
             raise DocArgumentException(
                 'Invalid UUID for file_id: {0}'.format(file_id))
-        return self._requestor.send_and_return_body('GET', joinp('file', file_id))
+        return self._request \
+            .to_endpoint(joinp('file', file_id)) \
+            .return_body() \
+            .get()
 
     def upload_file_content(self, file_id, etag=None, source=None, content=None):
         '''Upload a file content. The file entity must already exist.
@@ -739,18 +777,20 @@ class Client(object):
         if not is_valid_uuid(file_id):
             raise DocArgumentException(
                 'Invalid UUID for file_id: {0}'.format(file_id))
+
         if not (source or content) or (source and content):
             raise DocArgumentException('Either one of source file or content has to be provided.')
-        endpoint = joinp('file', file_id, 'content', 'upload')
-        data = content or open(source, 'rb')
-        headers = {}
-        if etag:
-            headers = {'If-Match': etag}
-        resp = self._requestor.send("POST", endpoint, data=data, headers=headers)
-        if 'ETag' in resp.headers:
-            return resp.headers['ETag']
-        else:
+
+        resp = self._request \
+            .to_endpoint(joinp('file', file_id, 'content', 'upload')) \
+            .with_body(content or open(source, 'rb')) \
+            .with_headers({'If-Match': etag} if etag else {}) \
+            .post()
+
+        if 'ETag' not in resp.headers:
             raise DocException('No ETag received from the service after the upload')
+
+        return resp.headers['ETag']
 
     def copy_file_content(self, file_id, source_file):
         '''Copy file content from source file to target file.
@@ -771,12 +811,15 @@ class Client(object):
         if not is_valid_uuid(file_id):
             raise DocArgumentException(
                 'Invalid UUID for file_id: {0}'.format(file_id))
+
         if not is_valid_uuid(source_file):
             raise DocArgumentException(
                 'Invalid UUID for source_file: {0}'.format(source_file))
-        self._requestor.send_and_return_body(
-            "PUT", joinp('file', file_id, 'content'),
-            headers={'X-Copy-From': source_file})
+
+        self._request \
+            .to_endpoint(joinp('file', file_id, 'content')) \
+            .with_headers({'X-Copy-From': source_file}) \
+            .put()
 
     def download_file_content(self, file_id, etag=None):
         '''Download file content.
@@ -809,19 +852,23 @@ class Client(object):
         if not is_valid_uuid(file_id):
             raise DocArgumentException(
                 'Invalid UUID for file_id: {0}'.format(file_id))
+
         headers = {'Accept': '*/*'}
         if etag:
             headers['If-None-Match'] = etag
 
-        resp = self._requestor.send(
-            "GET", joinp('file', file_id, 'content'), headers=headers)
+        resp = self._request \
+            .to_endpoint(joinp('file', file_id, 'content')) \
+            .with_headers(headers) \
+            .get()
+
         if resp.status_code == 304:
             return (None, None)
-        if 'ETag' in resp.headers:
-            etag = resp.headers['ETag']
-        else:
+
+        if 'ETag' not in resp.headers:
             raise DocException('No ETag received from the service with the download')
-        return (etag, resp.content)
+
+        return (resp.headers['ETag'], resp.content)
 
     def get_signed_url(self, file_id):
         '''Get a signed unauthenticated URL.
@@ -844,9 +891,11 @@ class Client(object):
         if not is_valid_uuid(file_id):
             raise DocArgumentException(
                 'Invalid UUID for file_id: {0}'.format(file_id))
-        return self._requestor.send_and_return_body(
-            "GET",
-            joinp('file', file_id, 'content', 'secure_link'))['signed_url']
+
+        return self._request \
+            .to_endpoint(joinp('file', file_id, 'content', 'secure_link')) \
+            .return_body() \
+            .get()['signed_url']
 
     def delete_file(self, file_id):
         '''Delete a file.
@@ -866,4 +915,7 @@ class Client(object):
         if not is_valid_uuid(file_id):
             raise DocArgumentException(
                 'Invalid UUID for file_id: {0}'.format(file_id))
-        self._requestor.send_and_return_body('DELETE', joinp('file', file_id))
+
+        self._request \
+            .to_endpoint(joinp('file', file_id)) \
+            .delete()
