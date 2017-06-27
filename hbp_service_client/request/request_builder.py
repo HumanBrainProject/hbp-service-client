@@ -4,7 +4,7 @@ from hbp_service_client.document_service.service_locator import ServiceLocator
 class RequestBuilder(object):
     '''A builder to create requests'''
 
-    def __init__(self, service_locator=None, url=None, service_url=None, endpoint=None, headers={}, return_body=False, params={}, body=None, json_body=None):
+    def __init__(self, service_locator=None, url=None, service_url=None, endpoint=None, headers={}, return_body=False, params={}, body=None, json_body=None, stream=False):
         '''
         Args:
            service_locator: collaborator which gets the collab services urls
@@ -17,6 +17,7 @@ class RequestBuilder(object):
            params: params to add to the request as key/value pairs
            body: the body of the request
            json_body: the body of the request as a json object
+           stream: stream the response if True
         '''
         self._service_locator = service_locator
         self._url = url
@@ -27,13 +28,14 @@ class RequestBuilder(object):
         self._params = params
         self._body = body
         self._json_body = json_body
+        self._stream = stream
 
     @classmethod
     def request(cls, environment='prod'):
         '''Create new request builder
 
             Arguments:
-                environment: The service environment to be used for the requestor
+                environment: The service environment to be used for the request
 
             Returns:
                 A request builder instance
@@ -51,7 +53,8 @@ class RequestBuilder(object):
             'return_body'     : self._return_body,
             'params'          : self._params,
             'body'            : self._body,
-            'json_body'       : self._json_body
+            'json_body'       : self._json_body,
+            'stream'          : self._stream
         }
         params[attribute] = value
         return RequestBuilder(**params)
@@ -88,6 +91,9 @@ class RequestBuilder(object):
     def with_json_body(self, json_body):
         return self._copy_and_set('json_body', json_body)
 
+    def stream_response(self):
+        return self._copy_and_set('stream', True)
+
     def get(self):
         return self._send('GET')
 
@@ -108,7 +114,8 @@ class RequestBuilder(object):
             headers=self._headers,
             params=self._params,
             data=self._body,
-            json=self._json_body
+            json=self._json_body,
+            stream=self._stream
         )
 
         if self._return_body:
