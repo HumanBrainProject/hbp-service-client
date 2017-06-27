@@ -4,7 +4,6 @@ import logging
 from os.path import join as joinp
 import json
 from validators import uuid as is_valid_uuid
-from hbp_service_client.document_service.requestor import Requestor
 from hbp_service_client.request.request_builder import RequestBuilder
 from hbp_service_client.document_service.exceptions import (
     DocException, DocArgumentException)
@@ -32,12 +31,11 @@ class Client(object):
     SERVICE_NAME = 'document'
     SERVICE_VERSION = 'v1'
 
-    def __init__(self, requestor, request=None):
+    def __init__(self, request):
         '''
         Args:
-           requestor: the requestor to send the requests with
+           request: the base request to customize and send request with
         '''
-        self._requestor = requestor
         self._request = request
 
     @classmethod
@@ -57,8 +55,8 @@ class Client(object):
             .request(environment) \
             .to_service(cls.SERVICE_NAME, cls.SERVICE_VERSION) \
             .with_token(access_token)
-        requestor = Requestor.new(cls.SERVICE_NAME, cls.SERVICE_VERSION, access_token, environment)
-        return cls(requestor, request=request)
+
+        return cls(request)
 
     @staticmethod
     def _prep_params(params):
