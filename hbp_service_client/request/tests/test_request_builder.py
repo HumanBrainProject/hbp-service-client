@@ -280,3 +280,21 @@ class TestRequestBuilder(unittest.TestCase):
             httpretty.last_request().headers,
             has_entries({'Content-Type': 'application/json'})
         )
+
+    def test_should_stream_the_response(self):
+        # given
+        httpretty.register_uri(
+            httpretty.GET, 'http://a.url',
+            body='#'*30
+        )
+
+        # when
+        with self.request.to('http://a.url').stream_response().get() as response:
+
+            # then
+            content = ''
+            for chunk in response.iter_content(chunk_size=10):
+                assert_that(chunk, equal_to('#'*10))
+                content += chunk
+
+            assert_that(content, equal_to('#'*30))
