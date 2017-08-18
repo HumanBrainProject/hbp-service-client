@@ -155,7 +155,7 @@ class TestStorageClient(unittest.TestCase):
         # then
         mock_open.assert_called_once_with('target.file', 'wb')
         file_handle = mock_open.return_value.__enter__.return_value
-        file_handle.write.assert_called_once_with('some content')
+        file_handle.write.assert_called_once_with(b'some content')
 
 
     @mock.patch('hbp_service_client.document_service.highlevel.open', create=True)
