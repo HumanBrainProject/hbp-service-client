@@ -88,10 +88,11 @@ class StorageClient(Client):
 
     def exists(self, path):
         try:
-            metadata = self.get_entity_by_query(path=path)
-            return metadata and 'uuid' in metadata
+            metadata = self._client.get_entity_by_query(path=path)
         except DocNotFoundException:
             return False
+
+        return metadata and 'uuid' in metadata
 
     def get_parent(self, path):
         path_steps = path.split('/')

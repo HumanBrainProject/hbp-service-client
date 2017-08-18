@@ -180,3 +180,45 @@ class TestStorageClient(unittest.TestCase):
         # then
         file_handle = mock_open.return_value.__enter__.return_value
         file_handle.write.assert_called_twice_with('#'*1024)
+
+
+    def test_exists_should_return_False_if_entity_does_not_exist(self):
+        # given
+        httpretty.register_uri(
+            httpretty.GET, 'https://document/service/entity/?path=path-to-nothing',
+            status=404
+        )
+
+        # when
+        exists = self.client.exists('path-to-nothing')
+
+        # then
+        assert_that(exists, equal_to(False))
+
+
+    def test_exists_should_return_False_if_entity_has_no_uuid(self):
+        # given
+        self.register_uri(
+            'https://document/service/entity/?path=path-to-no-uuid',
+            returns={'entity_type': 'file'}
+        )
+
+        # when
+        exists = self.client.exists('path-to-no-uuid')
+
+        # then
+        assert_that(exists, equal_to(False))
+
+
+    def test_exists_should_return_True_if_entity_exists(self):
+        # given
+        self.register_uri(
+            'https://document/service/entity/?path=path-to-entity',
+            returns={'entity_type': 'file', 'uuid': 'e2c25c1b-1234-4cf6-b8d2-271e628a9a56'}
+        )
+
+        # when
+        exists = self.client.exists('path-to-entity')
+
+        # then
+        assert_that(exists, equal_to(True))
