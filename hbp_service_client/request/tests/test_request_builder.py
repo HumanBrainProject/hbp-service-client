@@ -245,7 +245,7 @@ class TestRequestBuilder(unittest.TestCase):
         # then
         assert_that(
             httpretty.last_request().body,
-            equal_to('some content')
+            equal_to(b'some content')
         )
 
     def test_should_set_the_body_of_the_request_with_provided_json(self):
@@ -263,7 +263,7 @@ class TestRequestBuilder(unittest.TestCase):
         # then
         assert_that(
             httpretty.last_request().body,
-            equal_to('{"another-key": {"some-key": "some value"}, "a-key": "its value"}')
+            equal_to(b'{"a-key": "its value", "another-key": {"some-key": "some value"}}')
         )
 
     def test_should_set_the_content_type_when_sending_json(self):
@@ -295,12 +295,12 @@ class TestRequestBuilder(unittest.TestCase):
         with self.request.to('http://a.url').stream_response().get() as response:
 
             # then
-            content = ''
+            content = b''
             for chunk in response.iter_content(chunk_size=10):
-                assert_that(chunk, equal_to('#'*10))
+                assert_that(chunk, equal_to(b'#'*10))
                 content += chunk
 
-            assert_that(content, equal_to('#'*30))
+            assert_that(content, equal_to(b'#'*30))
 
     def test_should_handle_joining_slash_between_service_and_endpoint(self):
         # given
