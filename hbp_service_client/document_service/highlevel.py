@@ -80,7 +80,6 @@ class StorageClient(Client):
         assert entity['entity_type'] == 'file'
 
         signed_url = self._client.get_signed_url(entity['uuid'])
-
         response = self._client.download_signed_url(signed_url)
 
         with open(target_path, "wb") as output:
@@ -129,17 +128,14 @@ class StorageClient(Client):
         path_steps = dest_path.split('/')
         new_file_name = path_steps.pop()
         parent_path = "/".join(path_steps)
-        print 'uploading to parent dir:' + parent_path
         parent_metadata = self.get_entity_by_query(path=parent_path)
         #create the file container
         file_details = self.create_file(new_file_name, content_type=mimetype, parent=parent_metadata['uuid'])
-        print 'file_details:' + str(file_details)
         etag = self.upload_file_content(file_details['uuid'], source = local_file)
 
         #NOTE: This should be done inside the upload_file_content itself with a single file read
         if md5check:
             md5_local = self.md5_for_file(local_file, hr=True)
-            print 'tags: ' + str(etag) + '?=' + str(md5_local)
             if etag != '"' + md5_local + '"':
                 raise DocException('md5 response of server doesn\'t match local file: ' + local_file)
         return (file_details['uuid'],etag)
