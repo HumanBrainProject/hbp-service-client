@@ -64,10 +64,16 @@ class RequestBuilder(object):
 
     def to_service(self, service, version):
         service_url = self._service_locator.get_service_url(service, version)
-        return self._copy_and_set('service_url', service_url)
+        return self._copy_and_set('service_url', self._strip_trailing_slashes(service_url))
 
     def to_endpoint(self, endpoint):
-        return self._copy_and_set('endpoint', endpoint)
+        return self._copy_and_set('endpoint', self._strip_leading_slashes(endpoint))
+
+    def _strip_leading_slashes(self, text):
+        return self._strip_leading_slashes(text[1:]) if text.startswith('/') else text
+
+    def _strip_trailing_slashes(self, text):
+        return self._strip_trailing_slashes(text[:-1]) if text.endswith('/') else text
 
     def with_headers(self, headers):
         copy = headers.copy()
@@ -107,7 +113,7 @@ class RequestBuilder(object):
         return self._send('PUT')
 
     def _send(self, method):
-        url = self._url if self._url else '{}/{}/'.format(self._service_url, self._endpoint)
+        url = self._url if self._url else '{}/{}'.format(self._service_url, self._endpoint)
         response = requests.request(
             method,
             url,

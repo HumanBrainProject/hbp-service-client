@@ -1,7 +1,6 @@
 '''Python wrapper for the HBP Document Service low-level REST API'''
 
 import logging
-from os.path import join as joinp
 import json
 from validators import uuid as is_valid_uuid
 from hbp_service_client.request.request_builder import RequestBuilder
@@ -95,7 +94,7 @@ class Client(object):
             raise DocArgumentException(
                 'Invalid UUID for entity_id: {0}'.format(entity_id))
         return self._request \
-            .to_endpoint(joinp('entity', entity_id)) \
+            .to_endpoint('entity/{}/'.format(entity_id)) \
             .return_body() \
             .get()
 
@@ -121,7 +120,7 @@ class Client(object):
                 'Invalid UUID for entity_id: {0}'.format(entity_id))
 
         return self._request \
-            .to_endpoint(joinp('entity', entity_id, 'path')) \
+            .to_endpoint('entity/{}/path/'.format(entity_id)) \
             .return_body() \
             .get()["path"]
 
@@ -145,7 +144,7 @@ class Client(object):
                 'Invalid UUID for entity_id: {0}'.format(entity_id))
 
         return self._request \
-            .to_endpoint(joinp('entity', entity_id, 'collab')) \
+            .to_endpoint('entity/{}/collab/'.format(entity_id)) \
             .return_body() \
             .get()["collab_id"]
 
@@ -196,7 +195,7 @@ class Client(object):
         params = self._prep_params(params)
 
         return self._request \
-            .to_endpoint('entity') \
+            .to_endpoint('entity/') \
             .with_params(params) \
             .return_body() \
             .get()
@@ -240,7 +239,7 @@ class Client(object):
                                        'dictionary')
 
         return self._request \
-            .to_endpoint(joinp(entity_type, entity_id, 'metadata')) \
+            .to_endpoint('{}/{}/metadata/'.format(entity_type, entity_id)) \
             .with_json_body(metadata) \
             .return_body() \
             .post()
@@ -272,7 +271,7 @@ class Client(object):
                 'Invalid UUID for entity_id: {0}'.format(entity_id))
 
         return self._request \
-            .to_endpoint(joinp(entity_type, entity_id, 'metadata')) \
+            .to_endpoint('{}/{}/metadata/'.format(entity_type, entity_id)) \
             .return_body() \
             .get()
 
@@ -310,7 +309,7 @@ class Client(object):
                                        'dictionary')
 
         return self._request \
-            .to_endpoint(joinp(entity_type, entity_id, 'metadata')) \
+            .to_endpoint('{}/{}/metadata/'.format(entity_type, entity_id)) \
             .with_json_body(metadata) \
             .return_body() \
             .put()
@@ -348,7 +347,7 @@ class Client(object):
                                        'dictionary')
 
         return self._request \
-            .to_endpoint(joinp(entity_type, entity_id, 'metadata')) \
+            .to_endpoint('{}/{}/metadata/'.format(entity_type, entity_id)) \
             .with_json_body({'keys': metadata_keys}) \
             .return_body() \
             .delete()
@@ -404,7 +403,7 @@ class Client(object):
             DocException: other 400-600 error codes
         '''
         return self._request \
-            .to_endpoint('project') \
+            .to_endpoint('project/') \
             .with_params(self._prep_params(locals())) \
             .return_body() \
             .get()
@@ -440,7 +439,7 @@ class Client(object):
                 'Invalid UUID for project_id: {0}'.format(project_id))
 
         return self._request \
-            .to_endpoint(joinp('project', project_id)) \
+            .to_endpoint('project/{}/'.format(project_id)) \
             .return_body() \
             .get()
 
@@ -497,7 +496,7 @@ class Client(object):
         params = self._prep_params(locals())
         del params['project_id'] # not a query parameter
         return self._request \
-            .to_endpoint(joinp('project', project_id, 'children')) \
+            .to_endpoint('project/{}/children/'.format(project_id)) \
             .with_params(params) \
             .return_body() \
             .get()
@@ -540,7 +539,7 @@ class Client(object):
                 'Invalid UUID for parent: {0}'.format(parent))
 
         return self._request \
-            .to_endpoint('folder') \
+            .to_endpoint('folder/') \
             .with_json_body(self._prep_params(locals())) \
             .return_body() \
             .post()
@@ -576,7 +575,7 @@ class Client(object):
             raise DocArgumentException(
                 'Invalid UUID for folder: {0}'.format(folder))
         return self._request \
-            .to_endpoint(joinp('folder', folder)) \
+            .to_endpoint('folder/{}/'.format(folder)) \
             .return_body() \
             .get()
 
@@ -633,7 +632,7 @@ class Client(object):
         params = self._prep_params(locals())
         del params['folder'] # not a query parameter
         return self._request \
-            .to_endpoint(joinp('folder', folder, 'children')) \
+            .to_endpoint('folder/{}/children/'.format(folder)) \
             .with_params(params) \
             .return_body() \
             .get()
@@ -657,7 +656,7 @@ class Client(object):
             raise DocArgumentException(
                 'Invalid UUID for folder: {0}'.format(folder))
         self._request \
-            .to_endpoint(joinp('folder', folder)) \
+            .to_endpoint('folder/{}/'.format(folder)) \
             .delete()
 
     #
@@ -699,7 +698,7 @@ class Client(object):
             raise DocArgumentException(
                 'Invalid UUID for parent: {0}'.format(parent))
         return self._request \
-            .to_endpoint('file') \
+            .to_endpoint('file/') \
             .with_json_body(self._prep_params(locals())) \
             .return_body() \
             .post()
@@ -736,7 +735,7 @@ class Client(object):
             raise DocArgumentException(
                 'Invalid UUID for file_id: {0}'.format(file_id))
         return self._request \
-            .to_endpoint(joinp('file', file_id)) \
+            .to_endpoint('file/{}/'.format(file_id)) \
             .return_body() \
             .get()
 
@@ -780,7 +779,7 @@ class Client(object):
             raise DocArgumentException('Either one of source file or content has to be provided.')
 
         resp = self._request \
-            .to_endpoint(joinp('file', file_id, 'content', 'upload')) \
+            .to_endpoint('file/{}/content/upload/'.format(file_id)) \
             .with_body(content or open(source, 'rb')) \
             .with_headers({'If-Match': etag} if etag else {}) \
             .post()
@@ -815,7 +814,7 @@ class Client(object):
                 'Invalid UUID for source_file: {0}'.format(source_file))
 
         self._request \
-            .to_endpoint(joinp('file', file_id, 'content')) \
+            .to_endpoint('file/{}/content/'.format(file_id)) \
             .with_headers({'X-Copy-From': source_file}) \
             .put()
 
@@ -856,7 +855,7 @@ class Client(object):
             headers['If-None-Match'] = etag
 
         resp = self._request \
-            .to_endpoint(joinp('file', file_id, 'content')) \
+            .to_endpoint('file/{}/content/'.format(file_id)) \
             .with_headers(headers) \
             .get()
 
@@ -891,7 +890,7 @@ class Client(object):
                 'Invalid UUID for file_id: {0}'.format(file_id))
 
         return self._request \
-            .to_endpoint(joinp('file', file_id, 'content', 'secure_link')) \
+            .to_endpoint('file/{}/content/secure_link/'.format(file_id)) \
             .return_body() \
             .get()['signed_url']
 
@@ -915,5 +914,11 @@ class Client(object):
                 'Invalid UUID for file_id: {0}'.format(file_id))
 
         self._request \
-            .to_endpoint(joinp('file', file_id)) \
+            .to_endpoint('file/{}/'.format(file_id)) \
             .delete()
+
+    def download_signed_url(self, signed_url):
+        return self._request \
+            .to_endpoint(signed_url) \
+            .stream_response() \
+            .get()

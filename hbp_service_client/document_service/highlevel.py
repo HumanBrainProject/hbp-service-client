@@ -76,11 +76,12 @@ class StorageClient(Client):
         return file_names
 
     def download_file(self, path, target_path):
-        entity = self.get_entity_by_query(path=path)
+        entity = self._client.get_entity_by_query(path=path)
         assert entity['entity_type'] == 'file'
 
-        signed_url = self.get_signed_url(entity['uuid'])
-        response = requests.get('https://document/service' + signed_url, stream=True)
+        signed_url = self._client.get_signed_url(entity['uuid'])
+
+        response = self._client.download_signed_url(signed_url)
 
         with open(target_path, "wb") as output:
             for chunk in response.iter_content(chunk_size=1024):

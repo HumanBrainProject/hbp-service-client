@@ -13,7 +13,10 @@ class TestRequestBuilder(unittest.TestCase):
         # Fakes the service locator call to the services.json file
         httpretty.register_uri(
             httpretty.GET, 'https://collab.humanbrainproject.eu/services.json',
-            body=json.dumps({ 'my_service': {'v3': 'https://my/service/v3'} })
+            body=json.dumps({ 'my_service': {
+                'v3': 'https://my/service/v3',
+                'with_trailing_slash': 'https://my/service/v3/'
+            } })
         )
         self.request = RequestBuilder.request()
 
@@ -44,7 +47,7 @@ class TestRequestBuilder(unittest.TestCase):
         # when
         response = self.request \
             .to_service('my_service', 'v3') \
-            .to_endpoint('to/endpoint') \
+            .to_endpoint('to/endpoint/') \
             .get()
 
         # then
@@ -298,3 +301,40 @@ class TestRequestBuilder(unittest.TestCase):
                 content += chunk
 
             assert_that(content, equal_to('#'*30))
+
+    def test_should_handle_joining_slash_between_service_and_endpoint(self):
+        # given
+        httpretty.register_uri(
+            httpretty.GET, 'https://my/service/v3/to/endpoint/',
+            body='the endpoint response'
+        )
+
+        # when
+        # service with NO trailing slash, endpoint with leading slash
+        response = self.request \
+            .to_service('my_service', 'v3') \
+            .to_endpoint('/to/endpoint/') \
+            .get()
+
+        # then
+        assert_that(response.text, equal_to('the endpoint response'))
+
+        # when
+        # service with trailing slash, endpoint with NO leading slash
+        response = self.request \
+            .to_service('my_service', 'with_trailing_slash') \
+            .to_endpoint('to/endpoint/') \
+            .get()
+
+        # then
+        assert_that(response.text, equal_to('the endpoint response'))
+
+        # when
+        # service with trailing slash, endpoint with leading slash
+        response = self.request \
+            .to_service('my_service', 'with_trailing_slash') \
+            .to_endpoint('/to/endpoint/') \
+            .get()
+
+        # then
+        assert_that(response.text, equal_to('the endpoint response'))
