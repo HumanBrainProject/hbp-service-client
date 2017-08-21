@@ -5,7 +5,8 @@ import json
 from validators import uuid as is_valid_uuid
 from hbp_service_client.request.request_builder import RequestBuilder
 from hbp_service_client.document_service.exceptions import (
-    DocException, DocArgumentException)
+    DocException, DocArgumentException, DocForbiddenException,
+    DocNotFoundException)
 
 L = logging.getLogger(__name__)
 
@@ -53,7 +54,25 @@ class Client(object):
         request = RequestBuilder \
             .request(environment) \
             .to_service(cls.SERVICE_NAME, cls.SERVICE_VERSION) \
-            .with_token(access_token)
+            .with_token(access_token) \
+            .throw(
+                DocForbiddenException,
+                lambda resp:
+                    'You are forbidden to do this.' if resp.status_code == 403
+                    else None
+            ) \
+            .throw(
+                DocNotFoundException,
+                lambda resp:
+                    'The entity is not found' if resp.status_code == 404
+                    else None
+            ) \
+            .throw(
+                DocException,
+                lambda resp:
+                    'Server response: {0} - {1}'.format(resp.status_code, resp.text) if not resp.ok
+                    else None
+            )
 
         return cls(request)
 

@@ -262,8 +262,8 @@ class TestRequestBuilder(unittest.TestCase):
 
         # then
         assert_that(
-            httpretty.last_request().body,
-            equal_to(b'{"a-key": "its value", "another-key": {"some-key": "some value"}}')
+            json.loads(httpretty.last_request().body.decode()),
+            equal_to({'a-key': 'its value', 'another-key': {'some-key': 'some value'}})
         )
 
     def test_should_set_the_content_type_when_sending_json(self):
@@ -338,3 +338,44 @@ class TestRequestBuilder(unittest.TestCase):
 
         # then
         assert_that(response.text, equal_to('the endpoint response'))
+
+    def test_should_throw_exception_if_test_returns_a_message(self):
+        # given
+        class NotFoundException(Exception):
+            pass
+
+        httpretty.register_uri(
+            httpretty.GET, 'http://some.url',
+            status=404
+        )
+
+        # when
+        try:
+            self.request \
+                .to('http://some.url') \
+                .throw(NotFoundException, lambda resp: 'Not found' if resp.status_code == 404 else None) \
+                .get()
+            self.fail('Exception has not been thrown')
+
+        # then
+        except NotFoundException as ex:
+            assert_that(ex.args[0], equal_to('Not found'))
+
+    def test_should_NOT_throw_exception_if_test_returns_None(self):
+        # given
+        class NotFoundException(Exception):
+            pass
+
+        httpretty.register_uri(
+            httpretty.GET, 'http://some.url',
+            status=200
+        )
+
+        # when
+        self.request \
+            .to('http://some.url') \
+            .throw(NotFoundException, lambda resp: 'Not found' if resp.status_code == 404 else None) \
+            .get()
+
+        # then
+        # no exception
