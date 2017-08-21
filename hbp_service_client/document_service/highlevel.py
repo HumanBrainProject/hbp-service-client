@@ -96,10 +96,9 @@ class StorageClient(Client):
 
     def get_parent(self, path):
         path_steps = path.split('/')
-        #extract the last element of the path, which we should be trying to create
         new_dir = path_steps.pop()
         parent_path = "/".join(path_steps)
-        return self.get_entity_by_query(path=path)
+        return self._client.get_entity_by_query(path=parent_path)
 
     def mkdir(self, path):
         parent_metadata = self.get_parent(path)
