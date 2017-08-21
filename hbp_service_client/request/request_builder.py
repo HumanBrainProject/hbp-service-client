@@ -4,7 +4,7 @@ from hbp_service_client.document_service.service_locator import ServiceLocator
 class RequestBuilder(object):
     '''A builder to create requests'''
 
-    def __init__(self, service_locator=None, url=None, service_url=None, endpoint=None, headers={}, return_body=False, params={}, body=None, json_body=None, stream=False):
+    def __init__(self, service_locator=None, url=None, service_url=None, endpoint=None, headers={}, return_body=False, params={}, body=None, json_body=None, stream=False, throws=[]):
         '''
         Args:
            service_locator: collaborator which gets the collab services urls
@@ -29,6 +29,7 @@ class RequestBuilder(object):
         self._body = body
         self._json_body = json_body
         self._stream = stream
+        self._throws = throws
 
     @classmethod
     def request(cls, environment='prod'):
@@ -54,7 +55,8 @@ class RequestBuilder(object):
             'params'          : self._params,
             'body'            : self._body,
             'json_body'       : self._json_body,
-            'stream'          : self._stream
+            'stream'          : self._stream,
+            'throws'          : self._throws
         }
         params[attribute] = value
         return RequestBuilder(**params)
@@ -100,6 +102,9 @@ class RequestBuilder(object):
     def stream_response(self):
         return self._copy_and_set('stream', True)
 
+    def throw(self, exception_class, should_throw):
+        return self._copy_and_set('throws', self._throws + [(exception_class, should_throw)])
+
     def get(self):
         return self._send('GET')
 
@@ -124,10 +129,18 @@ class RequestBuilder(object):
             stream=self._stream
         )
 
+        self._throw_if_necessary(response, self._throws)
+
         if self._return_body:
              return self._extract_body(response)
 
         return response
+
+    def _throw_if_necessary(self, response, throws):
+        for (exception_class, should_throw) in throws:
+            args = should_throw(response)
+            if args != None:
+                raise exception_class(args)
 
     def _extract_body(self, response):
         if response.headers.get('Content-Type', None) == 'application/json':
