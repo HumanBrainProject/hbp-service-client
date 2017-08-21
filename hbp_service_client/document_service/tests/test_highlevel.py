@@ -8,6 +8,7 @@ import mock
 from hamcrest import *
 
 from hbp_service_client.document_service.highlevel import StorageClient
+from hbp_service_client.document_service.exceptions import DocNotFoundException
 
 class TestStorageClient(unittest.TestCase):
     def setUp(self):
