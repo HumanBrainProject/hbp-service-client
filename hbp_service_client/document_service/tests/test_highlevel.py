@@ -1,5 +1,5 @@
 import unittest
-from mock import Mock
+from mock import Mock, call
 import httpretty
 import json
 import re
@@ -180,7 +180,7 @@ class TestStorageClient(unittest.TestCase):
 
         # then
         file_handle = mock_open.return_value.__enter__.return_value
-        file_handle.write.assert_called_twice_with('#'*1024)
+        file_handle.write.assert_has_calls([call(b'#'*1024), call(b'#'*1024)])
 
 
     def test_exists_should_return_False_if_entity_does_not_exist(self):
