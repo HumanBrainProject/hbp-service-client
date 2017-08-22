@@ -375,7 +375,7 @@ class TestClient(unittest.TestCase):
         some_json = {"a": "123456", "b": [2,3,4], "c": {"x":"y"}}
         httpretty.register_uri(
             httpretty.GET,
-            url('https://document/service/project/?ordering=name&name=foobar'),
+            'https://document/service/project/',
             body=json.dumps(some_json),
             content_type="application/json",
             match_querystring=True
@@ -390,7 +390,7 @@ class TestClient(unittest.TestCase):
         some_json = {"a": "123456", "b": [2,3,4], "c": {"x":"y"}}
         httpretty.register_uri(
             httpretty.GET,
-            url('https://document/service/project/?ordering=name&name=foobar'),
+            'https://document/service/project/',
             body=json.dumps(some_json),
             content_type="application/json",
             match_querystring=True
