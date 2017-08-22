@@ -183,6 +183,10 @@ class TestStorageClient(unittest.TestCase):
         file_handle.write.assert_has_calls([call(b'#'*1024), call(b'#'*1024)])
 
 
+    #
+    # exists
+    #
+
     def test_exists_should_return_False_if_entity_does_not_exist(self):
         # given
         httpretty.register_uri(
@@ -225,15 +229,33 @@ class TestStorageClient(unittest.TestCase):
         assert_that(exists, equal_to(True))
 
 
+    #
+    # get_parents
+    #
+
     def test_get_parent_should_throw_exception_if_parent_does_not_exist(self):
         # given
         httpretty.register_uri(
             httpretty.GET, 'https://document/service/entity/?path=path%2Fto%2Fparent',
             status=404
         )
-        # self.client.get_parent('path/to/parent/entity')
+
         # then
         assert_that(
             calling(self.client.get_parent).with_args('path/to/parent/entity'),
             raises(DocNotFoundException)
         )
+
+
+    def test_get_parent_should_return_the_parent(self):
+        # given
+        self.register_uri(
+            'https://document/service/entity/?path=path%2Fto%2Fparent',
+            returns='parent entity'
+        )
+
+        # when
+        parent = self.client.get_parent('path/to/parent/entity')
+
+        # then
+        assert_that(parent, equal_to('parent entity'))
