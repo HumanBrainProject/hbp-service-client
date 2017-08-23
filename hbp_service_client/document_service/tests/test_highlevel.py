@@ -234,7 +234,7 @@ class TestStorageClient(unittest.TestCase):
     #
 
     def test_get_parent_should_throw_exception_if_parent_does_not_exist(self):
-        # given
+        # given the parent does not exist
         httpretty.register_uri(
             httpretty.GET, 'https://document/service/entity/?path=path%2Fto%2Fparent',
             status=404
@@ -248,7 +248,7 @@ class TestStorageClient(unittest.TestCase):
 
 
     def test_get_parent_should_return_the_parent(self):
-        # given
+        # given the parent exists
         self.register_uri(
             'https://document/service/entity/?path=path%2Fto%2Fparent',
             returns='parent entity'
@@ -259,3 +259,72 @@ class TestStorageClient(unittest.TestCase):
 
         # then
         assert_that(parent, equal_to('parent entity'))
+
+
+    #
+    # mkdir
+    #
+
+    def test_mkdir_should_throw_an_exception_if_parent_folder_does_not_exist(self):
+        # given the parent folder does not exist
+        httpretty.register_uri(
+            httpretty.GET, 'https://document/service/entity/?path=path%2Fto%2Fparent',
+            status=404
+        )
+
+        # then
+        assert_that(
+            calling(self.client.mkdir).with_args('path/to/parent/folder_to_create'),
+            raises(DocNotFoundException)
+        )
+
+
+    def test_mkdir_should_create_the_given_folder_under_its_parent(self):
+        # given the parent folder is found
+        parent_uuid = 'e2c25c1b-1234-4cf6-b8d2-271e628a9a56'
+        self.register_uri(
+            'https://document/service/entity/?path=path%2Fto%2Fparent',
+            returns={ 'uuid': parent_uuid }
+        )
+
+        # and the creation of the folder works
+        httpretty.register_uri(
+            httpretty.POST,
+            'https://document/service/folder/',
+            status=201
+        )
+
+        # when
+        self.client.mkdir('path/to/parent/folder_to_create')
+
+        # then
+        request_body = json.loads(httpretty.last_request().body.decode())
+        assert_that(
+            request_body['parent'],
+            equal_to(parent_uuid)
+        )
+
+
+    def test_mkdir_should_create_the_given_folder_with_its_name(self):
+        # given the parent folder is found
+        self.register_uri(
+            'https://document/service/entity/?path=path%2Fto%2Fparent',
+            returns={ 'uuid': 'e2c25c1b-1234-4cf6-b8d2-271e628a9a56' }
+        )
+
+        # and the creation of the folder works
+        httpretty.register_uri(
+            httpretty.POST,
+            'https://document/service/folder/',
+            status=201
+        )
+
+        # when
+        self.client.mkdir('path/to/parent/folder_to_create')
+
+        # then
+        request_body = json.loads(httpretty.last_request().body.decode())
+        assert_that(
+            request_body['name'],
+            equal_to('folder_to_create')
+        )
