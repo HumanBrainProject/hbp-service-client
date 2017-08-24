@@ -8,7 +8,7 @@ import os
 
 from os.path import join as joinp
 from validators import uuid as is_valid_uuid
-from hbp_service_client.document_service.client import Client
+from hbp_service_client.document_service.api import ApiClient
 from hbp_service_client.document_service.exceptions import (
     DocException, DocArgumentException, DocNotFoundException)
 
@@ -51,8 +51,8 @@ class StorageClient(object):
                 A document_service.Client instance
 
         '''
-        client = Client.new(access_token, environment)
-        return cls(client)
+        apiClient = ApiClient.new(access_token, environment)
+        return cls(apiClient)
 
     def ls(self, path):
         project = self.api_client.get_entity_by_query(path=path)

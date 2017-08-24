@@ -362,7 +362,7 @@ class TestStorageClient(unittest.TestCase):
         )
 
 
-    @mock.patch('hbp_service_client.document_service.client.open', create=True)
+    @mock.patch('hbp_service_client.document_service.api.open', create=True)
     def test_upload_should_create_the_destination_file_under_its_destination_folder(self, mock_open):
         # given  the parent folder is found
         parent_uuid = 'e2c25c1b-1234-4cf6-b8d2-271e628a9a56'
@@ -404,7 +404,7 @@ class TestStorageClient(unittest.TestCase):
         )
 
 
-    @mock.patch('hbp_service_client.document_service.client.open', create=True)
+    @mock.patch('hbp_service_client.document_service.api.open', create=True)
     def test_upload_should_create_the_destination_file_with_its_name(self, mock_open):
         # given  the parent folder is found
         self.register_uri(
@@ -445,7 +445,7 @@ class TestStorageClient(unittest.TestCase):
         )
 
 
-    @mock.patch('hbp_service_client.document_service.client.open', create=True)
+    @mock.patch('hbp_service_client.document_service.api.open', create=True)
     def test_upload_should_create_the_destination_file_with_the_content_of_the_local_file(self, mock_open):
         # given  the parent folder is found
         self.register_uri(
