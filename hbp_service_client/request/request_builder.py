@@ -1,5 +1,5 @@
 import requests
-from hbp_service_client.document_service.service_locator import ServiceLocator
+from hbp_service_client.storage_service.service_locator import ServiceLocator
 
 class RequestBuilder(object):
     '''A builder to create requests'''
