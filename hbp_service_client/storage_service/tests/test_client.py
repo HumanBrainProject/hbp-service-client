@@ -6,8 +6,8 @@ import uuid
 
 from hamcrest import *
 
-from hbp_service_client.document_service.api import ApiClient as DC
-from hbp_service_client.document_service.exceptions import (
+from hbp_service_client.storage_service.api import ApiClient as DC
+from hbp_service_client.storage_service.exceptions import (
     DocException, DocArgumentException
 )
 

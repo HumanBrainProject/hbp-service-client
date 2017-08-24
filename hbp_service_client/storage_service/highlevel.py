@@ -8,8 +8,8 @@ import os
 
 from os.path import join as joinp
 from validators import uuid as is_valid_uuid
-from hbp_service_client.document_service.api import ApiClient
-from hbp_service_client.document_service.exceptions import (
+from hbp_service_client.storage_service.api import ApiClient
+from hbp_service_client.storage_service.exceptions import (
     DocException, DocArgumentException, DocNotFoundException)
 
 
@@ -26,7 +26,7 @@ class StorageClient(object):
 
         Example:
             >>> #you'll have to have an access token ready
-            >>> from hbp_service_client.document_service.client import StorageClient
+            >>> from hbp_service_client.storage_service.client import StorageClient
             >>> doc_client = StorageClient.new(my_access_token)
             >>> my_project_contents = doc_client.list_project_content(my_project_id)
     '''
