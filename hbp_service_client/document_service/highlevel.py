@@ -36,7 +36,7 @@ class StorageClient(object):
         Args:
            client: the low level api client
         '''
-        self._client = client
+        self.api_client = client
 
     @classmethod
     def new(cls, access_token, environment='prod'):
@@ -55,7 +55,7 @@ class StorageClient(object):
         return cls(client)
 
     def ls(self, path):
-        project = self._client.get_entity_by_query(path=path)
+        project = self.api_client.get_entity_by_query(path=path)
         project_uuid = project['uuid']
         file_names = []
 
@@ -63,7 +63,7 @@ class StorageClient(object):
         more_pages = True
         page_number = 1
         while more_pages:
-            response = self._client.list_folder_content(project_uuid, page=page_number)
+            response = self.api_client.list_folder_content(project_uuid, page=page_number)
             more_pages = response['next'] is not None
             page_number += 1
             for child in response['results']:
@@ -73,11 +73,11 @@ class StorageClient(object):
         return file_names
 
     def download_file(self, path, target_path):
-        entity = self._client.get_entity_by_query(path=path)
+        entity = self.api_client.get_entity_by_query(path=path)
         assert entity['entity_type'] == 'file'
 
-        signed_url = self._client.get_signed_url(entity['uuid'])
-        response = self._client.download_signed_url(signed_url)
+        signed_url = self.api_client.get_signed_url(entity['uuid'])
+        response = self.api_client.download_signed_url(signed_url)
 
         with open(target_path, "wb") as output:
             for chunk in response.iter_content(chunk_size=1024):
@@ -85,7 +85,7 @@ class StorageClient(object):
 
     def exists(self, path):
         try:
-            metadata = self._client.get_entity_by_query(path=path)
+            metadata = self.api_client.get_entity_by_query(path=path)
         except DocNotFoundException:
             return False
 
@@ -95,11 +95,11 @@ class StorageClient(object):
         path_steps = path.split('/')
         new_dir = path_steps.pop()
         parent_path = "/".join(path_steps)
-        return self._client.get_entity_by_query(path=parent_path)
+        return self.api_client.get_entity_by_query(path=parent_path)
 
     def mkdir(self, path):
         parent_metadata = self.get_parent(path)
-        self._client.create_folder(path.split('/').pop(), parent_metadata['uuid'])
+        self.api_client.create_folder(path.split('/').pop(), parent_metadata['uuid'])
         #no return necessary, function succeeds or we would have thrown an exception before this point.
 
     def upload_file(self,local_file, dest_path, mimetype, md5check=False):
@@ -123,13 +123,13 @@ class StorageClient(object):
             raise DocArgumentException('Must specify source file name in local_file argument, directory upload not supported')
 
         #create the file container
-        new_file = self._client.create_file(
+        new_file = self.api_client.create_file(
             name         = dest_path.split('/').pop(),
             content_type = mimetype,
             parent       = self.get_parent(dest_path)['uuid']
         )
 
-        etag = self._client.upload_file_content(new_file['uuid'], source = local_file)
+        etag = self.api_client.upload_file_content(new_file['uuid'], source = local_file)
         new_file['etag'] = etag
 
         return new_file
