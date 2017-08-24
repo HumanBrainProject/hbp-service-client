@@ -125,14 +125,14 @@ class StorageClient(Client):
         if local_file.endswith(os.path.sep):
             raise DocArgumentException('Must specify source file name in local_file argument, directory upload not supported')
 
-        path_steps = dest_path.split('/')
-        new_file_name = path_steps.pop()
-        parent_path = "/".join(path_steps)
-        parent_metadata = self._client.get_entity_by_query(path=parent_path)
         #create the file container
-        file_details = self._client.create_file(new_file_name, content_type=mimetype, parent=parent_metadata['uuid'])
-        etag = self._client.upload_file_content(file_details['uuid'], source = local_file)
+        new_file = self._client.create_file(
+            name         = dest_path.split('/').pop(),
+            content_type = mimetype,
+            parent       = self.get_parent(dest_path)['uuid']
+        )
 
-        return (file_details['uuid'],etag)
+        etag = self._client.upload_file_content(new_file['uuid'], source = local_file)
+        new_file['etag'] = etag
 
-
+        return new_file
