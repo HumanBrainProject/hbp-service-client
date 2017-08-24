@@ -133,25 +133,6 @@ class StorageClient(Client):
         file_details = self._client.create_file(new_file_name, content_type=mimetype, parent=parent_metadata['uuid'])
         etag = self._client.upload_file_content(file_details['uuid'], source = local_file)
 
-        #NOTE: This should be done inside the upload_file_content itself with a single file read
-        if md5check:
-            md5_local = self.md5_for_file(local_file, hr=True)
-            if etag != '"' + md5_local + '"':
-                raise DocException('md5 response of server doesn\'t match local file: ' + local_file)
         return (file_details['uuid'],etag)
 
 
-    def md5_for_file(self, path, block_size=256*128, hr=False):
-        '''
-        from Stackoverflow: https://stackoverflow.com/questions/1131220/get-md5-hash-of-big-files-in-python
-        Block size directly depends on the block size of your filesystem
-        to avoid performances issues
-        Here I have blocks of 4096 octets (Default NTFS)
-        '''
-        md5 = hashlib.md5()
-        with open(path,'rb') as f:
-            for chunk in iter(lambda: f.read(block_size), b''):
-                 md5.update(chunk)
-        if hr:
-            return md5.hexdigest()
-        return md5.digest()
