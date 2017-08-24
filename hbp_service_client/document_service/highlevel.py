@@ -121,17 +121,17 @@ class StorageClient(Client):
         '''
         #get the paths of the target dir and the target file name
         if dest_path.endswith('/'):
-            raise DocException('Must specify target file name in dest_path argument')
-        if local_file.endswith(os.pathsep):
-            raise DocException('Must specify source file name in local_file argument, directory upload not supported')
+            raise DocArgumentException('Must specify target file name in dest_path argument')
+        if local_file.endswith(os.path.sep):
+            raise DocArgumentException('Must specify source file name in local_file argument, directory upload not supported')
 
         path_steps = dest_path.split('/')
         new_file_name = path_steps.pop()
         parent_path = "/".join(path_steps)
-        parent_metadata = self.get_entity_by_query(path=parent_path)
+        parent_metadata = self._client.get_entity_by_query(path=parent_path)
         #create the file container
-        file_details = self.create_file(new_file_name, content_type=mimetype, parent=parent_metadata['uuid'])
-        etag = self.upload_file_content(file_details['uuid'], source = local_file)
+        file_details = self._client.create_file(new_file_name, content_type=mimetype, parent=parent_metadata['uuid'])
+        etag = self._client.upload_file_content(file_details['uuid'], source = local_file)
 
         #NOTE: This should be done inside the upload_file_content itself with a single file read
         if md5check:
