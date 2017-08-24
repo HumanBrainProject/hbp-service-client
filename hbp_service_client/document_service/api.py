@@ -17,7 +17,7 @@ L = logging.getLogger(__name__)
 # gathered via locals()
 
 
-class Client(object):
+class ApiClient(object):
     '''Python wrapper for the HBP Document Service low-level REST API
 
         Example:
