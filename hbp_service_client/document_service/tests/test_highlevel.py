@@ -8,7 +8,7 @@ import mock
 from hamcrest import *
 
 from hbp_service_client.document_service.highlevel import StorageClient
-from hbp_service_client.document_service.exceptions import DocNotFoundException
+from hbp_service_client.document_service.exceptions import (DocNotFoundException, DocArgumentException)
 
 class TestStorageClient(unittest.TestCase):
     def setUp(self):
@@ -328,3 +328,163 @@ class TestStorageClient(unittest.TestCase):
             request_body['name'],
             equal_to('folder_to_create')
         )
+
+
+    #
+    # upload_file
+    #
+
+    def test_upload_file_should_check_if_destination_file_contains_name(self):
+        assert_that(
+            calling(self.client.upload_file).with_args(dest_path='path/to/a/folder/', local_file=None, mimetype=None),
+            raises(DocArgumentException)
+        )
+
+
+    def test_upload_file_should_check_if_local_file_is_not_a_folder(self):
+        assert_that(
+            calling(self.client.upload_file).with_args(local_file='path/to/a/folder/', dest_path='', mimetype=None),
+            raises(DocArgumentException)
+        )
+
+
+    def test_test_upload_should_throw_an_exception_if_destination_folder_does_not_exist(self):
+        # given the parent folder does not exist
+        httpretty.register_uri(
+            httpretty.GET, 'https://document/service/entity/?path=dest%2Fparent',
+            status=404
+        )
+
+        # then
+        assert_that(
+            calling(self.client.upload_file).with_args(dest_path='dest/parent/file_to_create', local_file='local/file_to_upload', mimetype=None),
+            raises(DocNotFoundException)
+        )
+
+
+    @mock.patch('hbp_service_client.document_service.client.open', create=True)
+    def test_upload_should_create_the_destination_file_under_its_destination_folder(self, mock_open):
+        # given  the parent folder is found
+        parent_uuid = 'e2c25c1b-1234-4cf6-b8d2-271e628a9a56'
+        self.register_uri(
+            'https://document/service/entity/?path=dest%2Fparent',
+            returns={ 'uuid': parent_uuid }
+        )
+
+        # and the creation of the file works
+        file_uuid = 'e2c25c1b-1234-4cf6-b8d2-271e628a1256'
+        httpretty.register_uri(
+            httpretty.POST,
+            'https://document/service/file/',
+            status=201,
+            body=json.dumps({ 'uuid': file_uuid }),
+            content_type="application/json"
+        )
+
+        # and the upload works
+        httpretty.register_uri(
+            httpretty.POST,
+            'https://document/service/file/{}/content/upload/'.format(file_uuid),
+            adding_headers={'ETag':'some_etag'}
+        )
+
+        # when
+        self.client.upload_file(
+            dest_path  = 'dest/parent/file_to_create',
+            local_file = 'local/file_to_upload',
+            mimetype   = None
+        )
+
+        # then
+        create_file_request = find_sent_request(lambda req: req.path == '/service/file/')
+        request_body = json.loads(create_file_request.body.decode())
+        assert_that(
+            request_body['parent'],
+            equal_to(parent_uuid)
+        )
+
+
+    @mock.patch('hbp_service_client.document_service.client.open', create=True)
+    def test_upload_should_create_the_destination_file_with_its_name(self, mock_open):
+        # given  the parent folder is found
+        self.register_uri(
+            'https://document/service/entity/?path=dest%2Fparent',
+            returns={ 'uuid': 'e2c25c1b-1234-4cf6-b8d2-271e628a9a56' }
+        )
+
+        # and the creation of the file works
+        file_uuid = 'e2c25c1b-1234-4cf6-b8d2-271e628a1256'
+        httpretty.register_uri(
+            httpretty.POST,
+            'https://document/service/file/',
+            status=201,
+            body=json.dumps({ 'uuid': file_uuid }),
+            content_type="application/json"
+        )
+
+        # and the upload works
+        httpretty.register_uri(
+            httpretty.POST,
+            'https://document/service/file/{}/content/upload/'.format(file_uuid),
+            adding_headers={'ETag':'some_etag'}
+        )
+
+        # when
+        self.client.upload_file(
+            dest_path  = 'dest/parent/file_to_create',
+            local_file = 'local/file_to_upload',
+            mimetype   = None
+        )
+
+        # then
+        create_file_request = find_sent_request(lambda req: req.path == '/service/file/')
+        request_body = json.loads(create_file_request.body.decode())
+        assert_that(
+            request_body['name'],
+            equal_to('file_to_create')
+        )
+
+
+    @mock.patch('hbp_service_client.document_service.client.open', create=True)
+    def test_upload_should_create_the_destination_file_with_the_content_of_the_local_file(self, mock_open):
+        # given  the parent folder is found
+        self.register_uri(
+            'https://document/service/entity/?path=dest%2Fparent',
+            returns={ 'uuid': 'e2c25c1b-1234-4cf6-b8d2-271e628a9a56' }
+        )
+
+        # and the creation of the file works
+        file_uuid = 'e2c25c1b-1234-4cf6-b8d2-271e628a1256'
+        httpretty.register_uri(
+            httpretty.POST,
+            'https://document/service/file/',
+            status=201,
+            body=json.dumps({ 'uuid': file_uuid }),
+            content_type="application/json"
+        )
+
+        # and the upload works
+        httpretty.register_uri(
+            httpretty.POST,
+            'https://document/service/file/{}/content/upload/'.format(file_uuid),
+            adding_headers={'ETag':'some_etag'}
+        )
+
+        # and the content of the local file is
+        mock_open.return_value = 'content of the local file'
+
+        # when
+        self.client.upload_file(
+            dest_path  = 'dest/parent/file_to_create',
+            local_file = 'local/file_to_upload',
+            mimetype   = None
+        )
+
+        # then
+        assert_that(
+            httpretty.last_request().body.decode(),
+            equal_to('content of the local file')
+        )
+
+def find_sent_request(predicate):
+    return next((x for x in httpretty.HTTPretty.latest_requests if predicate(x)), None)
