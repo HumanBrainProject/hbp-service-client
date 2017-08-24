@@ -9,7 +9,6 @@ import os
 from os.path import join as joinp
 from validators import uuid as is_valid_uuid
 from hbp_service_client.document_service.client import Client
-from hbp_service_client.document_service.requestor import Requestor
 from hbp_service_client.document_service.exceptions import (
     DocException, DocArgumentException, DocNotFoundException)
 
@@ -22,7 +21,7 @@ L = logging.getLogger(__name__)
 # This is needed for the unused params, which are not used because they are
 # gathered via locals()
 
-class StorageClient(Client):
+class StorageClient(object):
     '''High-level Client for interacting with the HBP Document Service, providing convenience functions for common operations
 
         Example:
@@ -32,12 +31,11 @@ class StorageClient(Client):
             >>> my_project_contents = doc_client.list_project_content(my_project_id)
     '''
 
-    def __init__(self, requestor, client):
+    def __init__(self, client):
         '''
         Args:
-           requestor: the requestor to send the requests with
+           client: the low level api client
         '''
-        super(StorageClient, self).__init__(requestor)
         self._client = client
 
     @classmethod
@@ -53,9 +51,8 @@ class StorageClient(Client):
                 A document_service.Client instance
 
         '''
-        requestor = Requestor.new(cls.SERVICE_NAME, cls.SERVICE_VERSION, access_token, environment)
         client = Client.new(access_token, environment)
-        return cls(requestor, client)
+        return cls(client)
 
     def ls(self, path):
         project = self._client.get_entity_by_query(path=path)
