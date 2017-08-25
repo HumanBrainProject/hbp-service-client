@@ -1,6 +1,6 @@
 '''A convenience single client that combines functionality from the different services'''
 
-from hbp_service_client.storage_service.api import ApiClient as SAC
+from hbp_service_client.storage_service.api import ApiClient as StorageApiClient
 
 
 class Client(object):
@@ -15,4 +15,4 @@ class Client(object):
         '''create a new cross-service client'''
 
         return cls(
-            storage_client=SAC.new(access_token, environment=environment))
+            storage_client=StorageApiClient.new(access_token, environment=environment))
