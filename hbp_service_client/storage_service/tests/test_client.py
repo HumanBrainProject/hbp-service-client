@@ -7,10 +7,10 @@ import mock
 
 from hamcrest import *
 
-from hbp_service_client.storage_service.client import StorageClient
+from hbp_service_client.storage_service.client import Client
 from hbp_service_client.storage_service.exceptions import (DocNotFoundException, DocArgumentException)
 
-class TestStorageClient(unittest.TestCase):
+class TestClient(unittest.TestCase):
     def setUp(self):
         httpretty.enable()
         # Fakes the service locator call to the services.json file
@@ -18,7 +18,7 @@ class TestStorageClient(unittest.TestCase):
             httpretty.GET, 'https://collab.humanbrainproject.eu/services.json',
             body=json.dumps({ 'document': {'v1': 'https://document/service'} })
         )
-        self.client = StorageClient.new('access_token')
+        self.client = Client.new('access_token')
 
     def tearDown(self):
         httpretty.disable()
