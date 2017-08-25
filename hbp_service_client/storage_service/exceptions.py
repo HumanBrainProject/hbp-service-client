@@ -1,21 +1,21 @@
 '''local exceptions'''
 
 
-class DocException(Exception):
+class StorageException(Exception):
     '''local exception'''
     pass
 
 
-class DocArgumentException(DocException):
+class StorageArgumentException(StorageException):
     '''Wrong arguments provided'''
     pass
 
 
-class DocForbiddenException(DocException):
+class StorageForbiddenException(StorageException):
     '''403 forbidden'''
     pass
 
 
-class DocNotFoundException(DocException):
+class StorageNotFoundException(StorageException):
     '''404 not found'''
     pass
