@@ -8,7 +8,7 @@ from hamcrest import *
 
 from hbp_service_client.storage_service.api import ApiClient as AC
 from hbp_service_client.storage_service.exceptions import (
-    DocException, DocArgumentException
+    StorageException, StorageArgumentException
 )
 
 def url(url):
@@ -66,7 +66,7 @@ class TestApiClient(unittest.TestCase):
     def test_get_entity_verifies_uuids(self):
         assert_that(
             calling(self.client.get_entity_details).with_args('1'),
-            raises(DocArgumentException)
+            raises(StorageArgumentException)
         )
 
     def test_get_entity_path_extracts_path_from_response(self):
@@ -86,7 +86,7 @@ class TestApiClient(unittest.TestCase):
     def test_get_entity_path_verifies_uuids(self):
         assert_that(
             calling(self.client.get_entity_path).with_args('1'),
-            raises(DocArgumentException)
+            raises(StorageArgumentException)
         )
 
     def test_get_entity_collabid_extracts_id_from_response(self):
@@ -106,7 +106,7 @@ class TestApiClient(unittest.TestCase):
     def test_get_entity_collab_id_verifies_uuids(self):
         assert_that(
             calling(self.client.get_entity_collab_id).with_args('1'),
-            raises(DocArgumentException)
+            raises(StorageArgumentException)
         )
 
     def test_get_entity_by_query_returns_response_body(self):
@@ -127,14 +127,14 @@ class TestApiClient(unittest.TestCase):
     def test_get_entity_by_query_verifies_uuids(self):
         assert_that(
             calling(self.client.get_entity_by_query).with_args('1'),
-            raises(DocArgumentException)
+            raises(StorageArgumentException)
         )
 
     def test_get_entity_by_query_requires_params(self):
-        # method raises DocArgumentException with no args
+        # method raises StorageArgumentException with no args
         assert_that(
             calling(self.client.get_entity_by_query),
-            raises(DocArgumentException)
+            raises(StorageArgumentException)
         )
 
     def test_get_entity_by_query_extracts_metadata(self):
@@ -165,7 +165,7 @@ class TestApiClient(unittest.TestCase):
         assert_that(
             calling(self.client.set_metadata).with_args(
                 'entity_type', '1', {}),
-            raises(DocArgumentException)
+            raises(StorageArgumentException)
         )
 
     def test_set_metadata_uses_the_right_method(self):
@@ -221,7 +221,7 @@ class TestApiClient(unittest.TestCase):
                 'entity_id',
                 '{"foo": "bar"}'
             ),
-            raises(DocArgumentException),
+            raises(StorageArgumentException),
         )
 
     #
@@ -245,7 +245,7 @@ class TestApiClient(unittest.TestCase):
         assert_that(
             calling(self.client.get_metadata).with_args(
                 'entity_type', '1'),
-            raises(DocArgumentException)
+            raises(StorageArgumentException)
         )
 
     #
@@ -272,7 +272,7 @@ class TestApiClient(unittest.TestCase):
         assert_that(
             calling(self.client.update_metadata).with_args(
                 'entity_type', '1', {}),
-            raises(DocArgumentException)
+            raises(StorageArgumentException)
         )
 
     def test_update_metadata_returns_the_response_body(self):
@@ -313,7 +313,7 @@ class TestApiClient(unittest.TestCase):
                 self.A_UUID,
                 '{"foo": "bar"}'
             ),
-            raises(DocArgumentException),
+            raises(StorageArgumentException),
         )
 
     #
@@ -338,7 +338,7 @@ class TestApiClient(unittest.TestCase):
         assert_that(
             calling(self.client.delete_metadata).with_args(
                 'entity_type', '1', []),
-            raises(DocArgumentException)
+            raises(StorageArgumentException)
         )
 
     def test_delete_metadata_sends_the_right_body(self):
@@ -362,7 +362,7 @@ class TestApiClient(unittest.TestCase):
                 self.A_UUID,
                 'i am not a list!'
             ),
-            raises(DocArgumentException)
+            raises(StorageArgumentException)
         )
 
     #
@@ -424,7 +424,7 @@ class TestApiClient(unittest.TestCase):
     def test_get_project_details_verifies_uuids(self):
         assert_that(
             calling(self.client.get_project_details).with_args('1'),
-            raises(DocArgumentException)
+            raises(StorageArgumentException)
         )
 
     #
@@ -449,7 +449,7 @@ class TestApiClient(unittest.TestCase):
     def test_list_project_content_verifies_uuids(self):
         assert_that(
             calling(self.client.list_project_content).with_args('1'),
-            raises(DocArgumentException)
+            raises(StorageArgumentException)
         )
 
     def test_list_project_content_send_the_right_params(self):
@@ -494,7 +494,7 @@ class TestApiClient(unittest.TestCase):
     def test_create_folder_verifies_uuids(self):
         assert_that(
             calling(self.client.create_folder).with_args('name', 'parent_id'),
-            raises(DocArgumentException)
+            raises(StorageArgumentException)
         )
 
     def test_create_folder_returns_the_response_body(self):
@@ -544,7 +544,7 @@ class TestApiClient(unittest.TestCase):
     def test_get_folder_details_verifies_uuids(self):
         assert_that(
             calling(self.client.get_folder_details).with_args('1'),
-            raises(DocArgumentException)
+            raises(StorageArgumentException)
         )
 
     #
@@ -569,7 +569,7 @@ class TestApiClient(unittest.TestCase):
     def test_list_folder_content_verifies_uuids(self):
         assert_that(
             calling(self.client.list_folder_content).with_args('1'),
-            raises(DocArgumentException)
+            raises(StorageArgumentException)
         )
 
     def test_list_folder_content_sends_the_right_params(self):
@@ -606,7 +606,7 @@ class TestApiClient(unittest.TestCase):
     def test_delete_folder_verifies_uuids(self):
         assert_that(
             calling(self.client.delete_folder).with_args('1'),
-            raises(DocArgumentException)
+            raises(StorageArgumentException)
         )
 
     def test_delete_folder_returns_none(self):
@@ -644,7 +644,7 @@ class TestApiClient(unittest.TestCase):
         assert_that(
             calling(self.client.create_file).with_args(
                 'some_name', 'some_content_type', 'parent_id'),
-            raises(DocArgumentException)
+            raises(StorageArgumentException)
         )
 
     def test_create_file_return_the_response_body(self):
@@ -700,7 +700,7 @@ class TestApiClient(unittest.TestCase):
     def test_get_file_details_verifies_uuids(self):
         assert_that(
             calling(self.client.get_file_details).with_args('1'),
-            raises(DocArgumentException)
+            raises(StorageArgumentException)
         )
 
     #
@@ -725,7 +725,7 @@ class TestApiClient(unittest.TestCase):
         assert_that(
             calling(self.client.upload_file_content).with_args(
                 '1', content='content'),
-            raises(DocArgumentException)
+            raises(StorageArgumentException)
         )
 
     def test_upload_file_content_sets_the_right_headers(self):
@@ -757,7 +757,7 @@ class TestApiClient(unittest.TestCase):
                 etag = 'some_etag',
                 content = 'some_content'
             ),
-            raises(DocException)
+            raises(StorageException)
         )
 
     def test_upload_file_content_returns_the_upload_etag(self):
@@ -796,13 +796,13 @@ class TestApiClient(unittest.TestCase):
         assert_that(
             calling(self.client.copy_file_content).with_args(
                 self.A_UUID, 'source'),
-            raises(DocArgumentException)
+            raises(StorageArgumentException)
         )
 
         assert_that(
             calling(self.client.copy_file_content).with_args(
                 'destination', self.A_UUID),
-            raises(DocArgumentException)
+            raises(StorageArgumentException)
         )
 
     def test_copy_file_content_sets_the_right_headers(self):
@@ -844,7 +844,7 @@ class TestApiClient(unittest.TestCase):
     def test_download_file_content_verifies_uuids(self):
         assert_that(
             calling(self.client.download_file_content).with_args('1'),
-            raises(DocArgumentException)
+            raises(StorageArgumentException)
         )
 
     def test_download_file_content_returns_tuple(self):
@@ -883,7 +883,7 @@ class TestApiClient(unittest.TestCase):
         assert_that(
             calling(self.client.download_file_content).with_args(
                 self.A_UUID),
-            raises(DocException)
+            raises(StorageException)
         )
 
     def test_download_file_content_returns_the_right_content(self):
@@ -933,7 +933,7 @@ class TestApiClient(unittest.TestCase):
     def test_get_signed_url_verifies_uuids(self):
         assert_that(
             calling(self.client.get_signed_url).with_args('1'),
-            raises(DocArgumentException)
+            raises(StorageArgumentException)
         )
 
     #
@@ -955,5 +955,5 @@ class TestApiClient(unittest.TestCase):
     def test_delete_file_verifies_uuids(self):
         assert_that(
             calling(self.client.delete_file).with_args('1'),
-            raises(DocArgumentException)
+            raises(StorageArgumentException)
         )

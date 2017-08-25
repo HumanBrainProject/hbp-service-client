@@ -1,12 +1,12 @@
-'''Python wrapper for the HBP Document Service low-level REST API'''
+'''Python wrapper for the HBP Storageument Service low-level REST API'''
 
 import logging
 import json
 from validators import uuid as is_valid_uuid
 from hbp_service_client.request.request_builder import RequestBuilder
 from hbp_service_client.storage_service.exceptions import (
-    DocException, DocArgumentException, DocForbiddenException,
-    DocNotFoundException)
+    StorageException, StorageArgumentException, StorageForbiddenException,
+    StorageNotFoundException)
 
 L = logging.getLogger(__name__)
 
@@ -56,19 +56,19 @@ class ApiClient(object):
             .to_service(cls.SERVICE_NAME, cls.SERVICE_VERSION) \
             .with_token(access_token) \
             .throw(
-                DocForbiddenException,
+                StorageForbiddenException,
                 lambda resp:
                     'You are forbidden to do this.' if resp.status_code == 403
                     else None
             ) \
             .throw(
-                DocNotFoundException,
+                StorageNotFoundException,
                 lambda resp:
                     'The entity is not found' if resp.status_code == 404
                     else None
             ) \
             .throw(
-                DocException,
+                StorageException,
                 lambda resp:
                     'Server response: {0} - {1}'.format(resp.status_code, resp.text) if not resp.ok
                     else None
@@ -104,13 +104,13 @@ class ApiClient(object):
                  }
 
         Raises:
-            DocArgumentException: Invalid arguments
-            DocForbiddenException: Server response code 403
-            DocNotFoundException: Server response code 404
-            DocException: other 400-600 error codes
+            StorageArgumentException: Invalid arguments
+            StorageForbiddenException: Server response code 403
+            StorageNotFoundException: Server response code 404
+            StorageException: other 400-600 error codes
         '''
         if not is_valid_uuid(entity_id):
-            raise DocArgumentException(
+            raise StorageArgumentException(
                 'Invalid UUID for entity_id: {0}'.format(entity_id))
         return self._request \
             .to_endpoint('entity/{}/'.format(entity_id)) \
@@ -129,13 +129,13 @@ class ApiClient(object):
                 u'/12345/folder_1'
 
         Raises:
-            DocArgumentException: Invalid arguments
-            DocForbiddenException: Server response code 403
-            DocNotFoundException: Server response code 404
-            DocException: other 400-600 error codes
+            StorageArgumentException: Invalid arguments
+            StorageForbiddenException: Server response code 403
+            StorageNotFoundException: Server response code 404
+            StorageException: other 400-600 error codes
         '''
         if not is_valid_uuid(entity_id):
-            raise DocArgumentException(
+            raise StorageArgumentException(
                 'Invalid UUID for entity_id: {0}'.format(entity_id))
 
         return self._request \
@@ -153,13 +153,13 @@ class ApiClient(object):
             The id as interger of the Collebaration to which the entity belongs
 
         Raises:
-            DocArgumentException: Invalid arguments
-            DocForbiddenException: Server response code 403
-            DocNotFoundException: Server response code 404
-            DocException: other 400-600 error codes
+            StorageArgumentException: Invalid arguments
+            StorageForbiddenException: Server response code 403
+            StorageNotFoundException: Server response code 404
+            StorageException: other 400-600 error codes
         '''
         if not is_valid_uuid(entity_id):
-            raise DocArgumentException(
+            raise StorageArgumentException(
                 'Invalid UUID for entity_id: {0}'.format(entity_id))
 
         return self._request \
@@ -193,20 +193,20 @@ class ApiClient(object):
                 }
 
         Raises:
-            DocArgumentException: Invalid arguments
-            DocForbiddenException: Server response code 403
-            DocNotFoundException: Server response code 404
-            DocException: other 400-600 error codes
+            StorageArgumentException: Invalid arguments
+            StorageForbiddenException: Server response code 403
+            StorageNotFoundException: Server response code 404
+            StorageException: other 400-600 error codes
         '''
         if not (uuid or path or metadata):
-            raise DocArgumentException('No parameter given for the query.')
+            raise StorageArgumentException('No parameter given for the query.')
         if uuid and not is_valid_uuid(uuid):
-            raise DocArgumentException(
+            raise StorageArgumentException(
                 'Invalid UUID for uuid: {0}'.format(uuid))
         params = locals().copy()
         if metadata:
             if not isinstance(metadata, dict):
-                raise DocArgumentException('The metadata needs to be provided'
+                raise StorageArgumentException('The metadata needs to be provided'
                                            ' as a dictionary.')
             k, v = next(iter(metadata.items()))
             params[k] = v
@@ -245,16 +245,16 @@ class ApiClient(object):
                 }
 
         Raises:
-            DocArgumentException: Invalid arguments
-            DocForbiddenException: Server response code 403
-            DocNotFoundException: Server response code 404
-            DocException: other 400-600 error codes
+            StorageArgumentException: Invalid arguments
+            StorageForbiddenException: Server response code 403
+            StorageNotFoundException: Server response code 404
+            StorageException: other 400-600 error codes
         '''
         if not is_valid_uuid(entity_id):
-            raise DocArgumentException(
+            raise StorageArgumentException(
                 'Invalid UUID for entity_id: {0}'.format(entity_id))
         if not isinstance(metadata, dict):
-            raise DocArgumentException('The metadata was not provided as a '
+            raise StorageArgumentException('The metadata was not provided as a '
                                        'dictionary')
 
         return self._request \
@@ -280,13 +280,13 @@ class ApiClient(object):
                 }
 
         Raises:
-            DocArgumentException: Invalid arguments
-            DocForbiddenException: Server response code 403
-            DocNotFoundException: Server response code 404
-            DocException: other 400-600 error codes
+            StorageArgumentException: Invalid arguments
+            StorageForbiddenException: Server response code 403
+            StorageNotFoundException: Server response code 404
+            StorageException: other 400-600 error codes
         '''
         if not is_valid_uuid(entity_id):
-            raise DocArgumentException(
+            raise StorageArgumentException(
                 'Invalid UUID for entity_id: {0}'.format(entity_id))
 
         return self._request \
@@ -315,16 +315,16 @@ class ApiClient(object):
                 }
 
         Raises:
-            DocArgumentException: Invalid arguments
-            DocForbiddenException: Server response code 403
-            DocNotFoundException: Server response code 404
-            DocException: other 400-600 error codes
+            StorageArgumentException: Invalid arguments
+            StorageForbiddenException: Server response code 403
+            StorageNotFoundException: Server response code 404
+            StorageException: other 400-600 error codes
         '''
         if not is_valid_uuid(entity_id):
-            raise DocArgumentException(
+            raise StorageArgumentException(
                 'Invalid UUID for entity_id: {0}'.format(entity_id))
         if not isinstance(metadata, dict):
-            raise DocArgumentException('The metadata was not provided as a '
+            raise StorageArgumentException('The metadata was not provided as a '
                                        'dictionary')
 
         return self._request \
@@ -353,16 +353,16 @@ class ApiClient(object):
                 }
 
         Raises:
-            DocArgumentException: Invalid arguments
-            DocForbiddenException: Server response code 403
-            DocNotFoundException: Server response code 404
-            DocException: other 400-600 error codes
+            StorageArgumentException: Invalid arguments
+            StorageForbiddenException: Server response code 403
+            StorageNotFoundException: Server response code 404
+            StorageException: other 400-600 error codes
         '''
         if not is_valid_uuid(entity_id):
-            raise DocArgumentException(
+            raise StorageArgumentException(
                 'Invalid UUID for entity_id: {0}'.format(entity_id))
         if not isinstance(metadata_keys, list):
-            raise DocArgumentException('The metadata was not provided as a '
+            raise StorageArgumentException('The metadata was not provided as a '
                                        'dictionary')
 
         return self._request \
@@ -417,9 +417,9 @@ class ApiClient(object):
 
 
         Raises:
-            DocForbiddenException: Server response code 403
-            DocNotFoundException: Server response code 404
-            DocException: other 400-600 error codes
+            StorageForbiddenException: Server response code 403
+            StorageNotFoundException: Server response code 404
+            StorageException: other 400-600 error codes
         '''
         return self._request \
             .to_endpoint('project/') \
@@ -449,12 +449,12 @@ class ApiClient(object):
             }
 
         Raises:
-            DocForbiddenException: Server response code 403
-            DocNotFoundException: Server response code 404
-            DocException: other 400-600 error codes
+            StorageForbiddenException: Server response code 403
+            StorageNotFoundException: Server response code 404
+            StorageException: other 400-600 error codes
         '''
         if not is_valid_uuid(project_id):
-            raise DocArgumentException(
+            raise StorageArgumentException(
                 'Invalid UUID for project_id: {0}'.format(project_id))
 
         return self._request \
@@ -504,13 +504,13 @@ class ApiClient(object):
 
 
         Raises:
-            DocArgumentException: Ivalid parameters
-            DocForbiddenException: Server response code 403
-            DocNotFoundException: Server response code 404
-            DocException: other 400-600 error codes
+            StorageArgumentException: Ivalid parameters
+            StorageForbiddenException: Server response code 403
+            StorageNotFoundException: Server response code 404
+            StorageException: other 400-600 error codes
         '''
         if not is_valid_uuid(project_id):
-            raise DocArgumentException(
+            raise StorageArgumentException(
                 'Invalid UUID for project_id: {0}'.format(project_id))
         params = self._prep_params(locals())
         del params['project_id'] # not a query parameter
@@ -548,13 +548,13 @@ class ApiClient(object):
                 }
 
         Raises:
-            DocArgumentException: Invalid arguments
-            DocForbiddenException: Server response code 403
-            DocNotFoundException: Server response code 404
-            DocException: other 400-600 error codes
+            StorageArgumentException: Invalid arguments
+            StorageForbiddenException: Server response code 403
+            StorageNotFoundException: Server response code 404
+            StorageException: other 400-600 error codes
         '''
         if not is_valid_uuid(parent):
-            raise DocArgumentException(
+            raise StorageArgumentException(
                 'Invalid UUID for parent: {0}'.format(parent))
 
         return self._request \
@@ -585,13 +585,13 @@ class ApiClient(object):
                 }
 
         Raises:
-            DocArgumentException: Invalid arguments
-            DocForbiddenException: Server response code 403
-            DocNotFoundException: Server response code 404
-            DocException: other 400-600 error codes
+            StorageArgumentException: Invalid arguments
+            StorageForbiddenException: Server response code 403
+            StorageNotFoundException: Server response code 404
+            StorageException: other 400-600 error codes
         '''
         if not is_valid_uuid(folder):
-            raise DocArgumentException(
+            raise StorageArgumentException(
                 'Invalid UUID for folder: {0}'.format(folder))
         return self._request \
             .to_endpoint('folder/{}/'.format(folder)) \
@@ -640,13 +640,13 @@ class ApiClient(object):
                 }
 
         Raises:
-            DocArgumentException: Invalid arguments
-            DocForbiddenException: Server response code 403
-            DocNotFoundException: Server response code 404
-            DocException: other 400-600 error codes
+            StorageArgumentException: Invalid arguments
+            StorageForbiddenException: Server response code 403
+            StorageNotFoundException: Server response code 404
+            StorageException: other 400-600 error codes
         '''
         if not is_valid_uuid(folder):
-            raise DocArgumentException(
+            raise StorageArgumentException(
                 'Invalid UUID for folder: {0}'.format(folder))
         params = self._prep_params(locals())
         del params['folder'] # not a query parameter
@@ -666,13 +666,13 @@ class ApiClient(object):
             None
 
         Raises:
-            DocArgumentException: Invalid arguments
-            DocForbiddenException: 403
-            DocNotFoundException: 404
+            StorageArgumentException: Invalid arguments
+            StorageForbiddenException: 403
+            StorageNotFoundException: 404
             HTTPError: other non-20x error codes
         '''
         if not is_valid_uuid(folder):
-            raise DocArgumentException(
+            raise StorageArgumentException(
                 'Invalid UUID for folder: {0}'.format(folder))
         self._request \
             .to_endpoint('folder/{}/'.format(folder)) \
@@ -708,13 +708,13 @@ class ApiClient(object):
                 }
 
         Raises:
-            DocArgumentException: Invalid arguments
-            DocForbiddenException: 403
-            DocNotFoundException: 404
+            StorageArgumentException: Invalid arguments
+            StorageForbiddenException: 403
+            StorageNotFoundException: 404
             HTTPError: other non-20x error codes
         '''
         if not is_valid_uuid(parent):
-            raise DocArgumentException(
+            raise StorageArgumentException(
                 'Invalid UUID for parent: {0}'.format(parent))
         return self._request \
             .to_endpoint('file/') \
@@ -745,13 +745,13 @@ class ApiClient(object):
                 }
 
         Raises:
-            DocArgumentException: Invalid arguments
-            DocForbiddenException: Server response code 403
-            DocNotFoundException: Server response code 404
-            DocException: other 400-600 error codes
+            StorageArgumentException: Invalid arguments
+            StorageForbiddenException: Server response code 403
+            StorageNotFoundException: Server response code 404
+            StorageException: other 400-600 error codes
         '''
         if not is_valid_uuid(file_id):
-            raise DocArgumentException(
+            raise StorageArgumentException(
                 'Invalid UUID for file_id: {0}'.format(file_id))
         return self._request \
             .to_endpoint('file/{}/'.format(file_id)) \
@@ -762,7 +762,7 @@ class ApiClient(object):
         '''Upload a file content. The file entity must already exist.
 
         If an ETag is provided the file stored on the server is verified
-        against it. If it does not match, DocException is raised.
+        against it. If it does not match, StorageException is raised.
         This means the client needs to update its knowledge of the resource
         before attempting to update again. This can be used for optimistic
         concurrency control.
@@ -785,17 +785,17 @@ class ApiClient(object):
 
         Raises:
             IOError: The source cannot be opened.
-            DocArgumentException: Invalid arguments
-            DocForbiddenException: Server response code 403
-            DocNotFoundException: Server response code 404
-            DocException: other 400-600 error codes
+            StorageArgumentException: Invalid arguments
+            StorageForbiddenException: Server response code 403
+            StorageNotFoundException: Server response code 404
+            StorageException: other 400-600 error codes
         '''
         if not is_valid_uuid(file_id):
-            raise DocArgumentException(
+            raise StorageArgumentException(
                 'Invalid UUID for file_id: {0}'.format(file_id))
 
         if not (source or content) or (source and content):
-            raise DocArgumentException('Either one of source file or content has to be provided.')
+            raise StorageArgumentException('Either one of source file or content has to be provided.')
 
         resp = self._request \
             .to_endpoint('file/{}/content/upload/'.format(file_id)) \
@@ -804,7 +804,7 @@ class ApiClient(object):
             .post()
 
         if 'ETag' not in resp.headers:
-            raise DocException('No ETag received from the service after the upload')
+            raise StorageException('No ETag received from the service after the upload')
 
         return resp.headers['ETag']
 
@@ -819,17 +819,17 @@ class ApiClient(object):
             None
 
         Raises:
-        DocArgumentException: Invalid arguments
-        DocForbiddenException: Server response code 403
-        DocNotFoundException: Server response code 404
-        DocException: other 400-600 error codes
+        StorageArgumentException: Invalid arguments
+        StorageForbiddenException: Server response code 403
+        StorageNotFoundException: Server response code 404
+        StorageException: other 400-600 error codes
         '''
         if not is_valid_uuid(file_id):
-            raise DocArgumentException(
+            raise StorageArgumentException(
                 'Invalid UUID for file_id: {0}'.format(file_id))
 
         if not is_valid_uuid(source_file):
-            raise DocArgumentException(
+            raise StorageArgumentException(
                 'Invalid UUID for source_file: {0}'.format(source_file))
 
         self._request \
@@ -860,13 +860,13 @@ class ApiClient(object):
                 ('"71e1ed9ee52e565a56aec66bc648a32c"', 'Hello world!')
 
         Raises:
-            DocArgumentException: Invalid arguments
-            DocForbiddenException: Server response code 403
-            DocNotFoundException: Server response code 404
-            DocException: other 400-600 error codes
+            StorageArgumentException: Invalid arguments
+            StorageForbiddenException: Server response code 403
+            StorageNotFoundException: Server response code 404
+            StorageException: other 400-600 error codes
         '''
         if not is_valid_uuid(file_id):
-            raise DocArgumentException(
+            raise StorageArgumentException(
                 'Invalid UUID for file_id: {0}'.format(file_id))
 
         headers = {'Accept': '*/*'}
@@ -882,7 +882,7 @@ class ApiClient(object):
             return (None, None)
 
         if 'ETag' not in resp.headers:
-            raise DocException('No ETag received from the service with the download')
+            raise StorageException('No ETag received from the service with the download')
 
         return (resp.headers['ETag'], resp.content)
 
@@ -899,13 +899,13 @@ class ApiClient(object):
             The signed url as a string
 
         Raises:
-            DocArgumentException: Invalid arguments
-            DocForbiddenException: Server response code 403
-            DocNotFoundException: Server response code 404
-            DocException: other 400-600 error codes
+            StorageArgumentException: Invalid arguments
+            StorageForbiddenException: Server response code 403
+            StorageNotFoundException: Server response code 404
+            StorageException: other 400-600 error codes
         '''
         if not is_valid_uuid(file_id):
-            raise DocArgumentException(
+            raise StorageArgumentException(
                 'Invalid UUID for file_id: {0}'.format(file_id))
 
         return self._request \
@@ -923,13 +923,13 @@ class ApiClient(object):
             None
 
         Raises:
-            DocArgumentException: Invalid arguments
-            DocForbiddenException: Server response code 403
-            DocNotFoundException: Server response code 404
-            DocException: other 400-600 error codes
+            StorageArgumentException: Invalid arguments
+            StorageForbiddenException: Server response code 403
+            StorageNotFoundException: Server response code 404
+            StorageException: other 400-600 error codes
         '''
         if not is_valid_uuid(file_id):
-            raise DocArgumentException(
+            raise StorageArgumentException(
                 'Invalid UUID for file_id: {0}'.format(file_id))
 
         self._request \
