@@ -21,13 +21,13 @@ L = logging.getLogger(__name__)
 # This is needed for the unused params, which are not used because they are
 # gathered via locals()
 
-class StorageClient(object):
+class Client(object):
     '''High-level Client for interacting with the HBP Document Service, providing convenience functions for common operations
 
         Example:
             >>> #you'll have to have an access token ready
-            >>> from hbp_service_client.storage_service.client import StorageClient
-            >>> doc_client = StorageClient.new(my_access_token)
+            >>> from hbp_service_client.storage_service.client import Client
+            >>> doc_client = Client.new(my_access_token)
             >>> my_project_contents = doc_client.list_project_content(my_project_id)
     '''
 
