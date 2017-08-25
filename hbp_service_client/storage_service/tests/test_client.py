@@ -7,7 +7,7 @@ import mock
 
 from hamcrest import *
 
-from hbp_service_client.storage_service.highlevel import StorageClient
+from hbp_service_client.storage_service.client import StorageClient
 from hbp_service_client.storage_service.exceptions import (DocNotFoundException, DocArgumentException)
 
 class TestStorageClient(unittest.TestCase):
@@ -134,7 +134,7 @@ class TestStorageClient(unittest.TestCase):
         )
 
 
-    @mock.patch('hbp_service_client.storage_service.highlevel.open', create=True)
+    @mock.patch('hbp_service_client.storage_service.client.open', create=True)
     def test_download_file_should_download_file_content_into_a_local_file(self, mock_open):
         # given
         self.register_uri(
@@ -159,7 +159,7 @@ class TestStorageClient(unittest.TestCase):
         file_handle.write.assert_called_once_with(b'some content')
 
 
-    @mock.patch('hbp_service_client.storage_service.highlevel.open', create=True)
+    @mock.patch('hbp_service_client.storage_service.client.open', create=True)
     def test_download_file_should_download_file_content_in_1024_chunks(self, mock_open):
         # given
         self.register_uri(
