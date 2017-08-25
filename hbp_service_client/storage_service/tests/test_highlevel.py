@@ -388,6 +388,9 @@ class TestStorageClient(unittest.TestCase):
             adding_headers={'ETag':'some_etag'}
         )
 
+        # and the content of the local file is
+        mock_open.return_value = ''
+
         # when
         self.client.upload_file(
             dest_path  = 'dest/parent/file_to_create',
@@ -428,6 +431,9 @@ class TestStorageClient(unittest.TestCase):
             'https://document/service/file/{}/content/upload/'.format(file_uuid),
             adding_headers={'ETag':'some_etag'}
         )
+
+        # and the content of the local file is
+        mock_open.return_value = ''
 
         # when
         self.client.upload_file(
