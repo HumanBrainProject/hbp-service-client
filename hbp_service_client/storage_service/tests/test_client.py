@@ -8,7 +8,7 @@ import mock
 from hamcrest import *
 
 from hbp_service_client.storage_service.client import Client
-from hbp_service_client.storage_service.exceptions import (DocNotFoundException, DocArgumentException)
+from hbp_service_client.storage_service.exceptions import (StorageNotFoundException, StorageArgumentException)
 
 class TestClient(unittest.TestCase):
     def setUp(self):
@@ -243,7 +243,7 @@ class TestClient(unittest.TestCase):
         # then
         assert_that(
             calling(self.client.get_parent).with_args('path/to/parent/entity'),
-            raises(DocNotFoundException)
+            raises(StorageNotFoundException)
         )
 
 
@@ -275,7 +275,7 @@ class TestClient(unittest.TestCase):
         # then
         assert_that(
             calling(self.client.mkdir).with_args('path/to/parent/folder_to_create'),
-            raises(DocNotFoundException)
+            raises(StorageNotFoundException)
         )
 
 
@@ -337,14 +337,14 @@ class TestClient(unittest.TestCase):
     def test_upload_file_should_check_if_destination_file_contains_name(self):
         assert_that(
             calling(self.client.upload_file).with_args(dest_path='path/to/a/folder/', local_file=None, mimetype=None),
-            raises(DocArgumentException)
+            raises(StorageArgumentException)
         )
 
 
     def test_upload_file_should_check_if_local_file_is_not_a_folder(self):
         assert_that(
             calling(self.client.upload_file).with_args(local_file='path/to/a/folder/', dest_path='', mimetype=None),
-            raises(DocArgumentException)
+            raises(StorageArgumentException)
         )
 
 
@@ -358,7 +358,7 @@ class TestClient(unittest.TestCase):
         # then
         assert_that(
             calling(self.client.upload_file).with_args(dest_path='dest/parent/file_to_create', local_file='local/file_to_upload', mimetype=None),
-            raises(DocNotFoundException)
+            raises(StorageNotFoundException)
         )
 
 

@@ -1,4 +1,4 @@
-'''High-level Client for interacting with the HBP Document Service, providing convenience functions for common operations'''
+'''High-level Client for interacting with the HBP Storageument Service, providing convenience functions for common operations'''
 
 import hashlib
 import json
@@ -10,7 +10,7 @@ from os.path import join as joinp
 from validators import uuid as is_valid_uuid
 from hbp_service_client.storage_service.api import ApiClient
 from hbp_service_client.storage_service.exceptions import (
-    DocException, DocArgumentException, DocNotFoundException)
+    StorageException, StorageArgumentException, StorageNotFoundException)
 
 
 L = logging.getLogger(__name__)
@@ -86,7 +86,7 @@ class Client(object):
     def exists(self, path):
         try:
             metadata = self.api_client.get_entity_by_query(path=path)
-        except DocNotFoundException:
+        except StorageNotFoundException:
             return False
 
         return metadata and 'uuid' in metadata
@@ -118,9 +118,9 @@ class Client(object):
         '''
         #get the paths of the target dir and the target file name
         if dest_path.endswith('/'):
-            raise DocArgumentException('Must specify target file name in dest_path argument')
+            raise StorageArgumentException('Must specify target file name in dest_path argument')
         if local_file.endswith(os.path.sep):
-            raise DocArgumentException('Must specify source file name in local_file argument, directory upload not supported')
+            raise StorageArgumentException('Must specify source file name in local_file argument, directory upload not supported')
 
         #create the file container
         new_file = self.api_client.create_file(
