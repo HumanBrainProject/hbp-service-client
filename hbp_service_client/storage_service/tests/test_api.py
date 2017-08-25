@@ -6,7 +6,7 @@ import uuid
 
 from hamcrest import *
 
-from hbp_service_client.storage_service.api import ApiClient as DC
+from hbp_service_client.storage_service.api import ApiClient as AC
 from hbp_service_client.storage_service.exceptions import (
     DocException, DocArgumentException
 )
@@ -14,7 +14,7 @@ from hbp_service_client.storage_service.exceptions import (
 def url(url):
     return re.compile(re.escape(url))
 
-class TestClient(unittest.TestCase):
+class TestApiClient(unittest.TestCase):
 
     def setUp(self):
         httpretty.enable()
@@ -24,7 +24,7 @@ class TestClient(unittest.TestCase):
             body=json.dumps({ 'document': {'v1': 'https://document/service'} })
         )
 
-        self.client = DC.new('access-token')
+        self.client = AC.new('access-token')
         self.A_UUID = str(uuid.uuid4())
 
     def tearDown(self):
