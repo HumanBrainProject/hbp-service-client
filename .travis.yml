@@ -5,7 +5,7 @@ python:
   - "3.4"
   - "3.5"
 install:
-  - "pip install -r requirements.txt -r requirements_extension.txt"
+  - "pip install -r requirements.txt -r requirements_extension_tests.txt"
 script:
   - "green -vv"
   - "echo hello world"
