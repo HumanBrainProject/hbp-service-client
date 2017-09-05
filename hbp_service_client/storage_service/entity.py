@@ -16,17 +16,9 @@ class Entity(object):
     @classmethod
     def set_client(cls, client):
         #verify the interface
-        if not (hasattr(client, 'storage') and
-            hasattr(client.storage, 'api_client') and
-            hasattr(client.storage.api_client, 'list_folder_content') and
-            hasattr(client.storage.api_client, 'get_entity_details') and
-            callable(client.storage.api_client.list_folder_content) and
-            callable(client.storage.api_client.get_entity_details)):
+        if not hasattr(client, 'storage') and hasattr(client.storage, 'list_folder_content') and callable(client.storage.list_folder_content):
             raise ValueError('The client is of invalid specifications')
         cls.__client = client
-        #do some mapping here for easier refactoring
-        cls.__getdetails = cls.__client.storage.api_client.get_entity_details
-        cls.__listfolder = cls.__client.storage.api_client.list_folder_content
 
     @classmethod
     def from_dictionary(cls, dictionary):
@@ -44,7 +36,7 @@ class Entity(object):
         if not cls.__client:
             raise Exception('This method requires a client set')
         # TODO exception handling
-        return cls.from_dictionary(cls.__getdetails(uuid))
+        return cls.from_json(cls.__client.storage.get_entity_details(uuid))
 
     @property
     def parent(self):
@@ -74,8 +66,8 @@ class Entity(object):
         more = True
         page = 1
         while more:
-            partial_results = self.__listfolder(self.uuid, page=page, ordering='name')
-            self.children.extend([self.from_dictionary(entity) for entity in partial_results['results']])
+            partial_results = self.__client.storage.list_folder_content(self.uuid, page=page, ordering='name')
+            self.children.extend([self.from_json(entity) for entity in partial_results['results']])
             more = partial_results['next'] is not None
             page += 1
         for child in self.children:
@@ -93,7 +85,7 @@ class Entity(object):
                     folders_to_explore.insert(0, entity)
 
     def write_to_disk(self, destination=None, subtree=False):
-        ''' Write entity to disk
+        '''Write entity to disk
 
         Args:
             destination: the (existing) folder on disk under which it should be written. If none it will be the home directory
