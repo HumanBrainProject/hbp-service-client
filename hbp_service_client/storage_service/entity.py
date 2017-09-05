@@ -1,5 +1,5 @@
 from os import (mkdir, getcwd)
-from hbp_service_client.storage_service.exceptions import EntityArgumentException
+
 class Entity(object):
 
     _SUBTREE_TYPES = ['project', 'folder']
@@ -21,16 +21,12 @@ class Entity(object):
         cls.__client = client
 
     @classmethod
-    def from_dictionary(cls, dictionary):
-        try:
-            return cls(
-                entity_type=dictionary['entity_type'],
-                uuid=dictionary['uuid'],
-                name=dictionary['name'],
-                description=dictionary['description'])
-        except (TypeError, KeyError) as exc:
-            raise EntityArgumentException(exc)
-
+    def from_json(cls, json):
+        return cls(
+            entity_type=json['entity_type'],
+            uuid=json['uuid'],
+            name=json['name'],
+            description=json['description'])
     @classmethod
     def from_uuid(cls, uuid):
         if not cls.__client:
