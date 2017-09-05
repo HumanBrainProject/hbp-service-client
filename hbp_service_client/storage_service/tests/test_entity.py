@@ -4,7 +4,7 @@ import httpretty
 import json
 import re
 
-from hamcrest import (assert_that, has_properties, calling, raises, equal_to)
+from hamcrest import (assert_that, has_properties, calling, raises)
 
 from hbp_service_client.storage_service.exceptions import EntityArgumentException
 from hbp_service_client.storage_service.entity import Entity
@@ -112,30 +112,3 @@ class TestEntity(unittest.TestCase):
                 '_path': mydictionary['name']
                 })
         )
-
-    #
-    # parent
-    #
-
-    def test_setting_the_parent_sets_the_path(self):
-        #given
-        entity1 = Entity.from_dictionary(self.valid_entity_dictionary)
-        entity2 = Entity.from_dictionary(self.valid_entity_dictionary)
-
-        #when
-        entity1.parent = entity2
-
-        #then
-        assert_that(
-            entity1._path,
-            equal_to('{}/{}'.format(entity2.name, entity1.name)))
-
-    def test_parent_can_only_be_the_same_class(self):
-        #given
-        entity1 = Entity.from_dictionary(self.valid_entity_dictionary)
-        entity2 = u'2e608db7-cf2e-4e5b-b4c0-4dd4063d0cab'
-
-        #then
-        assert_that(
-            calling(entity1.__setattr__).with_args('parent', entity2),
-            raises(ValueError))
