@@ -1,19 +1,29 @@
 import unittest
-from hamcrest import (assert_that, instance_of, has_properties)
+import httpretty
+import json
+from hamcrest import (assert_that, instance_of, has_properties, not_none)
 
 from hbp_service_client.client import Client
-from hbp_service_client.storage_service.client import Client as StorageClient
 
 class TestClient(unittest.TestCase):
 
     def setUp(self):
+        httpretty.enable()
+        # Fakes the service locator call to the services.json file
+        httpretty.register_uri(
+            httpretty.GET, 'https://collab.humanbrainproject.eu/services.json',
+            body=json.dumps({ 'document': {'v1': 'https://document/service'} })
+        )
         self.client = Client.new('access_token')
 
+    def tearDown(self):
+        httpretty.disable()
+        httpretty.reset()
+
     def test_client_is_instantiable(self):
-        assert_that(self.client, instance_of(Client))
+        assert_that(self.client, not_none())
 
     def test_client_has_storage_client(self):
         assert_that(
             self.client,
-            has_properties(
-                {'storage': instance_of(StorageClient)}))
+            has_properties({'storage': not_none()}))
