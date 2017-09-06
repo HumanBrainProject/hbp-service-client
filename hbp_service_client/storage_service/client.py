@@ -31,6 +31,8 @@ class Client(object):
             >>> my_project_contents = doc_client.list_project_content(my_project_id)
     '''
 
+    __BROWSABLE_TYPES = ['project', 'folder']
+
     def __init__(self, client):
         '''
         Args:
@@ -55,15 +57,35 @@ class Client(object):
         return cls(apiClient)
 
     def ls(self, path):
-        project = self.api_client.get_entity_by_query(path=path)
-        project_uuid = project['uuid']
+        '''Retrieve entity path.
+
+        Args:
+            path (str): The path of the entity to be listed. Must start with a '/'.
+
+        Returns:
+            The list of entity names directly under the given path:
+
+                u'/12345/folder_1'
+
+        Raises:
+            StorageArgumentException: Invalid arguments
+            StorageForbiddenException: Server response code 403
+            StorageNotFoundException: Server response code 404
+            StorageException: other 400-600 error codes
+        '''
+        if not path or path[0] != '/' or path == '/':
+            raise StorageArgumentException('The path must start with a slash (/)')
+        entity = self.api_client.get_entity_by_query(path=path)
+        if entity['entity_type'] not in self.__BROWSABLE_TYPES:
+            raise StorageArgumentException('The entity type {} cannot be listed', entity['entity_type'])
+        entity_uuid = entity['uuid']
         file_names = []
 
         #get files
         more_pages = True
         page_number = 1
         while more_pages:
-            response = self.api_client.list_folder_content(project_uuid, page=page_number)
+            response = self.api_client.list_folder_content(entity_uuid, page=page_number)
             more_pages = response['next'] is not None
             page_number += 1
             for child in response['results']:

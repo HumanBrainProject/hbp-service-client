@@ -36,11 +36,45 @@ class TestClient(unittest.TestCase):
     # ls
     #
 
+    def test_ls_should_not_accept_paths_without_leading_slash(self):
+        #then
+        assert_that(
+            calling(self.client.ls).with_args('foo'),
+            raises(StorageArgumentException)
+        )
+
+    def test_ls_should_not_accept_empty_paths(self):
+        #then
+        assert_that(
+            calling(self.client.ls).with_args(''),
+            raises(StorageArgumentException)
+        )
+
+    def test_ls_should_not_accept_a_single_slash(self):
+        #then
+        assert_that(
+            calling(self.client.ls).with_args('/'),
+            raises(StorageArgumentException)
+        )
+
+    def test_ls_should_not_accept_files(self):
+        # given
+        self.register_uri(
+            'https://document/service/entity/?path=%2Fmyproject%2Fmyfile',
+            returns={'uuid': 'e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56', 'entity_type': 'file'}
+        )
+
+        # then
+        assert_that(
+            calling(self.client.ls).with_args('/myproject/myfile'),
+            raises(StorageArgumentException)
+        )
+
     def test_ls_should_return_an_empty_list_for_an_empty_project(self):
         # given
         self.register_uri(
-            'https://document/service/entity/?path=my_empty_project',
-            returns={'uuid': 'e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56'}
+            'https://document/service/entity/?path=%2Fmy_empty_project',
+            returns={'uuid': 'e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56', 'entity_type': 'project'}
         )
         self.register_uri(
             'https://document/service/folder/e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56/children/?page=1',
@@ -48,7 +82,7 @@ class TestClient(unittest.TestCase):
         )
 
         # when
-        file_names = self.client.ls('my_empty_project')
+        file_names = self.client.ls('/my_empty_project')
 
         # then
         assert_that(file_names, equal_to([]))
@@ -57,8 +91,8 @@ class TestClient(unittest.TestCase):
     def test_ls_should_return_the_files_of_the_project(self):
         # given
         self.register_uri(
-            'https://document/service/entity/?path=my_project',
-            returns={'uuid': 'e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56'}
+            'https://document/service/entity/?path=%2Fmy_project',
+            returns={'uuid': 'e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56', 'entity_type': 'project'}
         )
         self.register_uri(
             'https://document/service/folder/e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56/children/?page=1',
@@ -66,7 +100,7 @@ class TestClient(unittest.TestCase):
         )
 
         # when
-        file_names = self.client.ls('my_project')
+        file_names = self.client.ls('/my_project')
 
         # then
         assert_that(file_names, equal_to(['file1', 'file2']))
@@ -75,8 +109,8 @@ class TestClient(unittest.TestCase):
     def test_ls_should_return_the_folders_of_the_project_with_a_leading_slash(self):
         # given
         self.register_uri(
-            'https://document/service/entity/?path=my_project',
-            returns={'uuid': 'e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56'}
+            'https://document/service/entity/?path=%2Fmy_project',
+            returns={'uuid': 'e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56', 'entity_type': 'project'}
         )
         self.register_uri(
             'https://document/service/folder/e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56/children/?page=1',
@@ -84,7 +118,7 @@ class TestClient(unittest.TestCase):
         )
 
         # when
-        file_names = self.client.ls('my_project')
+        file_names = self.client.ls('/my_project')
 
         # then
         assert_that(file_names, equal_to(['/folder1', '/folder2']))
@@ -93,8 +127,8 @@ class TestClient(unittest.TestCase):
     def test_ls_should_load_all_the_paginated_files_of_the_project(self):
         # given
         self.register_uri(
-            'https://document/service/entity/?path=my_project',
-            returns={'uuid': 'e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56'}
+            'https://document/service/entity/?path=%2Fmy_project',
+            returns={'uuid': 'e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56', 'entity_type': 'project'}
         )
         self.register_uri(
             'https://document/service/folder/e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56/children/?page=1',
@@ -110,7 +144,7 @@ class TestClient(unittest.TestCase):
         )
 
         # when
-        file_names = self.client.ls('my_project')
+        file_names = self.client.ls('/my_project')
 
         # then
         assert_that(file_names, equal_to(['file1', '/folder1', 'file2', '/folder2', 'file3', '/folder3']))
