@@ -35,6 +35,12 @@ class TestClient(unittest.TestCase):
     #
     # ls
     #
+    def test_ls_should_not_accept_paths_that_not_string(self):
+        #then
+        assert_that(
+            calling(self.client.ls).with_args(123),
+            raises(StorageArgumentException)
+        )
 
     def test_ls_should_not_accept_paths_without_leading_slash(self):
         #then
