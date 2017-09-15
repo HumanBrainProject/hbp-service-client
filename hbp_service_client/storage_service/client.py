@@ -77,7 +77,7 @@ class Client(object):
             raise StorageArgumentException('The path must start with a slash (/)')
         entity = self.api_client.get_entity_by_query(path=path)
         if entity['entity_type'] not in self.__BROWSABLE_TYPES:
-            raise StorageArgumentException('The entity type {} cannot be listed', entity['entity_type'])
+            raise StorageArgumentException('The entity type "{0}" cannot be listed'.format(entity['entity_type']))
         entity_uuid = entity['uuid']
         file_names = []
 
