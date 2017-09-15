@@ -57,7 +57,7 @@ class Client(object):
         return cls(apiClient)
 
     def ls(self, path):
-        '''Retrieve entity path.
+        '''List the entities found directly under the given path.
 
         Args:
             path (str): The path of the entity to be listed. Must start with a '/'.
