@@ -73,7 +73,7 @@ class Client(object):
             StorageNotFoundException: Server response code 404
             StorageException: other 400-600 error codes
         '''
-        if not path or path[0] != '/' or path == '/':
+        if not path or not isinstance(path, str) or path[0] != '/' or path == '/':
             raise StorageArgumentException('The path must start with a slash (/)')
         entity = self.api_client.get_entity_by_query(path=path)
         if entity['entity_type'] not in self.__BROWSABLE_TYPES:
