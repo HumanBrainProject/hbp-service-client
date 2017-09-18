@@ -1,4 +1,4 @@
-import unittest
+import pytest
 from mock import Mock, call
 import httpretty
 import json
@@ -10,8 +10,11 @@ from hamcrest import *
 from hbp_service_client.storage_service.client import Client
 from hbp_service_client.storage_service.exceptions import (StorageNotFoundException, StorageArgumentException)
 
-class TestClient(unittest.TestCase):
-    def setUp(self):
+class TestClient(object):
+
+    __BAD_PATHS = [123, 'foo', '', '/']
+
+    def setup_method(self):
         httpretty.enable()
         # Fakes the service locator call to the services.json file
         httpretty.register_uri(
@@ -20,7 +23,7 @@ class TestClient(unittest.TestCase):
         )
         self.client = Client.new('access_token')
 
-    def tearDown(self):
+    def teardown_method(self):
         httpretty.disable()
         httpretty.reset()
 
@@ -35,33 +38,11 @@ class TestClient(unittest.TestCase):
     #
     # ls
     #
-    def test_ls_should_not_accept_paths_that_not_string(self):
-        #then
+    @pytest.mark.parametrize('path', __BAD_PATHS)
+    def test_ls_verifies_input_path(self, path):
         assert_that(
-            calling(self.client.ls).with_args(123),
-            raises(StorageArgumentException)
-        )
-
-    def test_ls_should_not_accept_paths_without_leading_slash(self):
-        #then
-        assert_that(
-            calling(self.client.ls).with_args('foo'),
-            raises(StorageArgumentException)
-        )
-
-    def test_ls_should_not_accept_empty_paths(self):
-        #then
-        assert_that(
-            calling(self.client.ls).with_args(''),
-            raises(StorageArgumentException)
-        )
-
-    def test_ls_should_not_accept_a_single_slash(self):
-        #then
-        assert_that(
-            calling(self.client.ls).with_args('/'),
-            raises(StorageArgumentException)
-        )
+            calling(self.client.ls).with_args(path),
+            raises(StorageArgumentException))
 
     def test_ls_should_not_accept_files(self):
         # given
