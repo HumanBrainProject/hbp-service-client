@@ -141,16 +141,22 @@ class TestClient(object):
     # download_file
     #
 
+    @pytest.mark.parametrize('path', __BAD_PATHS)
+    def test_dowload_file_validates_path(self, path):
+        assert_that(
+            calling(self.client.download_file).with_args(path, 'valid_target_path'),
+            raises(StorageArgumentException))
+
     def test_download_file_checks_entity_is_a_file(self):
         # given
         self.register_uri(
-            'https://document/service/entity/?path=path-to-something',
+            'https://document/service/entity/?path=%2Fpath%2Fto%2Fsomething',
             returns={'entity_type': 'not a file'}
         )
 
         # then
         assert_that(
-            calling(self.client.download_file).with_args('path-to-something', 'path/to/target'),
+            calling(self.client.download_file).with_args('/path/to/something', 'path/to/target'),
             raises(AssertionError)
         )
 
@@ -159,7 +165,7 @@ class TestClient(object):
     def test_download_file_should_download_file_content_into_a_local_file(self, mock_open):
         # given
         self.register_uri(
-            'https://document/service/entity/?path=path-to-file',
+            'https://document/service/entity/?path=%2Fpath%2Fto%2Ffile',
             returns={'entity_type': 'file', 'uuid': 'e2c25c1b-1234-4cf6-b8d2-271e628a9a56'}
         )
         self.register_uri(
@@ -172,7 +178,7 @@ class TestClient(object):
         )
 
         # when
-        self.client.download_file('path-to-file', 'target.file')
+        self.client.download_file('/path/to/file', 'target.file')
 
         # then
         mock_open.assert_called_once_with('target.file', 'wb')
@@ -184,7 +190,7 @@ class TestClient(object):
     def test_download_file_should_download_file_content_in_1024_chunks(self, mock_open):
         # given
         self.register_uri(
-            'https://document/service/entity/?path=path-to-file',
+            'https://document/service/entity/?path=%2Fpath%2Fto%2Ffile',
             returns={'entity_type': 'file', 'uuid': 'e2c25c1b-1234-4cf6-b8d2-271e628a9a56'}
         )
         self.register_uri(
@@ -197,7 +203,7 @@ class TestClient(object):
         )
 
         # when
-        self.client.download_file('path-to-file', 'target.file')
+        self.client.download_file('/path/to/file', 'target.file')
 
         # then
         file_handle = mock_open.return_value.__enter__.return_value
