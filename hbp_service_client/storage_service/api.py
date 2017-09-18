@@ -939,7 +939,7 @@ class ApiClient(object):
             .delete()
 
     def download_signed_url(self, signed_url):
-        return self._authenticated_request \
+        return self._request \
             .to_endpoint(signed_url) \
             .stream_response() \
             .get()
