@@ -73,8 +73,7 @@ class Client(object):
             StorageNotFoundException: Server response code 404
             StorageException: other 400-600 error codes
         '''
-        if not path or not isinstance(path, str) or path[0] != '/' or path == '/':
-            raise StorageArgumentException('The path must start with a slash (/)')
+        self.__validate_storage_path(path)
         entity = self.api_client.get_entity_by_query(path=path)
         if entity['entity_type'] not in self.__BROWSABLE_TYPES:
             raise StorageArgumentException('The entity type "{0}" cannot be listed'.format(entity['entity_type']))
@@ -95,6 +94,27 @@ class Client(object):
         return file_names
 
     def download_file(self, path, target_path):
+        '''Download a file from storage service to local disk.
+
+        Existing files on the target path will be overwritten.
+        The download is not recursive, as it only works on files.
+
+        Args:
+            path (str): The path of the entity to be downloaded. Must start with a '/'.
+
+        Returns:
+            The list of entity names directly under the given path:
+
+                u'/12345/folder_1'
+
+        Raises:
+            StorageArgumentException: Invalid arguments
+            StorageForbiddenException: Server response code 403
+            StorageNotFoundException: Server response code 404
+            StorageException: other 400-600 error codes
+        '''
+
+        self.__validate_storage_path(path)
         entity = self.api_client.get_entity_by_query(path=path)
         assert entity['entity_type'] == 'file'
 
@@ -155,3 +175,11 @@ class Client(object):
         new_file['etag'] = etag
 
         return new_file
+
+    @classmethod
+    def __validate_storage_path(cls, path):
+        '''Validate a string as a valid storage path'''
+
+        if not path or not isinstance(path, str) or path[0] != '/' or path == '/':
+            raise StorageArgumentException(
+                'The path must be a string, start with a slash (/), and be longer than 1 character.')
