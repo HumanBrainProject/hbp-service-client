@@ -31,12 +31,13 @@ class ApiClient(object):
     SERVICE_NAME = 'document'
     SERVICE_VERSION = 'v1'
 
-    def __init__(self, request):
+    def __init__(self, request, authenticated_request):
         '''
         Args:
            request: the base request to customize and send request with
         '''
         self._request = request
+        self._authenticated_request = authenticated_request
 
     @classmethod
     def new(cls, access_token, environment='prod'):
@@ -54,7 +55,6 @@ class ApiClient(object):
         request = RequestBuilder \
             .request(environment) \
             .to_service(cls.SERVICE_NAME, cls.SERVICE_VERSION) \
-            .with_token(access_token) \
             .throw(
                 StorageForbiddenException,
                 lambda resp:
@@ -74,7 +74,9 @@ class ApiClient(object):
                     else None
             )
 
-        return cls(request)
+        authenticated_request = request.with_token(access_token)
+
+        return cls(request, authenticated_request)
 
     @staticmethod
     def _prep_params(params):
@@ -112,7 +114,7 @@ class ApiClient(object):
         if not is_valid_uuid(entity_id):
             raise StorageArgumentException(
                 'Invalid UUID for entity_id: {0}'.format(entity_id))
-        return self._request \
+        return self._authenticated_request \
             .to_endpoint('entity/{}/'.format(entity_id)) \
             .return_body() \
             .get()
@@ -138,7 +140,7 @@ class ApiClient(object):
             raise StorageArgumentException(
                 'Invalid UUID for entity_id: {0}'.format(entity_id))
 
-        return self._request \
+        return self._authenticated_request \
             .to_endpoint('entity/{}/path/'.format(entity_id)) \
             .return_body() \
             .get()["path"]
@@ -162,7 +164,7 @@ class ApiClient(object):
             raise StorageArgumentException(
                 'Invalid UUID for entity_id: {0}'.format(entity_id))
 
-        return self._request \
+        return self._authenticated_request \
             .to_endpoint('entity/{}/collab/'.format(entity_id)) \
             .return_body() \
             .get()["collab_id"]
@@ -213,7 +215,7 @@ class ApiClient(object):
             del params['metadata']
         params = self._prep_params(params)
 
-        return self._request \
+        return self._authenticated_request \
             .to_endpoint('entity/') \
             .with_params(params) \
             .return_body() \
@@ -257,7 +259,7 @@ class ApiClient(object):
             raise StorageArgumentException('The metadata was not provided as a '
                                        'dictionary')
 
-        return self._request \
+        return self._authenticated_request \
             .to_endpoint('{}/{}/metadata/'.format(entity_type, entity_id)) \
             .with_json_body(metadata) \
             .return_body() \
@@ -289,7 +291,7 @@ class ApiClient(object):
             raise StorageArgumentException(
                 'Invalid UUID for entity_id: {0}'.format(entity_id))
 
-        return self._request \
+        return self._authenticated_request \
             .to_endpoint('{}/{}/metadata/'.format(entity_type, entity_id)) \
             .return_body() \
             .get()
@@ -327,7 +329,7 @@ class ApiClient(object):
             raise StorageArgumentException('The metadata was not provided as a '
                                        'dictionary')
 
-        return self._request \
+        return self._authenticated_request \
             .to_endpoint('{}/{}/metadata/'.format(entity_type, entity_id)) \
             .with_json_body(metadata) \
             .return_body() \
@@ -365,7 +367,7 @@ class ApiClient(object):
             raise StorageArgumentException('The metadata was not provided as a '
                                        'dictionary')
 
-        return self._request \
+        return self._authenticated_request \
             .to_endpoint('{}/{}/metadata/'.format(entity_type, entity_id)) \
             .with_json_body({'keys': metadata_keys}) \
             .return_body() \
@@ -421,7 +423,7 @@ class ApiClient(object):
             StorageNotFoundException: Server response code 404
             StorageException: other 400-600 error codes
         '''
-        return self._request \
+        return self._authenticated_request \
             .to_endpoint('project/') \
             .with_params(self._prep_params(locals())) \
             .return_body() \
@@ -457,7 +459,7 @@ class ApiClient(object):
             raise StorageArgumentException(
                 'Invalid UUID for project_id: {0}'.format(project_id))
 
-        return self._request \
+        return self._authenticated_request \
             .to_endpoint('project/{}/'.format(project_id)) \
             .return_body() \
             .get()
@@ -514,7 +516,7 @@ class ApiClient(object):
                 'Invalid UUID for project_id: {0}'.format(project_id))
         params = self._prep_params(locals())
         del params['project_id'] # not a query parameter
-        return self._request \
+        return self._authenticated_request \
             .to_endpoint('project/{}/children/'.format(project_id)) \
             .with_params(params) \
             .return_body() \
@@ -557,7 +559,7 @@ class ApiClient(object):
             raise StorageArgumentException(
                 'Invalid UUID for parent: {0}'.format(parent))
 
-        return self._request \
+        return self._authenticated_request \
             .to_endpoint('folder/') \
             .with_json_body(self._prep_params(locals())) \
             .return_body() \
@@ -593,7 +595,7 @@ class ApiClient(object):
         if not is_valid_uuid(folder):
             raise StorageArgumentException(
                 'Invalid UUID for folder: {0}'.format(folder))
-        return self._request \
+        return self._authenticated_request \
             .to_endpoint('folder/{}/'.format(folder)) \
             .return_body() \
             .get()
@@ -650,7 +652,7 @@ class ApiClient(object):
                 'Invalid UUID for folder: {0}'.format(folder))
         params = self._prep_params(locals())
         del params['folder'] # not a query parameter
-        return self._request \
+        return self._authenticated_request \
             .to_endpoint('folder/{}/children/'.format(folder)) \
             .with_params(params) \
             .return_body() \
@@ -674,7 +676,7 @@ class ApiClient(object):
         if not is_valid_uuid(folder):
             raise StorageArgumentException(
                 'Invalid UUID for folder: {0}'.format(folder))
-        self._request \
+        self._authenticated_request \
             .to_endpoint('folder/{}/'.format(folder)) \
             .delete()
 
@@ -716,7 +718,7 @@ class ApiClient(object):
         if not is_valid_uuid(parent):
             raise StorageArgumentException(
                 'Invalid UUID for parent: {0}'.format(parent))
-        return self._request \
+        return self._authenticated_request \
             .to_endpoint('file/') \
             .with_json_body(self._prep_params(locals())) \
             .return_body() \
@@ -753,7 +755,7 @@ class ApiClient(object):
         if not is_valid_uuid(file_id):
             raise StorageArgumentException(
                 'Invalid UUID for file_id: {0}'.format(file_id))
-        return self._request \
+        return self._authenticated_request \
             .to_endpoint('file/{}/'.format(file_id)) \
             .return_body() \
             .get()
@@ -797,7 +799,7 @@ class ApiClient(object):
         if not (source or content) or (source and content):
             raise StorageArgumentException('Either one of source file or content has to be provided.')
 
-        resp = self._request \
+        resp = self._authenticated_request \
             .to_endpoint('file/{}/content/upload/'.format(file_id)) \
             .with_body(content or open(source, 'rb')) \
             .with_headers({'If-Match': etag} if etag else {}) \
@@ -832,7 +834,7 @@ class ApiClient(object):
             raise StorageArgumentException(
                 'Invalid UUID for source_file: {0}'.format(source_file))
 
-        self._request \
+        self._authenticated_request \
             .to_endpoint('file/{}/content/'.format(file_id)) \
             .with_headers({'X-Copy-From': source_file}) \
             .put()
@@ -873,7 +875,7 @@ class ApiClient(object):
         if etag:
             headers['If-None-Match'] = etag
 
-        resp = self._request \
+        resp = self._authenticated_request \
             .to_endpoint('file/{}/content/'.format(file_id)) \
             .with_headers(headers) \
             .get()
@@ -908,7 +910,7 @@ class ApiClient(object):
             raise StorageArgumentException(
                 'Invalid UUID for file_id: {0}'.format(file_id))
 
-        return self._request \
+        return self._authenticated_request \
             .to_endpoint('file/{}/content/secure_link/'.format(file_id)) \
             .return_body() \
             .get()['signed_url']
@@ -932,12 +934,12 @@ class ApiClient(object):
             raise StorageArgumentException(
                 'Invalid UUID for file_id: {0}'.format(file_id))
 
-        self._request \
+        self._authenticated_request \
             .to_endpoint('file/{}/'.format(file_id)) \
             .delete()
 
     def download_signed_url(self, signed_url):
-        return self._request \
+        return self._authenticated_request \
             .to_endpoint(signed_url) \
             .stream_response() \
             .get()
