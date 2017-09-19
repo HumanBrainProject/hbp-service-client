@@ -163,8 +163,23 @@ class Client(object):
         return self.api_client.get_entity_by_query(path=parent_path)
 
     def mkdir(self, path):
+        '''Create a folder in the storage service pointed by the given path.
+
+        Args:
+            path (str): The path of the folder to be created
+
+        Returns:
+            None
+
+        Raises:
+            StorageArgumentException: Invalid arguments
+            StorageForbiddenException: Server response code 403
+            StorageNotFoundException: Server response code 404
+            StorageException: other 400-600 error codes
+        '''
+
         parent_metadata = self.get_parent(path)
-        self.api_client.create_folder(path.split('/').pop(), parent_metadata['uuid'])
+        self.api_client.create_folder(path.split('/')[-1], parent_metadata['uuid'])
         #no return necessary, function succeeds or we would have thrown an exception before this point.
 
     def upload_file(self,local_file, dest_path, mimetype, md5check=False):

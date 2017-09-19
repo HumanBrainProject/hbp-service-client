@@ -310,6 +310,17 @@ class TestClient(object):
     # mkdir
     #
 
+    @pytest.mark.parametrize('path', __BAD_PATHS)
+    def test_mkdir_validates_path(self, path):
+        assert_that(
+            calling(self.client.mkdir).with_args(path),
+            raises(StorageArgumentException))
+
+    def test_mkdir_doesnt_accept_projects(self):
+        assert_that(
+            calling(self.client.mkdir).with_args('/project'),
+            raises(StorageArgumentException))
+
     def test_mkdir_should_throw_an_exception_if_parent_folder_does_not_exist(self):
         # given the parent folder does not exist
         httpretty.register_uri(
