@@ -124,6 +124,15 @@ class Client(object):
                 output.write(chunk)
 
     def exists(self, path):
+        '''Check if a certain path exists in the storage service.
+
+        Args:
+            path (str): The path to be checked
+
+        Returns:
+            True if the path exists, False otherwise
+        '''
+        self.__validate_storage_path(path)
         try:
             metadata = self.api_client.get_entity_by_query(path=path)
         except StorageNotFoundException:
