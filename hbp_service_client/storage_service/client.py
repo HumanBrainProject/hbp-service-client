@@ -103,9 +103,7 @@ class Client(object):
             path (str): The path of the entity to be downloaded. Must start with a '/'.
 
         Returns:
-            The list of entity names directly under the given path:
-
-                u'/12345/folder_1'
+            None
 
         Raises:
             StorageArgumentException: Invalid arguments
