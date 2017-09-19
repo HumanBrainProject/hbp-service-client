@@ -131,6 +131,11 @@ class Client(object):
 
         Returns:
             True if the path exists, False otherwise
+        Raises:
+            StorageArgumentException: Invalid arguments
+            StorageForbiddenException: Server response code 403
+            StorageNotFoundException: Server response code 404
+            StorageException: other 400-600 error codes
         '''
         self.__validate_storage_path(path)
         try:
@@ -141,9 +146,20 @@ class Client(object):
         return metadata and 'uuid' in metadata
 
     def get_parent(self, path):
-        path_steps = path.split('/')
-        new_dir = path_steps.pop()
-        parent_path = "/".join(path_steps)
+        '''Get the parent entity of the entity pointed by the given path.
+
+        Args:
+            path (str): The path of the entity whose parent is needed
+
+        Returns:
+            A JSON object of the parent entity if found.
+        '''
+        self.__validate_storage_path(path)
+        path_steps = [step for step in path.split('/') if step]
+        del path_steps[-1]
+        if len(path_steps) == 0:
+            raise StorageArgumentException('Projects do not have a parent')
+        parent_path = '/{0}'.format('/'.join(path_steps))
         return self.api_client.get_entity_by_query(path=parent_path)
 
     def mkdir(self, path):
