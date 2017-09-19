@@ -390,6 +390,12 @@ class TestClient(object):
     # upload_file
     #
 
+    @pytest.mark.parametrize('path', __BAD_PATHS)
+    def test_upload_file_validates_path(self, path):
+        assert_that(
+            calling(self.client.upload_file).with_args(dest_path=path, local_file=None, mimetype=None),
+            raises(StorageArgumentException))
+
     def test_upload_file_should_check_if_destination_file_contains_name(self):
         assert_that(
             calling(self.client.upload_file).with_args(dest_path='path/to/a/folder/', local_file=None, mimetype=None),
