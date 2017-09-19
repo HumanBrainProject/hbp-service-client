@@ -266,16 +266,28 @@ class TestClient(object):
     # get_parents
     #
 
+    @pytest.mark.parametrize('path', __BAD_PATHS)
+    def test_get_parent_validates_path(self, path):
+        assert_that(
+            calling(self.client.get_parent).with_args(path),
+            raises(StorageArgumentException))
+
+
+    def test_get_parent_doesnt_accept_projects(self):
+        assert_that(
+            calling(self.client.get_parent).with_args('/project'),
+            raises(StorageArgumentException))
+
     def test_get_parent_should_throw_exception_if_parent_does_not_exist(self):
         # given the parent does not exist
         httpretty.register_uri(
-            httpretty.GET, 'https://document/service/entity/?path=path%2Fto%2Fparent',
+            httpretty.GET, 'https://document/service/entity/?path=%2Fpath%2Fto%2Fparent',
             status=404
         )
 
         # then
         assert_that(
-            calling(self.client.get_parent).with_args('path/to/parent/entity'),
+            calling(self.client.get_parent).with_args('/path/to/parent/entity'),
             raises(StorageNotFoundException)
         )
 
@@ -283,12 +295,12 @@ class TestClient(object):
     def test_get_parent_should_return_the_parent(self):
         # given the parent exists
         self.register_uri(
-            'https://document/service/entity/?path=path%2Fto%2Fparent',
+            'https://document/service/entity/?path=%2Fpath%2Fto%2Fparent',
             returns='parent entity'
         )
 
         # when
-        parent = self.client.get_parent('path/to/parent/entity')
+        parent = self.client.get_parent('/path/to/parent/entity')
 
         # then
         assert_that(parent, equal_to('parent entity'))
@@ -301,13 +313,13 @@ class TestClient(object):
     def test_mkdir_should_throw_an_exception_if_parent_folder_does_not_exist(self):
         # given the parent folder does not exist
         httpretty.register_uri(
-            httpretty.GET, 'https://document/service/entity/?path=path%2Fto%2Fparent',
+            httpretty.GET, 'https://document/service/entity/?path=%2Fpath%2Fto%2Fparent',
             status=404
         )
 
         # then
         assert_that(
-            calling(self.client.mkdir).with_args('path/to/parent/folder_to_create'),
+            calling(self.client.mkdir).with_args('/path/to/parent/folder_to_create'),
             raises(StorageNotFoundException)
         )
 
@@ -316,7 +328,7 @@ class TestClient(object):
         # given the parent folder is found
         parent_uuid = 'e2c25c1b-1234-4cf6-b8d2-271e628a9a56'
         self.register_uri(
-            'https://document/service/entity/?path=path%2Fto%2Fparent',
+            'https://document/service/entity/?path=%2Fpath%2Fto%2Fparent',
             returns={ 'uuid': parent_uuid }
         )
 
@@ -328,7 +340,7 @@ class TestClient(object):
         )
 
         # when
-        self.client.mkdir('path/to/parent/folder_to_create')
+        self.client.mkdir('/path/to/parent/folder_to_create')
 
         # then
         request_body = json.loads(httpretty.last_request().body.decode())
@@ -341,7 +353,7 @@ class TestClient(object):
     def test_mkdir_should_create_the_given_folder_with_its_name(self):
         # given the parent folder is found
         self.register_uri(
-            'https://document/service/entity/?path=path%2Fto%2Fparent',
+            'https://document/service/entity/?path=%2Fpath%2Fto%2Fparent',
             returns={ 'uuid': 'e2c25c1b-1234-4cf6-b8d2-271e628a9a56' }
         )
 
@@ -353,7 +365,7 @@ class TestClient(object):
         )
 
         # when
-        self.client.mkdir('path/to/parent/folder_to_create')
+        self.client.mkdir('/path/to/parent/folder_to_create')
 
         # then
         request_body = json.loads(httpretty.last_request().body.decode())
@@ -384,13 +396,13 @@ class TestClient(object):
     def test_test_upload_should_throw_an_exception_if_destination_folder_does_not_exist(self):
         # given the parent folder does not exist
         httpretty.register_uri(
-            httpretty.GET, 'https://document/service/entity/?path=dest%2Fparent',
+            httpretty.GET, 'https://document/service/entity/?path=%2Fdest%2Fparent',
             status=404
         )
 
         # then
         assert_that(
-            calling(self.client.upload_file).with_args(dest_path='dest/parent/file_to_create', local_file='local/file_to_upload', mimetype=None),
+            calling(self.client.upload_file).with_args(dest_path='/dest/parent/file_to_create', local_file='local/file_to_upload', mimetype=None),
             raises(StorageNotFoundException)
         )
 
@@ -400,7 +412,7 @@ class TestClient(object):
         # given  the parent folder is found
         parent_uuid = 'e2c25c1b-1234-4cf6-b8d2-271e628a9a56'
         self.register_uri(
-            'https://document/service/entity/?path=dest%2Fparent',
+            'https://document/service/entity/?path=%2Fdest%2Fparent',
             returns={ 'uuid': parent_uuid }
         )
 
@@ -426,7 +438,7 @@ class TestClient(object):
 
         # when
         self.client.upload_file(
-            dest_path  = 'dest/parent/file_to_create',
+            dest_path  = '/dest/parent/file_to_create',
             local_file = 'local/file_to_upload',
             mimetype   = None
         )
@@ -444,7 +456,7 @@ class TestClient(object):
     def test_upload_should_create_the_destination_file_with_its_name(self, mock_open):
         # given  the parent folder is found
         self.register_uri(
-            'https://document/service/entity/?path=dest%2Fparent',
+            'https://document/service/entity/?path=%2Fdest%2Fparent',
             returns={ 'uuid': 'e2c25c1b-1234-4cf6-b8d2-271e628a9a56' }
         )
 
@@ -470,7 +482,7 @@ class TestClient(object):
 
         # when
         self.client.upload_file(
-            dest_path  = 'dest/parent/file_to_create',
+            dest_path  = '/dest/parent/file_to_create',
             local_file = 'local/file_to_upload',
             mimetype   = None
         )
@@ -488,7 +500,7 @@ class TestClient(object):
     def test_upload_should_create_the_destination_file_with_the_content_of_the_local_file(self, mock_open):
         # given  the parent folder is found
         self.register_uri(
-            'https://document/service/entity/?path=dest%2Fparent',
+            'https://document/service/entity/?path=%2Fdest%2Fparent',
             returns={ 'uuid': 'e2c25c1b-1234-4cf6-b8d2-271e628a9a56' }
         )
 
@@ -514,7 +526,7 @@ class TestClient(object):
 
         # when
         self.client.upload_file(
-            dest_path  = 'dest/parent/file_to_create',
+            dest_path  = '/dest/parent/file_to_create',
             local_file = 'local/file_to_upload',
             mimetype   = None
         )
