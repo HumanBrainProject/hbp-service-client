@@ -180,8 +180,8 @@ class Client(object):
         self.api_client.create_folder(path.split('/')[-1], parent_metadata['uuid'])
         #no return necessary, function succeeds or we would have thrown an exception before this point.
 
-    def upload_file(self,local_file, dest_path, mimetype, md5check=False):
-        '''upload local file content to a Storage service destination folder
+    def upload_file(self, local_file, dest_path, mimetype, md5check=False):
+        '''Upload local file content to a storage service destination folder.
 
             Args:
                 local_file(string path)
@@ -192,8 +192,16 @@ class Client(object):
                 mimetype(str): set the contentType attribute
                 storage_attributes(dict): override standard storage metadata attributes
 
-            Returns: uuid of created file entity
+            Returns:
+                The uuid of created file entity as string
+
+            Raises:
+                StorageArgumentException: Invalid arguments
+                StorageForbiddenException: Server response code 403
+                StorageNotFoundException: Server response code 404
+                StorageException: other 400-600 error codes
         '''
+        self.__validate_storage_path(dest_path)
         #get the paths of the target dir and the target file name
         if dest_path.endswith('/'):
             raise StorageArgumentException('Must specify target file name in dest_path argument')
