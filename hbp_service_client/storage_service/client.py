@@ -154,11 +154,9 @@ class Client(object):
         Returns:
             A JSON object of the parent entity if found.
         '''
-        self.__validate_storage_path(path)
+        self.__validate_storage_path(path, projects_allowed=False)
         path_steps = [step for step in path.split('/') if step]
         del path_steps[-1]
-        if len(path_steps) == 0:
-            raise StorageArgumentException('Projects do not have a parent')
         parent_path = '/{0}'.format('/'.join(path_steps))
         return self.api_client.get_entity_by_query(path=parent_path)
 
@@ -177,7 +175,7 @@ class Client(object):
             StorageNotFoundException: Server response code 404
             StorageException: other 400-600 error codes
         '''
-
+        self.__validate_storage_path(path, projects_allowed=False)
         parent_metadata = self.get_parent(path)
         self.api_client.create_folder(path.split('/')[-1], parent_metadata['uuid'])
         #no return necessary, function succeeds or we would have thrown an exception before this point.
@@ -215,9 +213,12 @@ class Client(object):
         return new_file
 
     @classmethod
-    def __validate_storage_path(cls, path):
+    def __validate_storage_path(cls, path, projects_allowed=True):
         '''Validate a string as a valid storage path'''
 
         if not path or not isinstance(path, str) or path[0] != '/' or path == '/':
             raise StorageArgumentException(
                 'The path must be a string, start with a slash (/), and be longer than 1 character.')
+        if not projects_allowed and len([elem for elem in path.split('/') if elem]) == 1:
+            raise StorageArgumentException(
+                'This method does not accept projects in the path.')
