@@ -10,8 +10,8 @@ class RequestBuilder(object):
 
     def __init__(
             self, service_locator=None, url=None, service_url=None, endpoint=None,
-            headers=None, return_body=False, params=None, body=None, json_body=None,
-            stream=False, throws=None):
+            headers={}, return_body=False, params={}, body=None, json_body=None,
+            stream=False, throws=[]):
         '''
         Args:
            service_locator: collaborator which gets the collab services urls
@@ -32,13 +32,13 @@ class RequestBuilder(object):
         self._url = url
         self._service_url = service_url
         self._endpoint = endpoint
-        self._headers = headers if not None else {}
+        self._headers = headers if headers is not None else {}
         self._return_body = return_body
-        self._params = params if not None else {}
+        self._params = params if params is not None else {}
         self._body = body
         self._json_body = json_body
         self._stream = stream
-        self._throws = throws if not None else []
+        self._throws = throws if throws is not None else []
 
     @classmethod
     def request(cls, environment='prod'):
