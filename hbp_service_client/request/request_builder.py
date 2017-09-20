@@ -23,13 +23,13 @@ class RequestBuilder(object):
         self._url = url
         self._service_url = service_url
         self._endpoint = endpoint
-        self._headers = headers
+        self._headers = headers if not None else {}
         self._return_body = return_body
-        self._params = params
+        self._params = params if not None else {}
         self._body = body
         self._json_body = json_body
         self._stream = stream
-        self._throws = throws
+        self._throws = throws if not None else []
 
     @classmethod
     def request(cls, environment='prod'):
@@ -44,7 +44,7 @@ class RequestBuilder(object):
         '''
         return cls(service_locator=ServiceLocator.new(environment))
 
-    def _copy_and_set(self, attribute, value):
+    def __copy_and_set(self, attribute, value):
         params = {
             'service_locator' : self._service_locator,
             'url'             : self._url,
@@ -62,25 +62,50 @@ class RequestBuilder(object):
         return RequestBuilder(**params)
 
     def to_url(self, url):
-        return self._copy_and_set('url', url)
+        '''Sets the request target url
+
+        Args:
+            url (str): The url the request should be targeted to
+
+        Returns:
+            The request builder instance in order to chain calls
+        '''
+        return self.__copy_and_set('url', url)
 
     def to_service(self, service, version):
+        '''Sets the service name and version the request should target
+
+        Args:
+            service (str): The name of the service as displayed in the services.json file
+            version (str): The version of the service as displayed in the services.json file
+
+        Returns:
+            The request builder instance in order to chain calls
+        '''
         service_url = self._service_locator.get_service_url(service, version)
-        return self._copy_and_set('service_url', self._strip_trailing_slashes(service_url))
+        return self.__copy_and_set('service_url', self.__strip_trailing_slashes(service_url))
 
     def to_endpoint(self, endpoint):
-        return self._copy_and_set('endpoint', self._strip_leading_slashes(endpoint))
+        '''Sets the endpoint of the service the request should target
 
-    def _strip_leading_slashes(self, text):
-        return self._strip_leading_slashes(text[1:]) if text.startswith('/') else text
+        Args:
+            endpoint (str): The endpoint that will be concatenated to the service url
 
-    def _strip_trailing_slashes(self, text):
-        return self._strip_trailing_slashes(text[:-1]) if text.endswith('/') else text
+        Returns:
+            The request builder instance in order to chain calls
+        '''
+        return self.__copy_and_set('endpoint', self.__strip_leading_slashes(endpoint))
+
+    def __strip_leading_slashes(self, text):
+        return self.__strip_leading_slashes(text[1:]) if text.startswith('/') else text
+
+    def __strip_trailing_slashes(self, text):
+        return self.__strip_trailing_slashes(text[:-1]) if text.endswith('/') else text
 
     def with_headers(self, headers):
         copy = headers.copy()
         copy.update(self._headers)
-        return self._copy_and_set('headers', copy)
+        return self.__copy_and_set('headers', copy)
 
     def with_token(self, token):
         return self.with_headers({'Authorization': 'Bearer {}'.format(token)})
@@ -88,36 +113,36 @@ class RequestBuilder(object):
     def with_params(self, params):
         copy = params.copy()
         copy.update(self._params)
-        return self._copy_and_set('params', copy)
+        return self.__copy_and_set('params', copy)
 
     def return_body(self):
-        return self._copy_and_set('return_body', True)
+        return self.__copy_and_set('return_body', True)
 
     def with_body(self, body):
-        return self._copy_and_set('body', body)
+        return self.__copy_and_set('body', body)
 
     def with_json_body(self, json_body):
-        return self._copy_and_set('json_body', json_body)
+        return self.__copy_and_set('json_body', json_body)
 
     def stream_response(self):
-        return self._copy_and_set('stream', True)
+        return self.__copy_and_set('stream', True)
 
     def throw(self, exception_class, should_throw):
-        return self._copy_and_set('throws', self._throws + [(exception_class, should_throw)])
+        return self.__copy_and_set('throws', self._throws + [(exception_class, should_throw)])
 
     def get(self):
-        return self._send('GET')
+        return self.__send('GET')
 
     def post(self):
-        return self._send('POST')
+        return self.__send('POST')
 
     def delete(self):
-        return self._send('DELETE')
+        return self.__send('DELETE')
 
     def put(self):
-        return self._send('PUT')
+        return self.__send('PUT')
 
-    def _send(self, method):
+    def __send(self, method):
         url = self._url if self._url else '{}/{}'.format(self._service_url, self._endpoint)
         response = requests.request(
             method,
@@ -129,20 +154,22 @@ class RequestBuilder(object):
             stream=self._stream
         )
 
-        self._throw_if_necessary(response, self._throws)
+        self.__throw_if_necessary(response, self._throws)
 
         if self._return_body:
-             return self._extract_body(response)
+            return self.__extract_body(response)
 
         return response
 
-    def _throw_if_necessary(self, response, throws):
+    @staticmethod
+    def __throw_if_necessary(response, throws):
         for (exception_class, should_throw) in throws:
             args = should_throw(response)
             if args != None:
                 raise exception_class(args)
 
-    def _extract_body(self, response):
+    @staticmethod
+    def __extract_body(response):
         if response.headers.get('Content-Type', None) == 'application/json':
             return response.json()
         return response.text
