@@ -1,7 +1,14 @@
+# pylint: disable=unused-argument, too-many-public-methods, too-many-arguments
+#  - unused-argument: This is needed for the unused params, which are not used
+# because they are gathered via locals()
+#  - too-many-public-methods: If we keep adding methods then we should consider
+# about splitting this into smaller chunks
+#  - too-many-arguments: if we keep adding parameters related to paging then we
+# should consider creating a specific object
+
 '''Python wrapper for the HBP Storageument Service low-level REST API'''
 
 import logging
-import json
 from validators import uuid as is_valid_uuid
 from hbp_service_client.request.request_builder import RequestBuilder
 from hbp_service_client.storage_service.exceptions import (
@@ -10,11 +17,6 @@ from hbp_service_client.storage_service.exceptions import (
 
 L = logging.getLogger(__name__)
 
-# pylint: disable=W0212
-
-# pylint: disable=W0613
-# This is needed for the unused params, which are not used because they are
-# gathered via locals()
 
 
 class ApiClient(object):
@@ -57,21 +59,18 @@ class ApiClient(object):
             .to_service(cls.SERVICE_NAME, cls.SERVICE_VERSION) \
             .throw(
                 StorageForbiddenException,
-                lambda resp:
-                    'You are forbidden to do this.' if resp.status_code == 403
-                    else None
+                lambda resp: 'You are forbidden to do this.'
+                if resp.status_code == 403 else None
             ) \
             .throw(
                 StorageNotFoundException,
-                lambda resp:
-                    'The entity is not found' if resp.status_code == 404
-                    else None
+                lambda resp: 'The entity is not found'
+                if resp.status_code == 404 else None
             ) \
             .throw(
                 StorageException,
-                lambda resp:
-                    'Server response: {0} - {1}'.format(resp.status_code, resp.text) if not resp.ok
-                    else None
+                lambda resp: 'Server response: {0} - {1}'.format(resp.status_code, resp.text)
+                if not resp.ok else None
             )
 
         authenticated_request = request.with_token(access_token)
@@ -209,9 +208,9 @@ class ApiClient(object):
         if metadata:
             if not isinstance(metadata, dict):
                 raise StorageArgumentException('The metadata needs to be provided'
-                                           ' as a dictionary.')
-            k, v = next(iter(metadata.items()))
-            params[k] = v
+                                               ' as a dictionary.')
+            key, value = next(iter(metadata.items()))
+            params[key] = value
             del params['metadata']
         params = self._prep_params(params)
 
@@ -257,7 +256,7 @@ class ApiClient(object):
                 'Invalid UUID for entity_id: {0}'.format(entity_id))
         if not isinstance(metadata, dict):
             raise StorageArgumentException('The metadata was not provided as a '
-                                       'dictionary')
+                                           'dictionary')
 
         return self._authenticated_request \
             .to_endpoint('{}/{}/metadata/'.format(entity_type, entity_id)) \
@@ -327,7 +326,7 @@ class ApiClient(object):
                 'Invalid UUID for entity_id: {0}'.format(entity_id))
         if not isinstance(metadata, dict):
             raise StorageArgumentException('The metadata was not provided as a '
-                                       'dictionary')
+                                           'dictionary')
 
         return self._authenticated_request \
             .to_endpoint('{}/{}/metadata/'.format(entity_type, entity_id)) \
@@ -365,7 +364,7 @@ class ApiClient(object):
                 'Invalid UUID for entity_id: {0}'.format(entity_id))
         if not isinstance(metadata_keys, list):
             raise StorageArgumentException('The metadata was not provided as a '
-                                       'dictionary')
+                                           'dictionary')
 
         return self._authenticated_request \
             .to_endpoint('{}/{}/metadata/'.format(entity_type, entity_id)) \
@@ -797,7 +796,8 @@ class ApiClient(object):
                 'Invalid UUID for file_id: {0}'.format(file_id))
 
         if not (source or content) or (source and content):
-            raise StorageArgumentException('Either one of source file or content has to be provided.')
+            raise StorageArgumentException('Either one of source file or content '
+                                           'has to be provided.')
 
         resp = self._authenticated_request \
             .to_endpoint('file/{}/content/upload/'.format(file_id)) \
@@ -939,6 +939,24 @@ class ApiClient(object):
             .delete()
 
     def download_signed_url(self, signed_url):
+        '''Downloads a file with its signed url.
+
+        Args:
+            signed_url (str): The signed url of the file to download.
+
+        Returns:
+            The streamed response which is used to retrieve the file content
+
+            with open(target_file, "wb") as output:
+                for chunk in response.iter_content(chunk_size=1024):
+                    output.write(chunk)
+
+        Raises:
+            StorageArgumentException: Invalid arguments
+            StorageForbiddenException: Server response code 403
+            StorageNotFoundException: Server response code 404
+            StorageException: other 400-600 error codes
+        '''
         return self._request \
             .to_endpoint(signed_url) \
             .stream_response() \
