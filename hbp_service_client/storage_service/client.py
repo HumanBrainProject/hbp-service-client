@@ -46,8 +46,8 @@ class Client(object):
                 A document_service.Client instance
 
         '''
-        apiClient = ApiClient.new(access_token, environment)
-        return cls(apiClient)
+        api_client = ApiClient.new(access_token, environment)
+        return cls(api_client)
 
     def list(self, path):
         '''List the entities found directly under the given path.
