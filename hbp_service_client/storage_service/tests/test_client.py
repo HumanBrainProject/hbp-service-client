@@ -157,7 +157,7 @@ class TestClient(object):
         # then
         assert_that(
             calling(self.client.download_file).with_args('/path/to/something', 'path/to/target'),
-            raises(AssertionError)
+            raises(StorageArgumentException)
         )
 
 

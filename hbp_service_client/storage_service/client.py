@@ -114,7 +114,8 @@ class Client(object):
 
         self.__validate_storage_path(path)
         entity = self.api_client.get_entity_by_query(path=path)
-        assert entity['entity_type'] == 'file'
+        if entity['entity_type'] != 'file':
+            raise StorageArgumentException('Only file entities can be downloaded')
 
         signed_url = self.api_client.get_signed_url(entity['uuid'])
         response = self.api_client.download_signed_url(signed_url)
