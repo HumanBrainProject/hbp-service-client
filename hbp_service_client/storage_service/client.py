@@ -49,7 +49,7 @@ class Client(object):
         apiClient = ApiClient.new(access_token, environment)
         return cls(apiClient)
 
-    def ls(self, path):
+    def list(self, path):
         '''List the entities found directly under the given path.
 
         Args:

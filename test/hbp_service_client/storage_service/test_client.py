@@ -41,7 +41,7 @@ class TestClient(object):
     @pytest.mark.parametrize('path', __BAD_PATHS)
     def test_ls_verifies_input_path(self, path):
         assert_that(
-            calling(self.client.ls).with_args(path),
+            calling(self.client.list).with_args(path),
             raises(StorageArgumentException))
 
     def test_ls_should_not_accept_files(self):
@@ -53,7 +53,7 @@ class TestClient(object):
 
         # then
         assert_that(
-            calling(self.client.ls).with_args('/myproject/myfile'),
+            calling(self.client.list).with_args('/myproject/myfile'),
             raises(StorageArgumentException)
         )
 
@@ -69,7 +69,7 @@ class TestClient(object):
         )
 
         # when
-        file_names = self.client.ls('/my_empty_project')
+        file_names = self.client.list('/my_empty_project')
 
         # then
         assert_that(file_names, equal_to([]))
@@ -87,7 +87,7 @@ class TestClient(object):
         )
 
         # when
-        file_names = self.client.ls('/my_project')
+        file_names = self.client.list('/my_project')
 
         # then
         assert_that(file_names, equal_to(['file1', 'file2']))
@@ -105,7 +105,7 @@ class TestClient(object):
         )
 
         # when
-        file_names = self.client.ls('/my_project')
+        file_names = self.client.list('/my_project')
 
         # then
         assert_that(file_names, equal_to(['/folder1', '/folder2']))
@@ -131,7 +131,7 @@ class TestClient(object):
         )
 
         # when
-        file_names = self.client.ls('/my_project')
+        file_names = self.client.list('/my_project')
 
         # then
         assert_that(file_names, equal_to(['file1', '/folder1', 'file2', '/folder2', 'file3', '/folder3']))

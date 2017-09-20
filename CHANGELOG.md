@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ### Added
 
  * A storage service client `hbp_service_client.storage_service.client` with a higher level abstraction, adding the following methods:
-   * `ls` - List the entities found directly under the given path
+   * `list` - List the entities found directly under the given path
    * `exists` - Check if a certain path exists in the storage service.
    * `get_parent` - Get the parent entity of the entity pointed by the given path.
    * `mkdir` - Create a folder in the storage service pointed by the given path.
