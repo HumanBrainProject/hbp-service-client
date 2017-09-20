@@ -12,14 +12,7 @@ from hbp_service_client.storage_service.api import ApiClient
 from hbp_service_client.storage_service.exceptions import (
     StorageException, StorageArgumentException, StorageNotFoundException)
 
-
 L = logging.getLogger(__name__)
-
-# pylint: disable=W0212
-
-# pylint: disable=W0613
-# This is needed for the unused params, which are not used because they are
-# gathered via locals()
 
 class Client(object):
     '''High-level Client for interacting with the HBP Document Service, providing convenience functions for common operations
