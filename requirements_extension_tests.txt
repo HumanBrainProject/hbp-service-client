@@ -4,3 +4,4 @@ mock-matchers
 HTTPretty
 pytest
 pytest-watch
+pylint
