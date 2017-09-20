@@ -10,8 +10,8 @@ class RequestBuilder(object):
 
     def __init__(
             self, service_locator=None, url=None, service_url=None, endpoint=None,
-            headers={}, return_body=False, params={}, body=None, json_body=None,
-            stream=False, throws=[]):
+            headers=None, return_body=False, params=None, body=None, json_body=None,
+            stream=False, throws=None):
         '''
         Args:
            service_locator: collaborator which gets the collab services urls

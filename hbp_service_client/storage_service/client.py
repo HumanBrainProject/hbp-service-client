@@ -1,21 +1,18 @@
-'''High-level Client for interacting with the HBP Storageument Service, providing convenience functions for common operations'''
+'''High-level Client for interacting with the HBP Storageument Service, providing
+convenience functions for common operations'''
 
-import hashlib
-import json
 import logging
-import requests
 import os
 
-from os.path import join as joinp
-from validators import uuid as is_valid_uuid
 from hbp_service_client.storage_service.api import ApiClient
 from hbp_service_client.storage_service.exceptions import (
-    StorageException, StorageArgumentException, StorageNotFoundException)
+    StorageArgumentException, StorageNotFoundException)
 
 L = logging.getLogger(__name__)
 
 class Client(object):
-    '''High-level Client for interacting with the HBP Document Service, providing convenience functions for common operations
+    '''High-level Client for interacting with the HBP Document Service, providing
+       convenience functions for common operations
 
         Example:
             >>> #you'll have to have an access token ready
@@ -69,7 +66,8 @@ class Client(object):
         self.__validate_storage_path(path)
         entity = self.api_client.get_entity_by_query(path=path)
         if entity['entity_type'] not in self.__BROWSABLE_TYPES:
-            raise StorageArgumentException('The entity type "{0}" cannot be listed'.format(entity['entity_type']))
+            raise StorageArgumentException('The entity type "{0}" cannot be'
+                                           'listed'.format(entity['entity_type']))
         entity_uuid = entity['uuid']
         file_names = []
 
@@ -179,7 +177,8 @@ class Client(object):
         self.__validate_storage_path(path, projects_allowed=False)
         parent_metadata = self.get_parent(path)
         self.api_client.create_folder(path.split('/')[-1], parent_metadata['uuid'])
-        #no return necessary, function succeeds or we would have thrown an exception before this point.
+        #no return necessary, function succeeds or we would have thrown an exception
+        # before this point.
 
     def upload_file(self, local_file, dest_path, mimetype):
         '''Upload local file content to a storage service destination folder.
@@ -207,16 +206,17 @@ class Client(object):
         if dest_path.endswith('/'):
             raise StorageArgumentException('Must specify target file name in dest_path argument')
         if local_file.endswith(os.path.sep):
-            raise StorageArgumentException('Must specify source file name in local_file argument, directory upload not supported')
+            raise StorageArgumentException('Must specify source file name in local_file'
+                                           ' argument, directory upload not supported')
 
         #create the file container
         new_file = self.api_client.create_file(
-            name         = dest_path.split('/').pop(),
-            content_type = mimetype,
-            parent       = self.get_parent(dest_path)['uuid']
+            name=dest_path.split('/').pop(),
+            content_type=mimetype,
+            parent=self.get_parent(dest_path)['uuid']
         )
 
-        etag = self.api_client.upload_file_content(new_file['uuid'], source = local_file)
+        etag = self.api_client.upload_file_content(new_file['uuid'], source=local_file)
         new_file['etag'] = etag
 
         return new_file
@@ -227,7 +227,8 @@ class Client(object):
 
         if not path or not isinstance(path, str) or path[0] != '/' or path == '/':
             raise StorageArgumentException(
-                'The path must be a string, start with a slash (/), and be longer than 1 character.')
+                'The path must be a string, start with a slash (/), and be longer'
+                ' than 1 character.')
         if not projects_allowed and len([elem for elem in path.split('/') if elem]) == 1:
             raise StorageArgumentException(
                 'This method does not accept projects in the path.')
