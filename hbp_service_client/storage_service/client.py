@@ -188,7 +188,7 @@ class Client(object):
         self.api_client.create_folder(path.split('/')[-1], parent_metadata['uuid'])
         #no return necessary, function succeeds or we would have thrown an exception before this point.
 
-    def upload_file(self, local_file, dest_path, mimetype, md5check=False):
+    def upload_file(self, local_file, dest_path, mimetype):
         '''Upload local file content to a storage service destination folder.
 
             Args:
