@@ -25,6 +25,7 @@ var/
 *.egg
 Makefile
 ci_dep.txt
+*.req_make
 
 
 # PyInstaller
@@ -46,6 +47,7 @@ htmlcov/
 nosetests.xml
 coverage.xml
 *,cover
+test-reports*
 
 # Translations
 *.mo
