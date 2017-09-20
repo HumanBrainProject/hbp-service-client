@@ -272,7 +272,6 @@ class TestClient(object):
             calling(self.client.get_parent).with_args(path),
             raises(StorageArgumentException))
 
-
     def test_get_parent_doesnt_accept_projects(self):
         assert_that(
             calling(self.client.get_parent).with_args('/project'),
