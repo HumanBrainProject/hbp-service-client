@@ -1,3 +1,5 @@
+# pylint: disable=too-few-public-methods
+
 '''A convenience single client that combines functionality from the different services'''
 
 from hbp_service_client.storage_service.client import Client as StorageClient
