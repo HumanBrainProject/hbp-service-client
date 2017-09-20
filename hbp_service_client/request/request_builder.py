@@ -61,7 +61,7 @@ class RequestBuilder(object):
         params[attribute] = value
         return RequestBuilder(**params)
 
-    def to(self, url):
+    def to_url(self, url):
         return self._copy_and_set('url', url)
 
     def to_service(self, service, version):

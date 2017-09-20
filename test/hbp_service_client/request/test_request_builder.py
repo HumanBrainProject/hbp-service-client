@@ -32,7 +32,7 @@ class TestRequestBuilder(unittest.TestCase):
         )
 
         # when
-        response = self.request.to('http://a.url').get()
+        response = self.request.to_url('http://a.url').get()
 
         # then
         assert_that(response.text, equal_to('the url response'))
@@ -61,7 +61,7 @@ class TestRequestBuilder(unittest.TestCase):
         )
 
         # when
-        response = self.request.to('http://a.url').post()
+        response = self.request.to_url('http://a.url').post()
 
         # then
         assert_that(response.text, equal_to('the post response'))
@@ -74,7 +74,7 @@ class TestRequestBuilder(unittest.TestCase):
         )
 
         # when
-        response = self.request.to('http://a.url').delete()
+        response = self.request.to_url('http://a.url').delete()
 
         # then
         assert_that(response.text, equal_to('the delete response'))
@@ -87,7 +87,7 @@ class TestRequestBuilder(unittest.TestCase):
         )
 
         # when
-        response = self.request.to('http://a.url').put()
+        response = self.request.to_url('http://a.url').put()
 
         # then
         assert_that(response.text, equal_to('the put response'))
@@ -101,7 +101,7 @@ class TestRequestBuilder(unittest.TestCase):
 
         # when
         response = self.request \
-            .to('http://a.url') \
+            .to_url('http://a.url') \
             .with_headers({'my_header': 'its value'}) \
             .get()
 
@@ -119,7 +119,7 @@ class TestRequestBuilder(unittest.TestCase):
 
         # when
         response = self.request \
-            .to('http://a.url') \
+            .to_url('http://a.url') \
             .with_headers({'first_header': 'its value'}) \
             .with_headers({'second_header': 'its value'}) \
             .get()
@@ -142,7 +142,7 @@ class TestRequestBuilder(unittest.TestCase):
 
         # when
         response = self.request \
-            .to('http://a.url') \
+            .to_url('http://a.url') \
             .with_token('my-token') \
             .get()
 
@@ -161,7 +161,7 @@ class TestRequestBuilder(unittest.TestCase):
 
         # when
         response = self.request \
-            .to('http://a.url') \
+            .to_url('http://a.url') \
             .return_body() \
             .get()
 
@@ -178,7 +178,7 @@ class TestRequestBuilder(unittest.TestCase):
 
         # when
         response = self.request \
-            .to('http://a.url') \
+            .to_url('http://a.url') \
             .return_body() \
             .get()
 
@@ -193,7 +193,7 @@ class TestRequestBuilder(unittest.TestCase):
 
         # when
         response = self.request \
-            .to('http://a.url') \
+            .to_url('http://a.url') \
             .with_params({'a_param': 'its value', 'another_one': 'another value'}) \
             .get()
 
@@ -215,7 +215,7 @@ class TestRequestBuilder(unittest.TestCase):
 
         # when
         response = self.request \
-            .to('http://a.url') \
+            .to_url('http://a.url') \
             .with_params({'a_param': 'its value'}) \
             .with_params({'another_one': 'another value'}) \
             .get()
@@ -238,7 +238,7 @@ class TestRequestBuilder(unittest.TestCase):
 
         # when
         response = self.request \
-            .to('http://a.url') \
+            .to_url('http://a.url') \
             .with_body('some content') \
             .post()
 
@@ -256,7 +256,7 @@ class TestRequestBuilder(unittest.TestCase):
 
         # when
         response = self.request \
-            .to('http://a.url') \
+            .to_url('http://a.url') \
             .with_json_body({'a-key': 'its value', 'another-key': {'some-key': 'some value'}}) \
             .post()
 
@@ -274,7 +274,7 @@ class TestRequestBuilder(unittest.TestCase):
 
         # when
         response = self.request \
-            .to('http://a.url') \
+            .to_url('http://a.url') \
             .with_json_body({'a-key': 'its value'}) \
             .post()
 
@@ -292,7 +292,7 @@ class TestRequestBuilder(unittest.TestCase):
         )
 
         # when
-        with self.request.to('http://a.url').stream_response().get() as response:
+        with self.request.to_url('http://a.url').stream_response().get() as response:
 
             # then
             content = b''
@@ -352,7 +352,7 @@ class TestRequestBuilder(unittest.TestCase):
         # when
         try:
             self.request \
-                .to('http://some.url') \
+                .to_url('http://some.url') \
                 .throw(NotFoundException, lambda resp: 'Not found' if resp.status_code == 404 else None) \
                 .get()
             self.fail('Exception has not been thrown')
@@ -373,7 +373,7 @@ class TestRequestBuilder(unittest.TestCase):
 
         # when
         self.request \
-            .to('http://some.url') \
+            .to_url('http://some.url') \
             .throw(NotFoundException, lambda resp: 'Not found' if resp.status_code == 404 else None) \
             .get()
 
