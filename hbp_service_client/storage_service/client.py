@@ -131,6 +131,7 @@ class Client(object):
 
         Returns:
             True if the path exists, False otherwise
+
         Raises:
             StorageArgumentException: Invalid arguments
             StorageForbiddenException: Server response code 403
@@ -153,6 +154,12 @@ class Client(object):
 
         Returns:
             A JSON object of the parent entity if found.
+
+        Raises:
+            StorageArgumentException: Invalid arguments
+            StorageForbiddenException: Server response code 403
+            StorageNotFoundException: Server response code 404
+            StorageException: other 400-600 error codes
         '''
         self.__validate_storage_path(path, projects_allowed=False)
         path_steps = [step for step in path.split('/') if step]
