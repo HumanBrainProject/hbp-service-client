@@ -1,7 +1,7 @@
+import json
 import unittest
 import httpretty
-import json
-from hamcrest import (assert_that, instance_of, has_properties, not_none)
+from hamcrest import (assert_that, has_properties, not_none)
 
 from hbp_service_client.client import Client
 
@@ -11,8 +11,9 @@ class TestClient(unittest.TestCase):
         httpretty.enable()
         # Fakes the service locator call to the services.json file
         httpretty.register_uri(
-            httpretty.GET, 'https://collab.humanbrainproject.eu/services.json',
-            body=json.dumps({ 'document': {'v1': 'https://document/service'} })
+            httpretty.GET,
+            'https://collab.humanbrainproject.eu/services.json',
+            body=json.dumps({'document': {'v1': 'https://document/service'}})
         )
         self.client = Client.new('access_token')
 
