@@ -1,8 +1,8 @@
+import json
 import unittest
 import httpretty
-import json
-
-from hamcrest import *
+from hamcrest import (
+    assert_that, equal_to, has_entries)
 
 from hbp_service_client.request.request_builder import RequestBuilder as RequestBuilder
 
@@ -13,11 +13,9 @@ class TestRequestBuilder(unittest.TestCase):
         # Fakes the service locator call to the services.json file
         httpretty.register_uri(
             httpretty.GET, 'https://collab.humanbrainproject.eu/services.json',
-            body=json.dumps({ 'my_service': {
+            body=json.dumps({'my_service': {
                 'v3': 'https://my/service/v3',
-                'with_trailing_slash': 'https://my/service/v3/'
-            } })
-        )
+                'with_trailing_slash': 'https://my/service/v3/'}}))
         self.request = RequestBuilder.request()
 
     def tearDown(self):
@@ -100,7 +98,7 @@ class TestRequestBuilder(unittest.TestCase):
         )
 
         # when
-        response = self.request \
+        self.request \
             .to_url('http://a.url') \
             .with_headers({'my_header': 'its value'}) \
             .get()
@@ -118,7 +116,7 @@ class TestRequestBuilder(unittest.TestCase):
         )
 
         # when
-        response = self.request \
+        self.request \
             .to_url('http://a.url') \
             .with_headers({'first_header': 'its value'}) \
             .with_headers({'second_header': 'its value'}) \
@@ -141,7 +139,7 @@ class TestRequestBuilder(unittest.TestCase):
         )
 
         # when
-        response = self.request \
+        self.request \
             .to_url('http://a.url') \
             .with_token('my-token') \
             .get()
@@ -172,7 +170,7 @@ class TestRequestBuilder(unittest.TestCase):
         # given
         httpretty.register_uri(
             httpretty.GET, 'http://a.url',
-            body=json.dumps({ 'some_key': {'another_one': 'some value'} }),
+            body=json.dumps({'some_key': {'another_one': 'some value'}}),
             content_type="application/json"
         )
 
@@ -183,7 +181,7 @@ class TestRequestBuilder(unittest.TestCase):
             .get()
 
         # then
-        assert_that(response, equal_to({ 'some_key': {'another_one': 'some value'} }))
+        assert_that(response, equal_to({'some_key': {'another_one': 'some value'}}))
 
     def test_should_add_the_given_params_to_the_query_string(self):
         # given
@@ -192,7 +190,7 @@ class TestRequestBuilder(unittest.TestCase):
         )
 
         # when
-        response = self.request \
+        self.request \
             .to_url('http://a.url') \
             .with_params({'a_param': 'its value', 'another_one': 'another value'}) \
             .get()
@@ -214,7 +212,7 @@ class TestRequestBuilder(unittest.TestCase):
         )
 
         # when
-        response = self.request \
+        self.request \
             .to_url('http://a.url') \
             .with_params({'a_param': 'its value'}) \
             .with_params({'another_one': 'another value'}) \
@@ -237,7 +235,7 @@ class TestRequestBuilder(unittest.TestCase):
         )
 
         # when
-        response = self.request \
+        self.request \
             .to_url('http://a.url') \
             .with_body('some content') \
             .post()
@@ -255,7 +253,7 @@ class TestRequestBuilder(unittest.TestCase):
         )
 
         # when
-        response = self.request \
+        self.request \
             .to_url('http://a.url') \
             .with_json_body({'a-key': 'its value', 'another-key': {'some-key': 'some value'}}) \
             .post()
@@ -273,7 +271,7 @@ class TestRequestBuilder(unittest.TestCase):
         )
 
         # when
-        response = self.request \
+        self.request \
             .to_url('http://a.url') \
             .with_json_body({'a-key': 'its value'}) \
             .post()
@@ -361,7 +359,7 @@ class TestRequestBuilder(unittest.TestCase):
         except NotFoundException as ex:
             assert_that(ex.args[0], equal_to('Not found'))
 
-    def test_should_NOT_throw_exception_if_test_returns_None(self):
+    def test_should_not_throw_exception_if_test_returns_none(self):
         # given
         class NotFoundException(Exception):
             pass

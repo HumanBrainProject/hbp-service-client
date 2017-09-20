@@ -1,17 +1,18 @@
-import pytest
-from mock import Mock, call
-import httpretty
+'''Unit tests for hbp_service_client.storage_service.client'''
+
 import json
 import re
+import pytest
 import mock
+import httpretty
+from hamcrest import (assert_that, calling, raises, equal_to)
 
-from hamcrest import *
 
 from hbp_service_client.storage_service.client import Client
-from hbp_service_client.storage_service.exceptions import (StorageNotFoundException, StorageArgumentException)
+from hbp_service_client.storage_service.exceptions import (
+    StorageNotFoundException, StorageArgumentException)
 
 class TestClient(object):
-
     __BAD_PATHS = [123, 'foo', '', '/']
 
     def setup_method(self):
@@ -19,15 +20,17 @@ class TestClient(object):
         # Fakes the service locator call to the services.json file
         httpretty.register_uri(
             httpretty.GET, 'https://collab.humanbrainproject.eu/services.json',
-            body=json.dumps({ 'document': {'v1': 'https://document/service'} })
+            body=json.dumps({'document': {'v1': 'https://document/service'}})
         )
         self.client = Client.new('access_token')
 
-    def teardown_method(self):
+    @staticmethod
+    def teardown_method():
         httpretty.disable()
         httpretty.reset()
 
-    def register_uri(self, uri, returns):
+    @staticmethod
+    def register_uri(uri, returns):
         httpretty.register_uri(
             httpretty.GET, re.compile(re.escape(uri)),
             match_querystring=True,
@@ -83,7 +86,10 @@ class TestClient(object):
         )
         self.register_uri(
             'https://document/service/folder/e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56/children/?page=1',
-            returns={'next': None, 'results': [{'name': 'file1', 'entity_type': 'file'}, {'name': 'file2', 'entity_type': 'file'}]}
+            returns={
+                'next': None,
+                'results': [{'name': 'file1', 'entity_type': 'file'},
+                            {'name': 'file2', 'entity_type': 'file'}]}
         )
 
         # when
@@ -101,7 +107,10 @@ class TestClient(object):
         )
         self.register_uri(
             'https://document/service/folder/e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56/children/?page=1',
-            returns={'next': None, 'results': [{'name': 'folder1', 'entity_type': 'folder'}, {'name': 'folder2', 'entity_type': 'folder'}]}
+            returns={
+                'next': None,
+                'results': [{'name': 'folder1', 'entity_type': 'folder'},
+                            {'name': 'folder2', 'entity_type': 'folder'}]}
         )
 
         # when
@@ -119,22 +128,33 @@ class TestClient(object):
         )
         self.register_uri(
             'https://document/service/folder/e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56/children/?page=1',
-            returns={'next': 'link.to.next.page', 'results': [{'name': 'file1', 'entity_type': 'file'}, {'name': 'folder1', 'entity_type': 'folder'}]}
+            returns={
+                'next': 'link.to.next.page',
+                'results': [{'name': 'file1', 'entity_type': 'file'},
+                            {'name': 'folder1', 'entity_type': 'folder'}]}
         )
         self.register_uri(
             'https://document/service/folder/e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56/children/?page=2',
-            returns={'next': 'link.to.next.page', 'results': [{'name': 'file2', 'entity_type': 'file'}, {'name': 'folder2', 'entity_type': 'folder'}]}
+            returns={
+                'next': 'link.to.next.page',
+                'results': [{'name': 'file2', 'entity_type': 'file'},
+                            {'name': 'folder2', 'entity_type': 'folder'}]}
         )
         self.register_uri(
             'https://document/service/folder/e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56/children/?page=3',
-            returns={'next': None, 'results': [{'name': 'file3', 'entity_type': 'file'}, {'name': 'folder3', 'entity_type': 'folder'}]}
+            returns={
+                'next': None,
+                'results': [{'name': 'file3', 'entity_type': 'file'},
+                            {'name': 'folder3', 'entity_type': 'folder'}]}
         )
 
         # when
         file_names = self.client.list('/my_project')
 
         # then
-        assert_that(file_names, equal_to(['file1', '/folder1', 'file2', '/folder2', 'file3', '/folder3']))
+        assert_that(
+            file_names,
+            equal_to(['file1', '/folder1', 'file2', '/folder2', 'file3', '/folder3']))
 
 
     #
@@ -166,7 +186,9 @@ class TestClient(object):
         # given
         self.register_uri(
             'https://document/service/entity/?path=%2Fpath%2Fto%2Ffile',
-            returns={'entity_type': 'file', 'uuid': 'e2c25c1b-1234-4cf6-b8d2-271e628a9a56'}
+            returns={
+                'entity_type': 'file',
+                'uuid': 'e2c25c1b-1234-4cf6-b8d2-271e628a9a56'}
         )
         self.register_uri(
             'https://document/service/file/e2c25c1b-1234-4cf6-b8d2-271e628a9a56/content/secure_link/',
@@ -191,7 +213,9 @@ class TestClient(object):
         # given
         self.register_uri(
             'https://document/service/entity/?path=%2Fpath%2Fto%2Ffile',
-            returns={'entity_type': 'file', 'uuid': 'e2c25c1b-1234-4cf6-b8d2-271e628a9a56'}
+            returns={
+                'entity_type': 'file',
+                'uuid': 'e2c25c1b-1234-4cf6-b8d2-271e628a9a56'}
         )
         self.register_uri(
             'https://document/service/file/e2c25c1b-1234-4cf6-b8d2-271e628a9a56/content/secure_link/',
@@ -207,7 +231,8 @@ class TestClient(object):
 
         # then
         file_handle = mock_open.return_value.__enter__.return_value
-        file_handle.write.assert_has_calls([call(b'#'*1024), call(b'#'*1024)])
+        file_handle.write.assert_has_calls(
+            [mock.call(b'#'*1024), mock.call(b'#'*1024)])
 
 
     #
@@ -220,7 +245,7 @@ class TestClient(object):
             calling(self.client.exists).with_args(path),
             raises(StorageArgumentException))
 
-    def test_exists_should_return_False_if_entity_does_not_exist(self):
+    def test_exists_should_return_false_if_entity_does_not_exist(self):
         # given
         httpretty.register_uri(
             httpretty.GET, 'https://document/service/entity/?path=%2Fpath%2Fto%2Fnothing',
@@ -234,7 +259,7 @@ class TestClient(object):
         assert_that(exists, equal_to(False))
 
 
-    def test_exists_should_return_False_if_entity_has_no_uuid(self):
+    def test_exists_should_return_false_if_entity_has_no_uuid(self):
         # given
         self.register_uri(
             'https://document/service/entity/?path=%2Fpath%2Fto%2Fno%2Fuuid',
@@ -248,7 +273,7 @@ class TestClient(object):
         assert_that(exists, equal_to(False))
 
 
-    def test_exists_should_return_True_if_entity_exists(self):
+    def test_exists_should_return_true_if_entity_exists(self):
         # given
         self.register_uri(
             'https://document/service/entity/?path=%2Fpath%2Fto%2Fentity',
@@ -339,7 +364,7 @@ class TestClient(object):
         parent_uuid = 'e2c25c1b-1234-4cf6-b8d2-271e628a9a56'
         self.register_uri(
             'https://document/service/entity/?path=%2Fpath%2Fto%2Fparent',
-            returns={ 'uuid': parent_uuid }
+            returns={'uuid': parent_uuid}
         )
 
         # and the creation of the folder works
@@ -364,7 +389,7 @@ class TestClient(object):
         # given the parent folder is found
         self.register_uri(
             'https://document/service/entity/?path=%2Fpath%2Fto%2Fparent',
-            returns={ 'uuid': 'e2c25c1b-1234-4cf6-b8d2-271e628a9a56' }
+            returns={'uuid': 'e2c25c1b-1234-4cf6-b8d2-271e628a9a56'}
         )
 
         # and the creation of the folder works
@@ -418,7 +443,10 @@ class TestClient(object):
 
         # then
         assert_that(
-            calling(self.client.upload_file).with_args(dest_path='/dest/parent/file_to_create', local_file='local/file_to_upload', mimetype=None),
+            calling(self.client.upload_file).with_args(
+                dest_path='/dest/parent/file_to_create',
+                local_file='local/file_to_upload',
+                mimetype=None),
             raises(StorageNotFoundException)
         )
 
@@ -429,7 +457,7 @@ class TestClient(object):
         parent_uuid = 'e2c25c1b-1234-4cf6-b8d2-271e628a9a56'
         self.register_uri(
             'https://document/service/entity/?path=%2Fdest%2Fparent',
-            returns={ 'uuid': parent_uuid }
+            returns={'uuid': parent_uuid}
         )
 
         # and the creation of the file works
@@ -438,7 +466,7 @@ class TestClient(object):
             httpretty.POST,
             'https://document/service/file/',
             status=201,
-            body=json.dumps({ 'uuid': file_uuid }),
+            body=json.dumps({'uuid': file_uuid}),
             content_type="application/json"
         )
 
@@ -454,9 +482,9 @@ class TestClient(object):
 
         # when
         self.client.upload_file(
-            dest_path  = '/dest/parent/file_to_create',
-            local_file = 'local/file_to_upload',
-            mimetype   = None
+            dest_path='/dest/parent/file_to_create',
+            local_file='local/file_to_upload',
+            mimetype=None
         )
 
         # then
@@ -473,7 +501,7 @@ class TestClient(object):
         # given  the parent folder is found
         self.register_uri(
             'https://document/service/entity/?path=%2Fdest%2Fparent',
-            returns={ 'uuid': 'e2c25c1b-1234-4cf6-b8d2-271e628a9a56' }
+            returns={'uuid': 'e2c25c1b-1234-4cf6-b8d2-271e628a9a56'}
         )
 
         # and the creation of the file works
@@ -482,7 +510,7 @@ class TestClient(object):
             httpretty.POST,
             'https://document/service/file/',
             status=201,
-            body=json.dumps({ 'uuid': file_uuid }),
+            body=json.dumps({'uuid': file_uuid}),
             content_type="application/json"
         )
 
@@ -498,9 +526,9 @@ class TestClient(object):
 
         # when
         self.client.upload_file(
-            dest_path  = '/dest/parent/file_to_create',
-            local_file = 'local/file_to_upload',
-            mimetype   = None
+            dest_path='/dest/parent/file_to_create',
+            local_file='local/file_to_upload',
+            mimetype=None
         )
 
         # then
@@ -517,7 +545,7 @@ class TestClient(object):
         # given  the parent folder is found
         self.register_uri(
             'https://document/service/entity/?path=%2Fdest%2Fparent',
-            returns={ 'uuid': 'e2c25c1b-1234-4cf6-b8d2-271e628a9a56' }
+            returns={'uuid': 'e2c25c1b-1234-4cf6-b8d2-271e628a9a56'}
         )
 
         # and the creation of the file works
@@ -526,7 +554,7 @@ class TestClient(object):
             httpretty.POST,
             'https://document/service/file/',
             status=201,
-            body=json.dumps({ 'uuid': file_uuid }),
+            body=json.dumps({'uuid': file_uuid}),
             content_type="application/json"
         )
 
@@ -542,9 +570,9 @@ class TestClient(object):
 
         # when
         self.client.upload_file(
-            dest_path  = '/dest/parent/file_to_create',
-            local_file = 'local/file_to_upload',
-            mimetype   = None
+            dest_path='/dest/parent/file_to_create',
+            local_file='local/file_to_upload',
+            mimetype=None
         )
 
         # then

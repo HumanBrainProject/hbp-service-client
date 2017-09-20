@@ -1,33 +1,36 @@
-import unittest
-import httpretty
 import re
 import json
 import uuid
-
-from hamcrest import *
+import httpretty
+from hamcrest import (
+    assert_that, calling, raises, equal_to, instance_of, has_entries, none)
 
 from hbp_service_client.storage_service.api import ApiClient as AC
 from hbp_service_client.storage_service.exceptions import (
     StorageException, StorageArgumentException
 )
 
-def url(url):
+def escape_url(url):
     return re.compile(re.escape(url))
 
-class TestApiClient(unittest.TestCase):
+class TestApiClient(object):
 
-    def setUp(self):
+    @classmethod
+    def setup_class(cls):
+        cls.a_uuid = str(uuid.uuid4())
+
+    def setup_method(self):
         httpretty.enable()
         # Fakes the service locator call to the services.json file
         httpretty.register_uri(
             httpretty.GET, 'https://collab.humanbrainproject.eu/services.json',
-            body=json.dumps({ 'document': {'v1': 'https://document/service'} })
+            body=json.dumps({'document': {'v1': 'https://document/service'}})
         )
 
         self.client = AC.new('access-token')
-        self.A_UUID = str(uuid.uuid4())
 
-    def tearDown(self):
+    @staticmethod
+    def teardown_method():
         httpretty.disable()
         httpretty.reset()
 
@@ -50,16 +53,16 @@ class TestApiClient(unittest.TestCase):
     #
 
     def test_get_entity_details_returns_response_body(self):
-        some_json = {"a": 1, "b": [2,3,4], "c": {"x":"y"}}
+        some_json = {"a": 1, "b": [2, 3, 4], "c": {"x": "y"}}
         httpretty.register_uri(
             httpretty.GET,
-            'https://document/service/entity/{}/'.format(self.A_UUID),
+            'https://document/service/entity/{}/'.format(self.a_uuid),
             body=json.dumps(some_json),
             content_type="application/json"
         )
 
         assert_that(
-            self.client.get_entity_details(self.A_UUID),
+            self.client.get_entity_details(self.a_uuid),
             equal_to(some_json)
         )
 
@@ -70,16 +73,16 @@ class TestApiClient(unittest.TestCase):
         )
 
     def test_get_entity_path_extracts_path_from_response(self):
-        some_json = {"path": "foobar", "b": [2,3,4], "c": {"x":"y"}}
+        some_json = {"path": "foobar", "b": [2, 3, 4], "c": {"x": "y"}}
         httpretty.register_uri(
             httpretty.GET,
-            'https://document/service/entity/{}/path/'.format(self.A_UUID),
+            'https://document/service/entity/{}/path/'.format(self.a_uuid),
             body=json.dumps(some_json),
             content_type="application/json"
         )
 
         assert_that(
-            self.client.get_entity_path(self.A_UUID),
+            self.client.get_entity_path(self.a_uuid),
             equal_to("foobar")
         )
 
@@ -90,16 +93,16 @@ class TestApiClient(unittest.TestCase):
         )
 
     def test_get_entity_collabid_extracts_id_from_response(self):
-        some_json = {"collab_id": "123456", "b": [2,3,4], "c": {"x":"y"}}
+        some_json = {"collab_id": "123456", "b": [2, 3, 4], "c": {"x": "y"}}
         httpretty.register_uri(
             httpretty.GET,
-            'https://document/service/entity/{}/collab/'.format(self.A_UUID),
+            'https://document/service/entity/{}/collab/'.format(self.a_uuid),
             body=json.dumps(some_json),
             content_type="application/json"
         )
 
         assert_that(
-            self.client.get_entity_collab_id(self.A_UUID),
+            self.client.get_entity_collab_id(self.a_uuid),
             equal_to("123456")
         )
 
@@ -110,17 +113,17 @@ class TestApiClient(unittest.TestCase):
         )
 
     def test_get_entity_by_query_returns_response_body(self):
-        some_json = {"collab_id": "123456", "b": [2,3,4], "c": {"x":"y"}}
+        some_json = {"collab_id": "123456", "b": [2, 3, 4], "c": {"x": "y"}}
         httpretty.register_uri(
             httpretty.GET,
-            url('https://document/service/entity/?uuid={}'.format(self.A_UUID)),
+            escape_url('https://document/service/entity/?uuid={}'.format(self.a_uuid)),
             body=json.dumps(some_json),
             content_type="application/json",
             match_querystring=True
         )
 
         assert_that(
-            self.client.get_entity_by_query(self.A_UUID),
+            self.client.get_entity_by_query(self.a_uuid),
             equal_to(some_json)
         )
 
@@ -138,10 +141,10 @@ class TestApiClient(unittest.TestCase):
         )
 
     def test_get_entity_by_query_extracts_metadata(self):
-        some_json = {"collab_id": "123456", "b": [2,3,4], "c": {"x":"y"}}
+        some_json = {"collab_id": "123456", "b": [2, 3, 4], "c": {"x": "y"}}
         httpretty.register_uri(
             httpretty.GET,
-            url('https://document/service/entity/?foo=bar'),
+            escape_url('https://document/service/entity/?foo=bar'),
             body=json.dumps(some_json),
             content_type="application/json",
             match_querystring=True
@@ -172,12 +175,12 @@ class TestApiClient(unittest.TestCase):
         metadata = {'foo': 'bar'}
         httpretty.register_uri(
             httpretty.POST,
-            'https://document/service/entity_type/{}/metadata/'.format(self.A_UUID),
+            'https://document/service/entity_type/{}/metadata/'.format(self.a_uuid),
             body=json.dumps(metadata),
             content_type="application/json"
         )
 
-        self.client.set_metadata('entity_type', self.A_UUID, metadata)
+        self.client.set_metadata('entity_type', self.a_uuid, metadata)
 
         assert_that(
             httpretty.last_request().method,
@@ -188,13 +191,13 @@ class TestApiClient(unittest.TestCase):
         metadata = {'foo': 'bar'}
         httpretty.register_uri(
             httpretty.POST,
-            'https://document/service/entity_type/{}/metadata/'.format(self.A_UUID),
+            'https://document/service/entity_type/{}/metadata/'.format(self.a_uuid),
             body=json.dumps(metadata),
             content_type="application/json"
         )
 
         assert_that(
-            self.client.set_metadata('entity_type', self.A_UUID, metadata),
+            self.client.set_metadata('entity_type', self.a_uuid, metadata),
             equal_to(metadata)
         )
 
@@ -202,12 +205,12 @@ class TestApiClient(unittest.TestCase):
         metadata = {'foo': 'bar'}
         httpretty.register_uri(
             httpretty.POST,
-            'https://document/service/entity_type/{}/metadata/'.format(self.A_UUID),
+            'https://document/service/entity_type/{}/metadata/'.format(self.a_uuid),
             body=json.dumps(metadata),
             content_type="application/json"
         )
 
-        self.client.set_metadata('entity_type', self.A_UUID, metadata)
+        self.client.set_metadata('entity_type', self.a_uuid, metadata)
 
         assert_that(
             httpretty.last_request().headers,
@@ -232,12 +235,12 @@ class TestApiClient(unittest.TestCase):
         metadata = {'foo': 'bar'}
         httpretty.register_uri(
             httpretty.GET,
-            'https://document/service/entity_type/{}/metadata/'.format(self.A_UUID),
+            'https://document/service/entity_type/{}/metadata/'.format(self.a_uuid),
             body=json.dumps(metadata),
             content_type="application/json"
         )
         assert_that(
-            self.client.get_metadata('entity_type', self.A_UUID),
+            self.client.get_metadata('entity_type', self.a_uuid),
             equal_to(metadata)
         )
 
@@ -256,12 +259,12 @@ class TestApiClient(unittest.TestCase):
         metadata = {'foo': 'bar'}
         httpretty.register_uri(
             httpretty.PUT,
-            'https://document/service/entity_type/{}/metadata/'.format(self.A_UUID),
+            'https://document/service/entity_type/{}/metadata/'.format(self.a_uuid),
             body=json.dumps(metadata),
             content_type="application/json"
         )
 
-        self.client.update_metadata('entity_type', self.A_UUID, metadata)
+        self.client.update_metadata('entity_type', self.a_uuid, metadata)
 
         assert_that(
             httpretty.last_request().method,
@@ -279,14 +282,14 @@ class TestApiClient(unittest.TestCase):
         metadata = {'foo': 'bar'}
         httpretty.register_uri(
             httpretty.PUT,
-            'https://document/service/entity_type/{}/metadata/'.format(self.A_UUID),
+            'https://document/service/entity_type/{}/metadata/'.format(self.a_uuid),
             body=json.dumps(metadata),
             content_type="application/json"
         )
 
         assert_that(
             self.client.update_metadata(
-                'entity_type', self.A_UUID, metadata),
+                'entity_type', self.a_uuid, metadata),
             equal_to(metadata)
         )
 
@@ -294,12 +297,12 @@ class TestApiClient(unittest.TestCase):
         metadata = {'foo': 'bar'}
         httpretty.register_uri(
             httpretty.PUT,
-            'https://document/service/entity_type/{}/metadata/'.format(self.A_UUID),
+            'https://document/service/entity_type/{}/metadata/'.format(self.a_uuid),
             body=json.dumps(metadata),
             content_type="application/json"
         )
 
-        self.client.update_metadata('entity_type', self.A_UUID, metadata)
+        self.client.update_metadata('entity_type', self.a_uuid, metadata)
 
         assert_that(
             httpretty.last_request().headers,
@@ -310,7 +313,7 @@ class TestApiClient(unittest.TestCase):
         assert_that(
             calling(self.client.update_metadata).with_args(
                 'entity_type',
-                self.A_UUID,
+                self.a_uuid,
                 '{"foo": "bar"}'
             ),
             raises(StorageArgumentException),
@@ -323,11 +326,11 @@ class TestApiClient(unittest.TestCase):
     def test_delete_metadata_uses_the_right_method(self):
         httpretty.register_uri(
             httpretty.DELETE,
-            'https://document/service/entity_type/{}/metadata/'.format(self.A_UUID),
+            'https://document/service/entity_type/{}/metadata/'.format(self.a_uuid),
         )
 
         self.client.delete_metadata(
-            'entity_type', self.A_UUID, ['foo', 'bar'])
+            'entity_type', self.a_uuid, ['foo', 'bar'])
 
         assert_that(
             httpretty.last_request().method,
@@ -344,11 +347,11 @@ class TestApiClient(unittest.TestCase):
     def test_delete_metadata_sends_the_right_body(self):
         httpretty.register_uri(
             httpretty.DELETE,
-            'https://document/service/entity_type/{}/metadata/'.format(self.A_UUID),
+            'https://document/service/entity_type/{}/metadata/'.format(self.a_uuid),
         )
 
         self.client.delete_metadata(
-            'entity_type', self.A_UUID, ['foo', 'bar'])
+            'entity_type', self.a_uuid, ['foo', 'bar'])
 
         assert_that(
             httpretty.last_request().parsed_body,
@@ -359,7 +362,7 @@ class TestApiClient(unittest.TestCase):
         assert_that(
             calling(self.client.delete_metadata).with_args(
                 'entity_type',
-                self.A_UUID,
+                self.a_uuid,
                 'i am not a list!'
             ),
             raises(StorageArgumentException)
@@ -372,7 +375,7 @@ class TestApiClient(unittest.TestCase):
     #
 
     def test_list_projects_returns_the_response_body(self):
-        some_json = {"a": "123456", "b": [2,3,4], "c": {"x":"y"}}
+        some_json = {"a": "123456", "b": [2, 3, 4], "c": {"x": "y"}}
         httpretty.register_uri(
             httpretty.GET,
             'https://document/service/project/',
@@ -387,7 +390,7 @@ class TestApiClient(unittest.TestCase):
         )
 
     def test_list_projects_sends_the_right_params(self):
-        some_json = {"a": "123456", "b": [2,3,4], "c": {"x":"y"}}
+        some_json = {"a": "123456", "b": [2, 3, 4], "c": {"x": "y"}}
         httpretty.register_uri(
             httpretty.GET,
             'https://document/service/project/',
@@ -408,16 +411,16 @@ class TestApiClient(unittest.TestCase):
     #
 
     def test_get_project_details_returns_the_response_body(self):
-        some_json = {"a": "123456", "b": [2,3,4], "c": {"x":"y"}}
+        some_json = {"a": "123456", "b": [2, 3, 4], "c": {"x": "y"}}
         httpretty.register_uri(
             httpretty.GET,
-            'https://document/service/project/{}/'.format(self.A_UUID),
+            'https://document/service/project/{}/'.format(self.a_uuid),
             body=json.dumps(some_json),
             content_type="application/json"
         )
 
         assert_that(
-            self.client.get_project_details(self.A_UUID),
+            self.client.get_project_details(self.a_uuid),
             equal_to(some_json)
         )
 
@@ -432,17 +435,17 @@ class TestApiClient(unittest.TestCase):
     #
 
     def test_list_project_content_returns_the_response_body(self):
-        some_json = {"a": "123456", "b": [2,3,4], "c": {"x":"y"}}
+        some_json = {"a": "123456", "b": [2, 3, 4], "c": {"x": "y"}}
         httpretty.register_uri(
             httpretty.GET,
-            'https://document/service/project/{}/children/?ordering=name'.format(self.A_UUID),
+            'https://document/service/project/{}/children/?ordering=name'.format(self.a_uuid),
             body=json.dumps(some_json),
             content_type="application/json",
             match_querystring=True
         )
 
         assert_that(
-            self.client.list_project_content(self.A_UUID, ordering='name'),
+            self.client.list_project_content(self.a_uuid, ordering='name'),
             equal_to(some_json)
         )
 
@@ -453,16 +456,16 @@ class TestApiClient(unittest.TestCase):
         )
 
     def test_list_project_content_send_the_right_params(self):
-        some_json = {"a": "123456", "b": [2,3,4], "c": {"x":"y"}}
+        some_json = {"a": "123456", "b": [2, 3, 4], "c": {"x": "y"}}
         httpretty.register_uri(
             httpretty.GET,
-            'https://document/service/project/{}/children/?ordering=name'.format(self.A_UUID),
+            'https://document/service/project/{}/children/?ordering=name'.format(self.a_uuid),
             body=json.dumps(some_json),
             content_type="application/json",
             match_querystring=True
         )
 
-        self.client.list_project_content(self.A_UUID, ordering='name')
+        self.client.list_project_content(self.a_uuid, ordering='name')
 
         assert_that(
             httpretty.last_request().querystring,
@@ -476,7 +479,7 @@ class TestApiClient(unittest.TestCase):
     #
 
     def test_create_folder_uses_the_right_method(self):
-        some_json = {"a": "123456", "b": [2,3,4], "c": {"x":"y"}}
+        some_json = {"a": "123456", "b": [2, 3, 4], "c": {"x": "y"}}
         httpretty.register_uri(
             httpretty.POST,
             'https://document/service/folder/',
@@ -484,7 +487,7 @@ class TestApiClient(unittest.TestCase):
             content_type="application/json"
         )
 
-        self.client.create_folder('name', self.A_UUID)
+        self.client.create_folder('name', self.a_uuid)
 
         assert_that(
             httpretty.last_request().method,
@@ -498,7 +501,7 @@ class TestApiClient(unittest.TestCase):
         )
 
     def test_create_folder_returns_the_response_body(self):
-        some_json = {"a": "123456", "b": [2,3,4], "c": {"x":"y"}}
+        some_json = {"a": "123456", "b": [2, 3, 4], "c": {"x": "y"}}
         httpretty.register_uri(
             httpretty.POST,
             'https://document/service/folder/',
@@ -506,7 +509,7 @@ class TestApiClient(unittest.TestCase):
             content_type="application/json"
         )
         assert_that(
-            self.client.create_folder('name', self.A_UUID),
+            self.client.create_folder('name', self.a_uuid),
             equal_to(some_json)
         )
 
@@ -516,11 +519,11 @@ class TestApiClient(unittest.TestCase):
             'https://document/service/folder/'
         )
 
-        self.client.create_folder('name', self.A_UUID)
+        self.client.create_folder('name', self.a_uuid)
 
         assert_that(
             httpretty.last_request().parsed_body,
-            equal_to({'name': 'name', 'parent': self.A_UUID})
+            equal_to({'name': 'name', 'parent': self.a_uuid})
         )
 
     #
@@ -528,16 +531,16 @@ class TestApiClient(unittest.TestCase):
     #
 
     def test_get_folder_details_returns_the_response_body(self):
-        some_json = {"a": "123456", "b": [2,3,4], "c": {"x":"y"}}
+        some_json = {"a": "123456", "b": [2, 3, 4], "c": {"x": "y"}}
         httpretty.register_uri(
             httpretty.GET,
-            'https://document/service/folder/{}/'.format(self.A_UUID),
+            'https://document/service/folder/{}/'.format(self.a_uuid),
             body=json.dumps(some_json),
             content_type="application/json"
         )
 
         assert_that(
-            self.client.get_folder_details(self.A_UUID),
+            self.client.get_folder_details(self.a_uuid),
             equal_to(some_json)
         )
 
@@ -552,17 +555,17 @@ class TestApiClient(unittest.TestCase):
     #
 
     def test_list_folder_content_returns_the_response_body(self):
-        some_json = {"a": "123456", "b": [2,3,4], "c": {"x":"y"}}
+        some_json = {"a": "123456", "b": [2, 3, 4], "c": {"x": "y"}}
         httpretty.register_uri(
             httpretty.GET,
-            'https://document/service/folder/{}/children/?ordering=name'.format(self.A_UUID),
+            'https://document/service/folder/{}/children/?ordering=name'.format(self.a_uuid),
             body=json.dumps(some_json),
             content_type="application/json",
             match_querystring=True
         )
 
         assert_that(
-            self.client.list_folder_content(self.A_UUID, ordering='name'),
+            self.client.list_folder_content(self.a_uuid, ordering='name'),
             equal_to(some_json)
         )
 
@@ -575,11 +578,11 @@ class TestApiClient(unittest.TestCase):
     def test_list_folder_content_sends_the_right_params(self):
         httpretty.register_uri(
             httpretty.GET,
-            'https://document/service/folder/{}/children/?ordering=name'.format(self.A_UUID),
+            'https://document/service/folder/{}/children/?ordering=name'.format(self.a_uuid),
             match_querystring=True
         )
 
-        self.client.list_folder_content(self.A_UUID, ordering='name')
+        self.client.list_folder_content(self.a_uuid, ordering='name')
 
         assert_that(
             httpretty.last_request().querystring,
@@ -593,10 +596,10 @@ class TestApiClient(unittest.TestCase):
     def test_delete_folder_uses_the_right_method(self):
         httpretty.register_uri(
             httpretty.DELETE,
-            'https://document/service/folder/{}/'.format(self.A_UUID),
+            'https://document/service/folder/{}/'.format(self.a_uuid),
         )
 
-        self.client.delete_folder(self.A_UUID)
+        self.client.delete_folder(self.a_uuid)
 
         assert_that(
             httpretty.last_request().method,
@@ -612,11 +615,11 @@ class TestApiClient(unittest.TestCase):
     def test_delete_folder_returns_none(self):
         httpretty.register_uri(
             httpretty.DELETE,
-            'https://document/service/folder/{}/'.format(self.A_UUID),
+            'https://document/service/folder/{}/'.format(self.a_uuid),
         )
 
         assert_that(
-            self.client.delete_folder(self.A_UUID),
+            self.client.delete_folder(self.a_uuid),
             none()
         )
 
@@ -632,7 +635,7 @@ class TestApiClient(unittest.TestCase):
             'https://document/service/file/'
         )
         self.client.create_file(
-            'some_name', 'some_content_type', self.A_UUID
+            'some_name', 'some_content_type', self.a_uuid
         )
 
         assert_that(
@@ -648,7 +651,7 @@ class TestApiClient(unittest.TestCase):
         )
 
     def test_create_file_return_the_response_body(self):
-        some_json = {"a": "123456", "b": [2,3,4], "c": {"x":"y"}}
+        some_json = {"a": "123456", "b": [2, 3, 4], "c": {"x": "y"}}
         httpretty.register_uri(
             httpretty.POST,
             'https://document/service/file/',
@@ -658,7 +661,7 @@ class TestApiClient(unittest.TestCase):
 
         assert_that(
             self.client.create_file(
-                'some_name', 'some_content_type', self.A_UUID
+                'some_name', 'some_content_type', self.a_uuid
             ),
             equal_to(some_json)
         )
@@ -669,13 +672,14 @@ class TestApiClient(unittest.TestCase):
             'https://document/service/file/'
         )
         self.client.create_file(
-            'some_name', 'some_content_type', self.A_UUID
+            'some_name', 'some_content_type', self.a_uuid
         )
 
         assert_that(
             httpretty.last_request().parsed_body,
-            equal_to({'name': 'some_name', 'parent': self.A_UUID,
-                'content_type': 'some_content_type'})
+            equal_to(
+                {'name': 'some_name', 'parent': self.a_uuid,
+                 'content_type': 'some_content_type'})
         )
 
     #
@@ -683,17 +687,17 @@ class TestApiClient(unittest.TestCase):
     #
 
     def test_get_file_details_returns_the_response_body(self):
-        some_json = {"a": "123456", "b": [2,3,4], "c": {"x":"y"}}
+        some_json = {"a": "123456", "b": [2, 3, 4], "c": {"x": "y"}}
         httpretty.register_uri(
             httpretty.GET,
-            'https://document/service/file/{}/'.format(self.A_UUID),
+            'https://document/service/file/{}/'.format(self.a_uuid),
             body=json.dumps(some_json),
             content_type="application/json"
         )
 
         #method returns response body
         assert_that(
-            self.client.get_file_details(self.A_UUID),
+            self.client.get_file_details(self.a_uuid),
             equal_to(some_json)
         )
 
@@ -710,11 +714,11 @@ class TestApiClient(unittest.TestCase):
     def test_upload_file_content_uses_the_right_method(self):
         httpretty.register_uri(
             httpretty.POST,
-            'https://document/service/file/{}/content/upload/'.format(self.A_UUID),
+            'https://document/service/file/{}/content/upload/'.format(self.a_uuid),
             adding_headers={'ETag':'some_other_etag'}
         )
         self.client.upload_file_content(
-            self.A_UUID, content='some_content')
+            self.a_uuid, content='some_content')
 
         assert_that(
             httpretty.last_request().method,
@@ -731,13 +735,13 @@ class TestApiClient(unittest.TestCase):
     def test_upload_file_content_sets_the_right_headers(self):
         httpretty.register_uri(
             httpretty.POST,
-            'https://document/service/file/{}/content/upload/'.format(self.A_UUID),
+            'https://document/service/file/{}/content/upload/'.format(self.a_uuid),
             adding_headers={'ETag':'some_other_etag'}
         )
         self.client.upload_file_content(
-            self.A_UUID,
-            etag = 'some_etag',
-            content = 'some_content'
+            self.a_uuid,
+            etag='some_etag',
+            content='some_content'
         )
 
         assert_that(
@@ -745,17 +749,17 @@ class TestApiClient(unittest.TestCase):
             has_entries({'If-Match': 'some_etag'})
         )
 
-    def test_upload_file_content_requires_ETag_in_response(self):
+    def test_upload_file_content_requires_etag_in_response(self):
         httpretty.register_uri(
             httpretty.POST,
-            'https://document/service/file/{}/content/upload/'.format(self.A_UUID),
+            'https://document/service/file/{}/content/upload/'.format(self.a_uuid),
         )
 
         assert_that(
             calling(self.client.upload_file_content).with_args(
-                self.A_UUID,
-                etag = 'some_etag',
-                content = 'some_content'
+                self.a_uuid,
+                etag='some_etag',
+                content='some_content'
             ),
             raises(StorageException)
         )
@@ -763,18 +767,18 @@ class TestApiClient(unittest.TestCase):
     def test_upload_file_content_returns_the_upload_etag(self):
         httpretty.register_uri(
             httpretty.POST,
-            'https://document/service/file/{}/content/upload/'.format(self.A_UUID),
+            'https://document/service/file/{}/content/upload/'.format(self.a_uuid),
             adding_headers={'ETag':'some_other_etag'}
         )
         self.client.upload_file_content(
-            self.A_UUID,
-            content = 'some_content'
+            self.a_uuid,
+            content='some_content'
         )
 
         assert_that(
             self.client.upload_file_content(
-                self.A_UUID,
-                content = 'some_content'
+                self.a_uuid,
+                content='some_content'
             ),
             equal_to('some_other_etag')
         )
@@ -785,7 +789,7 @@ class TestApiClient(unittest.TestCase):
 
     def test_copy_file_content_uses_the_right_method(self):
         httpretty.register_uri(httpretty.PUT, re.compile('https://.*'))
-        self.client.copy_file_content(self.A_UUID, str(uuid.uuid4()))
+        self.client.copy_file_content(self.a_uuid, str(uuid.uuid4()))
 
         assert_that(
             httpretty.last_request().method,
@@ -795,33 +799,33 @@ class TestApiClient(unittest.TestCase):
     def test_copy_file_content_verifies_uuids(self):
         assert_that(
             calling(self.client.copy_file_content).with_args(
-                self.A_UUID, 'source'),
+                self.a_uuid, 'source'),
             raises(StorageArgumentException)
         )
 
         assert_that(
             calling(self.client.copy_file_content).with_args(
-                'destination', self.A_UUID),
+                'destination', self.a_uuid),
             raises(StorageArgumentException)
         )
 
     def test_copy_file_content_sets_the_right_headers(self):
         httpretty.register_uri(httpretty.PUT, re.compile('https://.*'))
-        self.client.copy_file_content(str(uuid.uuid4()), self.A_UUID)
+        self.client.copy_file_content(str(uuid.uuid4()), self.a_uuid)
 
         assert_that(
             httpretty.last_request().headers,
-            has_entries({'X-Copy-From': self.A_UUID})
+            has_entries({'X-Copy-From': self.a_uuid})
         )
 
-    def test_copy_file_content_returns_None(self):
+    def test_copy_file_content_returns_none(self):
         httpretty.register_uri(
             httpretty.PUT,
-            'https://document/service/file/{}/content/'.format(self.A_UUID)
+            'https://document/service/file/{}/content/'.format(self.a_uuid)
         )
 
         assert_that(
-            self.client.copy_file_content(self.A_UUID, str(uuid.uuid4())),
+            self.client.copy_file_content(self.a_uuid, str(uuid.uuid4())),
             none()
         )
 
@@ -831,10 +835,10 @@ class TestApiClient(unittest.TestCase):
 
     def test_download_file_conent_sets_the_right_headers(self):
         httpretty.register_uri(
-            httpretty.GET, 'https://document/service/file/{}/content/'.format(self.A_UUID),
+            httpretty.GET, 'https://document/service/file/{}/content/'.format(self.a_uuid),
             adding_headers={'ETag':'some_other_etag'}
         )
-        self.client.download_file_content(self.A_UUID, 'some_etag')
+        self.client.download_file_content(self.a_uuid, 'some_etag')
 
         assert_that(
             httpretty.last_request().headers,
@@ -850,13 +854,13 @@ class TestApiClient(unittest.TestCase):
     def test_download_file_content_returns_tuple(self):
         httpretty.register_uri(
             httpretty.GET,
-            'https://document/service/file/{}/content/'.format(self.A_UUID),
+            'https://document/service/file/{}/content/'.format(self.a_uuid),
             adding_headers={'ETag':'some_etag'},
             body='somecontent'
         )
 
         assert_that(
-            self.client.download_file_content(self.A_UUID),
+            self.client.download_file_content(self.a_uuid),
             instance_of(tuple)
         )
 
@@ -864,38 +868,38 @@ class TestApiClient(unittest.TestCase):
         httpretty.reset()
         httpretty.register_uri(
             httpretty.GET,
-            'https://document/service/file/{}/content/'.format(self.A_UUID),
+            'https://document/service/file/{}/content/'.format(self.a_uuid),
             status=304,
         )
 
         assert_that(
-            self.client.download_file_content(self.A_UUID),
+            self.client.download_file_content(self.a_uuid),
             instance_of(tuple)
         )
 
-    def test_download_file_content_requires_ETag_in_response(self):
+    def test_download_file_content_requires_etag_in_response(self):
         httpretty.register_uri(
             httpretty.GET,
-            'https://document/service/file/{}/content/'.format(self.A_UUID),
+            'https://document/service/file/{}/content/'.format(self.a_uuid),
             body='somecontent'
         )
 
         assert_that(
             calling(self.client.download_file_content).with_args(
-                self.A_UUID),
+                self.a_uuid),
             raises(StorageException)
         )
 
     def test_download_file_content_returns_the_right_content(self):
         httpretty.register_uri(
             httpretty.GET,
-            'https://document/service/file/{}/content/'.format(self.A_UUID),
+            'https://document/service/file/{}/content/'.format(self.a_uuid),
             adding_headers={'ETag':'some_etag'},
             body='somecontent'
         )
 
         assert_that(
-            self.client.download_file_content(self.A_UUID)[1],
+            self.client.download_file_content(self.a_uuid)[1],
             equal_to(b'somecontent')
         )
 
@@ -903,12 +907,12 @@ class TestApiClient(unittest.TestCase):
         httpretty.reset()
         httpretty.register_uri(
             httpretty.GET,
-            'https://document/service/file/{}/content/'.format(self.A_UUID),
+            'https://document/service/file/{}/content/'.format(self.a_uuid),
             status=304,
         )
 
         assert_that(
-            self.client.download_file_content(self.A_UUID)[1],
+            self.client.download_file_content(self.a_uuid)[1],
             none()
         )
 
@@ -917,16 +921,16 @@ class TestApiClient(unittest.TestCase):
     #
 
     def test_get_signed_url_extracts_url_from_response_body(self):
-        some_json = {"signed_url": "foo://bar", "b": [2,3,4], "c": {"x":"y"}}
+        some_json = {"signed_url": "foo://bar", "b": [2, 3, 4], "c": {"x": "y"}}
         httpretty.register_uri(
             httpretty.GET,
-            'https://document/service/file/{}/content/secure_link/'.format(self.A_UUID),
+            'https://document/service/file/{}/content/secure_link/'.format(self.a_uuid),
             body=json.dumps(some_json),
             content_type="application/json"
         )
 
         assert_that(
-            self.client.get_signed_url(self.A_UUID),
+            self.client.get_signed_url(self.a_uuid),
             equal_to("foo://bar")
         )
 
@@ -943,9 +947,9 @@ class TestApiClient(unittest.TestCase):
     def test_delete_file_uses_the_right_method(self):
         httpretty.register_uri(
             httpretty.DELETE,
-            'https://document/service/file/{}/'.format(self.A_UUID)
+            'https://document/service/file/{}/'.format(self.a_uuid)
         )
-        self.client.delete_file(self.A_UUID)
+        self.client.delete_file(self.a_uuid)
 
         assert_that(
             httpretty.last_request().method,
