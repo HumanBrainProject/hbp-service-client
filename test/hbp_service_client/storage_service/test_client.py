@@ -42,12 +42,12 @@ class TestClient(object):
     # ls
     #
     @pytest.mark.parametrize('path', __BAD_PATHS)
-    def test_ls_verifies_input_path(self, path):
+    def test_list_verifies_input_path(self, path):
         assert_that(
             calling(self.client.list).with_args(path),
             raises(StorageArgumentException))
 
-    def test_ls_should_not_accept_files(self):
+    def test_list_should_not_accept_files(self):
         # given
         self.register_uri(
             'https://document/service/entity/?path=%2Fmyproject%2Fmyfile',
@@ -60,7 +60,7 @@ class TestClient(object):
             raises(StorageArgumentException)
         )
 
-    def test_ls_should_return_an_empty_list_for_an_empty_project(self):
+    def test_list_should_return_an_empty_list_for_an_empty_project(self):
         # given
         self.register_uri(
             'https://document/service/entity/?path=%2Fmy_empty_project',
@@ -78,7 +78,7 @@ class TestClient(object):
         assert_that(file_names, equal_to([]))
 
 
-    def test_ls_should_return_the_files_of_the_project(self):
+    def test_list_should_return_the_files_of_the_project(self):
         # given
         self.register_uri(
             'https://document/service/entity/?path=%2Fmy_project',
@@ -99,7 +99,7 @@ class TestClient(object):
         assert_that(file_names, equal_to(['file1', 'file2']))
 
 
-    def test_ls_should_return_the_folders_of_the_project_with_a_leading_slash(self):
+    def test_list_should_return_the_folders_of_the_project_with_a_leading_slash(self):
         # given
         self.register_uri(
             'https://document/service/entity/?path=%2Fmy_project',
@@ -120,7 +120,7 @@ class TestClient(object):
         assert_that(file_names, equal_to(['/folder1', '/folder2']))
 
 
-    def test_ls_should_load_all_the_paginated_files_of_the_project(self):
+    def test_list_should_load_all_the_paginated_files_of_the_project(self):
         # given
         self.register_uri(
             'https://document/service/entity/?path=%2Fmy_project',
