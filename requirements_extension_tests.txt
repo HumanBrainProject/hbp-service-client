@@ -1,1 +1,8 @@
+PyHamcrest
+mock
+mock-matchers
+HTTPretty
+pytest
+pytest-watch
+pylint
 pycodestyle
