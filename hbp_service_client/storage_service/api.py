@@ -19,7 +19,7 @@ L = logging.getLogger(__name__)
 
 
 class ApiClient(object):
-    '''A low level client library for the Storge Service REST API.
+    '''A low level client library for the Storage Service REST API.
 
         Example:
             >>> #you'll have to have an access token ready

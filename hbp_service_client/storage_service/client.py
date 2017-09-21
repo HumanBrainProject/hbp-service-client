@@ -12,7 +12,7 @@ L = logging.getLogger(__name__)
 
 
 class Client(object):
-    '''A client library for the Storge Service.
+    '''A client library for the Storage Service.
 
         Example:
             >>> #you'll have to have an access token ready
