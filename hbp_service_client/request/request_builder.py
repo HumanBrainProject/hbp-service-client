@@ -5,6 +5,7 @@
 import requests
 from hbp_service_client.storage_service.service_locator import ServiceLocator
 
+
 class RequestBuilder(object):
     '''A builder to create requests'''
 
@@ -55,17 +56,17 @@ class RequestBuilder(object):
 
     def __copy_and_set(self, attribute, value):
         params = {
-            'service_locator' : self._service_locator,
-            'url'             : self._url,
-            'service_url'     : self._service_url,
-            'endpoint'        : self._endpoint,
-            'headers'         : self._headers,
-            'return_body'     : self._return_body,
-            'params'          : self._params,
-            'body'            : self._body,
-            'json_body'       : self._json_body,
-            'stream'          : self._stream,
-            'throws'          : self._throws
+            'service_locator': self._service_locator,
+            'url': self._url,
+            'service_url': self._service_url,
+            'endpoint': self._endpoint,
+            'headers': self._headers,
+            'return_body': self._return_body,
+            'params': self._params,
+            'body': self._body,
+            'json_body': self._json_body,
+            'stream': self._stream,
+            'throws': self._throws
         }
         params[attribute] = value
         return RequestBuilder(**params)
@@ -161,7 +162,7 @@ class RequestBuilder(object):
         '''Sets the body of the request
 
         Args:
-            body : The body of the request
+            body: The body of the request
 
         Returns:
             The request builder instance in order to chain calls
@@ -267,7 +268,7 @@ class RequestBuilder(object):
     def __throw_if_necessary(response, throws):
         for (exception_class, should_throw) in throws:
             args = should_throw(response)
-            if args != None:
+            if args is not None:
                 raise exception_class(args)
 
     @staticmethod

@@ -9,3 +9,4 @@ install:
 script:
   - "pytest"
   - "pylint hbp_service_client"
+  - "pycodestyle hbp_service_client ---max-line-length 100"

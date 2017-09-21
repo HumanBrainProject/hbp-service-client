@@ -18,7 +18,6 @@ from hbp_service_client.storage_service.exceptions import (
 L = logging.getLogger(__name__)
 
 
-
 class ApiClient(object):
     '''Python wrapper for the HBP Document Service low-level REST API
 
@@ -514,7 +513,7 @@ class ApiClient(object):
             raise StorageArgumentException(
                 'Invalid UUID for project_id: {0}'.format(project_id))
         params = self._prep_params(locals())
-        del params['project_id'] # not a query parameter
+        del params['project_id']  # not a query parameter
         return self._authenticated_request \
             .to_endpoint('project/{}/children/'.format(project_id)) \
             .with_params(params) \
@@ -650,7 +649,7 @@ class ApiClient(object):
             raise StorageArgumentException(
                 'Invalid UUID for folder: {0}'.format(folder))
         params = self._prep_params(locals())
-        del params['folder'] # not a query parameter
+        del params['folder']  # not a query parameter
         return self._authenticated_request \
             .to_endpoint('folder/{}/children/'.format(folder)) \
             .with_params(params) \
