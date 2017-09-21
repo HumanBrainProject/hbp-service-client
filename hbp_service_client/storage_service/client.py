@@ -221,6 +221,38 @@ class Client(object):
 
         return new_file
 
+    def delete(self, path):
+        ''' Delete an entity from the storage service using its path.
+
+            Args:
+                path(str): The path of the entity to be delete
+
+            Returns:
+                The uuid of created file entity as string
+
+            Raises:
+                StorageArgumentException: Invalid arguments
+                StorageForbiddenException: Server response code 403
+                StorageNotFoundException: Server response code 404
+                StorageException: other 400-600 error codes
+        '''
+        self.__validate_storage_path(path, projects_allowed=False)
+
+        entity = self.api_client.get_entity_by_query(path=path)
+
+        if entity['entity_type'] in self.__BROWSABLE_TYPES:
+            # At this point it can only be a folder
+            contents = self.api_client.list_folder_content(entity['uuid'])
+            if contents['count'] > 0:
+                raise StorageArgumentException(
+                    'This method cannot delete non-empty folder. Please empty the folder first.')
+
+            self.api_client.delete_folder(entity['uuid'])
+        elif entity['entity_type'] == 'file':
+            self.api_client.delete_file(entity['uuid'])
+
+
+
     @classmethod
     def __validate_storage_path(cls, path, projects_allowed=True):
         '''Validate a string as a valid storage path'''

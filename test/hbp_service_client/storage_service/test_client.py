@@ -5,7 +5,7 @@ import re
 import pytest
 import mock
 import httpretty
-from hamcrest import (assert_that, calling, raises, equal_to)
+from hamcrest import (assert_that, calling, raises, equal_to, has_properties)
 
 
 from hbp_service_client.storage_service.client import Client
@@ -580,6 +580,101 @@ class TestClient(object):
             httpretty.last_request().body.decode(),
             equal_to('content of the local file')
         )
+
+    #
+    # delete
+    #
+
+    @pytest.mark.parametrize('path', __BAD_PATHS)
+    def test_delete_should_validate_the_path(self, path):
+        assert_that(
+            calling(self.client.delete).with_args(path),
+            raises(StorageArgumentException))
+
+    def test_delete_should_not_accept_projects(self):
+        assert_that(
+            calling(self.client.delete).with_args('/foo'),
+            raises(StorageArgumentException))
+
+    def test_delete_should_reject_non_empty_folders(self):
+        # given
+        folder_uuid = 'e2c25c1b-1234-4cf6-b8d2-271e628a1256'
+        # the folder exists
+        self.register_uri(
+            'https://document/service/entity/?path=%2Ffoo%2Fbar',
+            returns={'uuid': folder_uuid, 'entity_type': 'folder'}
+        )
+        # and it has children
+        self.register_uri(
+            'https://document/service/folder/{}/children/'.format(folder_uuid),
+            returns={'count': 1}
+        )
+
+        # then
+        assert_that(
+            calling(self.client.delete).with_args('/foo/bar'),
+            raises(StorageArgumentException))
+
+    def test_delete_should_delete_empty_folder_from_storage(self):
+        # given
+        folder_uuid = 'e2c25c1b-1234-4cf6-b8d2-271e628a1256'
+        endpoint = '/folder/{}/'.format(folder_uuid)
+        # the folder exists
+        self.register_uri(
+            'https://document/service/entity/?path=%2Ffoo%2Fbar',
+            returns={'uuid': folder_uuid, 'entity_type': 'folder'}
+        )
+        # and it has no children
+        self.register_uri(
+            'https://document/service{}children/'.format(endpoint),
+            returns={'count': 0}
+        )
+
+        httpretty.register_uri(
+            httpretty.DELETE,
+            'https://document/service{}'.format(endpoint),
+            status=204
+        )
+
+        # when
+        self.client.delete('/foo/bar')
+
+        # then
+        assert_that(
+            httpretty.last_request(),
+            has_properties(
+                {'method':equal_to('DELETE'),
+                 'path':equal_to('/service{}'.format(endpoint))})
+        )
+
+    def test_delete_should_delete_file_from_storage(self):
+        # given
+        file_uuid = 'e2c25c1b-1234-4cf6-b8d2-271e628a1256'
+        endpoint = '/file/{}/'.format(file_uuid)
+        # the file exists
+        self.register_uri(
+            'https://document/service/entity/?path=%2Ffoo%2Fbar',
+            returns={'uuid': file_uuid, 'entity_type': 'file'}
+        )
+
+        httpretty.register_uri(
+            httpretty.DELETE,
+            'https://document/service{}'.format(endpoint),
+            status=204
+        )
+
+        # when
+        self.client.delete('/foo/bar')
+
+        # then
+        assert_that(
+            httpretty.last_request(),
+            has_properties(
+                {'method':equal_to('DELETE'),
+                'path':equal_to('/service{}'.format(endpoint))})
+        )
+
+
 
 def find_sent_request(predicate):
     return next((x for x in httpretty.HTTPretty.latest_requests if predicate(x)), None)
