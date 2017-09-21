@@ -12,8 +12,7 @@ L = logging.getLogger(__name__)
 
 
 class Client(object):
-    '''High-level Client for interacting with the HBP Storge Service, providing
-       convenience functions for common operations
+    '''A client library for the Storge Service.
 
         Example:
             >>> #you'll have to have an access token ready

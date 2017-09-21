@@ -3,28 +3,23 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to bbp_client's documentation!
-======================================
+Welcome to hbp_service_client's documentation!
+================================================
 
-A library of convenience code to interact with the different unified platform core services including
-authentication, provenance, documents and tasks.
+A library of convenience code to interact with the different unified platform core services.
 
 
-Contents
+Classes
 --------
 
-.. toctree::
-   :maxdepth: 2
+.. currentmodule:: hbp_service_client
 
-   document_service
+.. autosummary::
+  :toctree:
+  :nosignatures:
 
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+  client.Client
+  storage_service.client.Client
+  storage_service.api.ApiClient
 
 .. _HBP: https://www.humanbrainproject.eu/

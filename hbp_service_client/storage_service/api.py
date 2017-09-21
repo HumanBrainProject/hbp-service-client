@@ -6,7 +6,7 @@
 #  - too-many-arguments: if we keep adding parameters related to paging then we
 # should consider creating a specific object
 
-'''Python wrapper for the HBP Storageument Service low-level REST API'''
+'''HBP Storage Service low-level REST API client'''
 
 import logging
 from validators import uuid as is_valid_uuid
@@ -19,7 +19,7 @@ L = logging.getLogger(__name__)
 
 
 class ApiClient(object):
-    '''Python wrapper for the HBP Document Service low-level REST API
+    '''A low level client library for the Storge Service REST API.
 
         Example:
             >>> #you'll have to have an access token ready
@@ -42,7 +42,7 @@ class ApiClient(object):
 
     @classmethod
     def new(cls, access_token, environment='prod'):
-        '''Create new documentservice client
+        '''Create a new storage service REST client.
 
             Arguments:
                 environment: The service environment to be used for the client
@@ -50,7 +50,10 @@ class ApiClient(object):
                     service
 
             Returns:
-                A document_service.Client instance
+                A storage_service.api.ApiClient instance
+
+            Example:
+                >>> storage_client = ApiClient.new(my_access_token)
 
         '''
         request = RequestBuilder \
