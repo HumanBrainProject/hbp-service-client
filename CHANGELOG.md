@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
    * `mkdir` - Create a folder in the storage service pointed by the given path.
    * `upload_file` - Upload local file content to a storage service destination folder.
    * `download_file` - Download a file from the storage service to local disk.
+   * `delete` - Delete an entity from the storage service using its path.
 
 ### Changed
  * The module `hbp_service_client.document_service` was renamed to `hbp_service_client.storage_service`
