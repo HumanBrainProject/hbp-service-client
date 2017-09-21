@@ -67,7 +67,7 @@ class TestClient(object):
             returns={'uuid': 'e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56', 'entity_type': 'project'}
         )
         self.register_uri(
-            'https://document/service/folder/e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56/children/?page=1',
+            'https://document/service/folder/e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56/children/',
             returns={'next': None, 'results': []}
         )
 
@@ -85,7 +85,7 @@ class TestClient(object):
             returns={'uuid': 'e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56', 'entity_type': 'project'}
         )
         self.register_uri(
-            'https://document/service/folder/e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56/children/?page=1',
+            'https://document/service/folder/e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56/children/',
             returns={
                 'next': None,
                 'results': [{'name': 'file1', 'entity_type': 'file'},
@@ -106,7 +106,7 @@ class TestClient(object):
             returns={'uuid': 'e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56', 'entity_type': 'project'}
         )
         self.register_uri(
-            'https://document/service/folder/e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56/children/?page=1',
+            'https://document/service/folder/e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56/children/',
             returns={
                 'next': None,
                 'results': [{'name': 'folder1', 'entity_type': 'folder'},
@@ -126,26 +126,29 @@ class TestClient(object):
             'https://document/service/entity/?path=%2Fmy_project',
             returns={'uuid': 'e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56', 'entity_type': 'project'}
         )
-        self.register_uri(
-            'https://document/service/folder/e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56/children/?page=1',
-            returns={
-                'next': 'link.to.next.page',
-                'results': [{'name': 'file1', 'entity_type': 'file'},
-                            {'name': 'folder1', 'entity_type': 'folder'}]}
-        )
-        self.register_uri(
-            'https://document/service/folder/e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56/children/?page=2',
-            returns={
-                'next': 'link.to.next.page',
-                'results': [{'name': 'file2', 'entity_type': 'file'},
-                            {'name': 'folder2', 'entity_type': 'folder'}]}
-        )
-        self.register_uri(
-            'https://document/service/folder/e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56/children/?page=3',
-            returns={
-                'next': None,
-                'results': [{'name': 'file3', 'entity_type': 'file'},
-                            {'name': 'folder3', 'entity_type': 'folder'}]}
+        httpretty.register_uri(
+            httpretty.GET,
+            'https://document/service/folder/e2c25c1b-f6a9-4cf6-b8d2-271e628a9a56/children/',
+            responses=[
+                httpretty.Response(
+                    body=json.dumps({
+                        'next': 'link.to.next.page',
+                        'results': [{'name': 'file1', 'entity_type': 'file'},
+                                    {'name': 'folder1', 'entity_type': 'folder'}]}),
+                    content_type='application/json'),
+                httpretty.Response(
+                    body=json.dumps({
+                        'next': 'link.to.next.page',
+                        'results': [{'name': 'file2', 'entity_type': 'file'},
+                                    {'name': 'folder2', 'entity_type': 'folder'}]}),
+                    content_type='application/json'),
+                httpretty.Response(
+                    body=json.dumps({
+                        'next': None,
+                        'results': [{'name': 'file3', 'entity_type': 'file'},
+                                    {'name': 'folder3', 'entity_type': 'folder'}]}),
+                    content_type='application/json')
+            ]
         )
 
         # when
