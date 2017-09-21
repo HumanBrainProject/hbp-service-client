@@ -75,7 +75,8 @@ class Client(object):
         more_pages = True
         page_number = 1
         while more_pages:
-            response = self.api_client.list_folder_content(entity_uuid, page=page_number)
+            response = self.api_client.list_folder_content(
+                entity_uuid, page=page_number, ordering='name')
             more_pages = response['next'] is not None
             page_number += 1
             for child in response['results']:
