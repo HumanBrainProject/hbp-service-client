@@ -6,7 +6,7 @@
 Welcome to hbp_service_client's documentation!
 ================================================
 
-A library of convenience code to interact with the different unified platform core services.
+A library of convenience code to interact with the Collaboratory core services.
 
 
 Classes

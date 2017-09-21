@@ -12,5 +12,4 @@ hbp\_service\_client\.client\.Client
 
    .. autosummary::
 
-      ~Client.__init__
       ~Client.new
