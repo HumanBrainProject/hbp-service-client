@@ -671,7 +671,7 @@ class TestClient(object):
             httpretty.last_request(),
             has_properties(
                 {'method':equal_to('DELETE'),
-                'path':equal_to('/service{}'.format(endpoint))})
+                 'path':equal_to('/service{}'.format(endpoint))})
         )
 
 
