@@ -1,5 +1,7 @@
 # HBP service client
 
+[![Build Status](https://travis-ci.org/HumanBrainProject/hbp-service-client.svg?branch=master)](https://travis-ci.org/HumanBrainProject/hbp-service-client)
+
 This library is intended to help Collaboratory Application developers communicate with the core services of the platform in their Python backends or Jupyter notebooks.
 
 ## Documentation
