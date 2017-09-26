@@ -13,6 +13,8 @@ class Entity(object):
         self.name = name
         self.description = description
         self.children = []
+        # _path is always relative to the root of the tree
+        # in the root it's the entity name
         self._path = name
 
     @classmethod
