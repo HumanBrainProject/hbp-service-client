@@ -124,8 +124,20 @@ class Entity(object):
             self.__write_file(target_path)
 
     def __write_file(self, path):
-        with open(path, 'w') as f:
-            f.write('foo')
+        # The line below is difficult because we only the entity's path relative
+        # to the root of the subtree
+        # In order to get the full path we need the full path of the root and
+        # concatenating the entity's relative path
 
-    def __create_directory(self, path):
+        # self.__client.download_file(path=self._path, target_path=path)
+
+        # For now just use the code ..
+
+        signed_url = self.__client.get_signed_url(self.uuid)
+        response = self.__client.download_signed_url(signed_url)
+
+        with open(path, "wb") as output:
+            for chunk in response.iter_content(chunk_size=1024):
+                output.write(chunk)
+
         os.mkdir(path)
