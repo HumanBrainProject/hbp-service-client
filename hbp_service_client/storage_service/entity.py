@@ -140,4 +140,6 @@ class Entity(object):
             for chunk in response.iter_content(chunk_size=1024):
                 output.write(chunk)
 
+    @staticmethod
+    def __create_directory(path):
         os.mkdir(path)
