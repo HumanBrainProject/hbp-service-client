@@ -19,3 +19,13 @@ class StorageForbiddenException(StorageException):
 class StorageNotFoundException(StorageException):
     '''404 not found'''
     pass
+
+
+class EntityException(Exception):
+    '''Exception for the Entity class'''
+    pass
+
+
+class EntityArgumentException(EntityException):
+    '''Wrong argument'''
+    pass
