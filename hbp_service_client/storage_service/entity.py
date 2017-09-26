@@ -1,4 +1,5 @@
 from os import (mkdir, getcwd)
+from hbp_service_client.storage_service.api import ApiClient
 from hbp_service_client.storage_service.exceptions import EntityArgumentException
 
 class Entity(object):
@@ -16,10 +17,12 @@ class Entity(object):
 
     @classmethod
     def set_client(cls, client):
-        #verify the interface
-        if (not hasattr(client, 'storage') and
-                hasattr(client.storage, 'list_folder_content') and
-                callable(client.storage.list_folder_content)):
+        # #verify the interface
+        # if (not hasattr(client, 'storage') and
+        #         hasattr(client.storage, 'list_folder_content') and
+        #         callable(client.storage.list_folder_content)):
+        #     raise ValueError('The client is of invalid specifications')
+        if not isinstance(client, ApiClient):
             raise ValueError('The client is of invalid specifications')
         cls.__client = client
 
