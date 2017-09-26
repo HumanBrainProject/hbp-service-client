@@ -1,5 +1,6 @@
 from os import (mkdir, getcwd)
 from hbp_service_client.storage_service.exceptions import EntityArgumentException
+
 class Entity(object):
 
     _SUBTREE_TYPES = ['project', 'folder']
@@ -16,7 +17,9 @@ class Entity(object):
     @classmethod
     def set_client(cls, client):
         #verify the interface
-        if not hasattr(client, 'storage') and hasattr(client.storage, 'list_folder_content') and callable(client.storage.list_folder_content):
+        if (not hasattr(client, 'storage') and
+                hasattr(client.storage, 'list_folder_content') and
+                callable(client.storage.list_folder_content)):
             raise ValueError('The client is of invalid specifications')
         cls.__client = client
 
@@ -51,7 +54,8 @@ class Entity(object):
         self._path = '{0}/{1}'.format(parent._path, self.name)
 
     def __str__(self):
-        return "({id}: {name}[{type}])".format(id=self.uuid, name=self.name, type=self.entity_type)
+        return "({id}: {name}[{type}])".format(
+            id=self.uuid, name=self.name, type=self.entity_type)
 
     def __repr__(self):
         return self.__str__()
@@ -66,7 +70,8 @@ class Entity(object):
         more = True
         page = 1
         while more:
-            partial_results = self.__client.storage.list_folder_content(self.uuid, page=page, ordering='name')
+            partial_results = self.__client.storage.list_folder_content(
+                self.uuid, page=page, ordering='name')
             self.children.extend([self.from_json(entity) for entity in partial_results['results']])
             more = partial_results['next'] is not None
             page += 1
