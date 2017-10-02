@@ -77,7 +77,7 @@ class Entity(object):
         while more:
             partial_results = self.__client.list_folder_content(
                 self.uuid, page=page, ordering='name')
-            self.children.extend([self.from_json(entity) for entity in partial_results['results']])
+            self.children.extend([self.from_dictionary(entity) for entity in partial_results['results']])
             more = partial_results['next'] is not None
             page += 1
         for child in self.children:
