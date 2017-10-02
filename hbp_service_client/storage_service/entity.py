@@ -1,4 +1,4 @@
-from os import (mkdir, getcwd)
+from os import (mkdir)
 from hbp_service_client.storage_service.api import ApiClient
 from hbp_service_client.storage_service.exceptions import EntityArgumentException
 
@@ -142,4 +142,4 @@ class Entity(object):
 
     @staticmethod
     def __create_directory(path):
-        os.mkdir(path)
+        mkdir(path)
