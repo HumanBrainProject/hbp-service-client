@@ -44,7 +44,7 @@ class Entity(object):
         if not cls.__client:
             raise Exception('This method requires a client set')
         # TODO exception handling
-        return cls.from_dictionary(cls.__client.storage.get_entity_details(uuid))
+        return cls.from_dictionary(cls.__client.get_entity_details(uuid))
 
     @property
     def parent(self):
@@ -75,7 +75,7 @@ class Entity(object):
         more = True
         page = 1
         while more:
-            partial_results = self.__client.storage.list_folder_content(
+            partial_results = self.__client.list_folder_content(
                 self.uuid, page=page, ordering='name')
             self.children.extend([self.from_json(entity) for entity in partial_results['results']])
             more = partial_results['next'] is not None
