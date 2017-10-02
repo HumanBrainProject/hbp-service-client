@@ -44,7 +44,7 @@ class Entity(object):
         if not cls.__client:
             raise Exception('This method requires a client set')
         # TODO exception handling
-        return cls.from_json(cls.__client.storage.get_entity_details(uuid))
+        return cls.from_dictionary(cls.__client.storage.get_entity_details(uuid))
 
     @property
     def parent(self):
