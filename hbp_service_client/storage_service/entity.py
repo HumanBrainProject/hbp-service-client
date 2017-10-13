@@ -1,4 +1,5 @@
-from os import (mkdir)
+from os import (mkdir, listdir)
+from os.path import (exists, isdir, isfile, basename, join)
 from hbp_service_client.storage_service.api import ApiClient
 from hbp_service_client.storage_service.exceptions import EntityArgumentException
 
@@ -16,6 +17,7 @@ class Entity(object):
         # _path is always relative to the root of the tree
         # in the root it's the entity name
         self._path = name
+        self.__disk_path = None
 
     @classmethod
     def set_client(cls, client):
@@ -45,6 +47,28 @@ class Entity(object):
             raise Exception('This method requires a client set')
         # TODO exception handling
         return cls.from_dictionary(cls.__client.get_entity_details(uuid))
+
+    @classmethod
+    def from_disk(cls, path):
+        ''' Create an entity from the disk
+        '''
+        if not exists(path):
+            raise EntityArgumentException('The given path does not exist on the disk.')
+
+        entity_dict = {
+            'uuid': None,
+            'description': None,
+            'name': basename(path)} # TODO check basename of /tmp/a/
+        if isdir(path):
+            entity_dict['entity_type'] = 'folder'
+        elif isfile(path):
+            entity_dict['entity_type'] = 'file'
+        else:
+            raise EntityArgumentException('Links are not supported.')
+
+        entity = cls.from_dictionary(**entity_dict)
+        entity.__disk_path = path
+        return entity
 
     @property
     def parent(self):
