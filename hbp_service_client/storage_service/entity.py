@@ -157,19 +157,44 @@ class Entity(object):
             subtree: to indicate whether we want to write the whole subtree
 
         '''
+        # TODO if subtree then do explore_subtree
+
         if subtree and not self.entity_type in self._SUBTREE_TYPES:
-            raise ValueError('This method is only valid on folders.')
+            raise ValueError('This setting is only valid on folders.')
         destination = destination or os.getcwd()
 
         self.__write(destination)
         if subtree:
-            folders_to_write = [self]
-            while len(folders_to_write) > 0:
-                current_folder = folders_to_write.pop()
-                for child in current_folder.children:
-                    if child.entity_type in self._SUBTREE_TYPES:
-                        folders_to_write.insert(0, child)
-                    child.__write(destination)
+            self.__process_subtree('__write', destination)
+
+
+    def __process_subtree(self, method, *args):
+        '''Iterate subtree and call method(*args) on nodes'''
+
+        if self.entity_type not in self._SUBTREE_TYPES:
+            raise ValueError('This setting is only valid on folders.')
+        folders_to_process = [self]
+        while len(folders_to_process) > 0:
+            current_folder = folders_to_process.pop()
+            for child in current_folder.children:
+                if child.entity_type in self._SUBTREE_TYPES:
+                    folders_to_process.insert(0, child)
+                getattr(child, method)(*args)
+
+    def __load(self, destination):
+        parent_uuid = destination if destination else self.parent.uuid
+        if self.entity_type == 'folder':
+            self.__load_directory(parent_uuid)
+        else:
+            self.__load_file(parent_uuid)
+
+
+    def __load_file(self, parent_uuid):
+
+
+    def __load_directory(self, parent_uuid):
+        parent_uuid = destination if destination else self.parent.uuid
+        self.__client.create_folder(name=self.name, parent=parent_uuid)
 
     def __write(self, destination):
         target_path = '{0}/{1}'.format(destination, self._path)
