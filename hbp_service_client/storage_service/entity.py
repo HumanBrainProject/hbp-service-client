@@ -190,10 +190,16 @@ class Entity(object):
 
 
     def __load_file(self, parent_uuid):
+        new_file = self.__client.create_file(
+            name=self.name,
+            parent=parent_uuid,
+            content_type='foo') #FIXME
+        self.__client.upload_file_content(
+            file_id=new_file['uuid'],
+            source=self.__disk_path)
 
 
     def __load_directory(self, parent_uuid):
-        parent_uuid = destination if destination else self.parent.uuid
         self.__client.create_folder(name=self.name, parent=parent_uuid)
 
     def __write(self, destination):
