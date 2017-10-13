@@ -1,4 +1,4 @@
-from os import (mkdir, listdir)
+from os import (mkdir, listdir, getcwd)
 from os.path import (exists, isdir, isfile, basename, join)
 from hbp_service_client.storage_service.api import ApiClient
 from hbp_service_client.storage_service.exceptions import EntityArgumentException
@@ -161,7 +161,7 @@ class Entity(object):
 
         if subtree and not self.entity_type in self._SUBTREE_TYPES:
             raise ValueError('This setting is only valid on folders.')
-        destination = destination or os.getcwd()
+        destination = destination or getcwd()
 
         self.__write(destination)
         if subtree:
