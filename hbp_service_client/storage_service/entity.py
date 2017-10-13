@@ -126,6 +126,29 @@ class Entity(object):
                 if entity.entity_type == 'folder':
                     folders_to_explore.insert(0, entity)
 
+    def load_to_service(self, destination_path=None, destination_uuid=None, subtree=False):
+        if not self.__client:
+            raise Exception('This method requires a client set')
+
+        if (not (destination_path or destination_uuid) or (destination_path and destination_uuid)):
+            raise EntityArgumentException('Exactly one destination is required.')
+        if subtree and not self.entity_type in self._SUBTREE_TYPES:
+            raise ValueError('This setting is only valid on folders.')
+        query = {}
+        if destination_path:
+            query = {'path': destination_path}
+        elif destination_uuid:
+            query = {'uuid': destination_uuid}
+
+        parent = self.__client.get_entity_by_query(**query)
+        if parent['entity_type'] not in self._SUBTREE_TYPES:
+            raise EntityArgumentException('The destination must be a project or folder')
+
+        self.__load(parent['uuid'])
+        if subtree:
+            self.__process_subtree('__load', None)
+
+
     def write_to_disk(self, destination=None, subtree=False):
         '''Write entity to disk
 
