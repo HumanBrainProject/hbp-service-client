@@ -92,20 +92,28 @@ class Entity(object):
     def explore_children(self):
         if not self.entity_type in self._SUBTREE_TYPES:
             raise ValueError('This method is only valid on folders.')
-        if not self.__client:
-            raise Exception('This method requires a client set')
-        # reset children to avoid duplicating, this way we refresh the cache
-        self.children = []
-        more = True
-        page = 1
-        while more:
-            partial_results = self.__client.list_folder_content(
-                self.uuid, page=page, ordering='name')
-            self.children.extend([self.from_dictionary(entity) for entity in partial_results['results']])
-            more = partial_results['next'] is not None
-            page += 1
+        if self.uuid:
+            # this is what we do when the entity came from the service
+            if not self.__client:
+                raise Exception('This method requires a client set')
+            self.children = []
+            # reset children to avoid duplicating, this way we refresh the cache
+            more = True
+            page = 1
+            while more:
+                partial_results = self.__client.list_folder_content(
+                    self.uuid, page=page, ordering='name')
+                self.children.extend([self.from_dictionary(entity) for entity in partial_results['results']])
+                more = partial_results['next'] is not None
+                page += 1
+        else:
+            # there is no uuid, so we explore on disk
+            self.children = []
+            for child in listdir(self.__disk_path):
+                self.children.append(self.from_disk(join(self.__disk_path, child)))
         for child in self.children:
             child.parent = self
+
 
     def explore_subtree(self):
         # reset children to avoid duplicating, this way we refresh the cache
