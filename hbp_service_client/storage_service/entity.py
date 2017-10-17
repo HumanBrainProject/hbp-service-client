@@ -198,13 +198,15 @@ class Entity(object):
             name=self.name,
             parent=parent_uuid,
             content_type='foo') #FIXME
+        self.uuid = new_file['uuid']
         self.__client.upload_file_content(
-            file_id=new_file['uuid'],
+            file_id=self.uuid,
             source=self.__disk_path)
 
 
     def __load_directory(self, parent_uuid):
-        self.__client.create_folder(name=self.name, parent=parent_uuid)
+        new_folder = self.__client.create_folder(name=self.name, parent=parent_uuid)
+        self.uuid = new_folder['uuid']
 
     def __write(self, destination):
         target_path = '{0}/{1}'.format(destination, self._path)
