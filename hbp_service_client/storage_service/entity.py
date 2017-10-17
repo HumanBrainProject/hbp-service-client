@@ -179,7 +179,11 @@ class Entity(object):
             for child in current_folder.children:
                 if child.entity_type in self._SUBTREE_TYPES:
                     folders_to_process.insert(0, child)
-                getattr(child, method)(*args)
+                getattr(
+                    child,
+                    '_{classname}{methodname}'.format(
+                        classname=self.__class__.__name__, # FIXME ugly hack to call the private methods
+                        methodname=method))(*args)
 
     def __load(self, destination):
         parent_uuid = destination if destination else self.parent.uuid
