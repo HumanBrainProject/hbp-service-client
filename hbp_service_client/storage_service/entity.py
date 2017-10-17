@@ -66,7 +66,7 @@ class Entity(object):
         else:
             raise EntityArgumentException('Links are not supported.')
 
-        entity = cls.from_dictionary(**entity_dict)
+        entity = cls.from_dictionary(entity_dict)
         entity.__disk_path = path
         return entity
 
