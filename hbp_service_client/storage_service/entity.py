@@ -1,6 +1,6 @@
 from os import (mkdir, listdir, getcwd)
 from os.path import (exists, isdir, isfile, basename, join)
-from re import (compile, match)
+from re import (compile, search)
 from hbp_service_client.storage_service.api import ApiClient
 from hbp_service_client.storage_service.exceptions import EntityArgumentException
 
@@ -136,7 +136,7 @@ class Entity(object):
         while len(folders_to_explore) > 0:
             current_folder = folders_to_explore.pop()
             for entity in current_folder.children:
-                if match(pattern, entity.name):
+                if pattern.search(entity.name):
                     results.append(entity)
                 if entity.entity_type == 'folder':
                     folders_to_explore.insert(0, entity)
