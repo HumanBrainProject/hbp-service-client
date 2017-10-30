@@ -179,9 +179,9 @@ class Entity(object):
             raise ValueError('This setting is only valid on folders.')
         destination = destination or getcwd()
 
-        self.__write(destination)
+        self.__write(destination, use_path=subtree)
         if subtree:
-            self.__process_subtree('__write', destination)
+            self.__process_subtree('__write', destination, use_path=subtree)
 
 
     def __process_subtree(self, method, *args):
@@ -224,8 +224,9 @@ class Entity(object):
         new_folder = self.__client.create_folder(name=self.name, parent=parent_uuid)
         self.uuid = new_folder['uuid']
 
-    def __write(self, destination):
-        target_path = '{0}/{1}'.format(destination, self._path)
+    def __write(self, destination, use_path=True):
+        suffix = self._path if use_path else self.name
+        target_path = '{0}/{1}'.format(destination, suffix)
         if self.entity_type in self._SUBTREE_TYPES:
             self.__create_directory(target_path)
         elif self.entity_type == 'file':
