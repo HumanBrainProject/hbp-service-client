@@ -1,5 +1,6 @@
 from os import (mkdir, listdir, getcwd)
 from os.path import (exists, isdir, isfile, basename, join)
+from re import (compile, match)
 from hbp_service_client.storage_service.api import ApiClient
 from hbp_service_client.storage_service.exceptions import EntityArgumentException
 
@@ -125,6 +126,21 @@ class Entity(object):
             for entity in current_folder.children:
                 if entity.entity_type == 'folder':
                     folders_to_explore.insert(0, entity)
+
+    def search_subtree(self, regex):
+        if self.entity_type not in self._SUBTREE_TYPES:
+            raise EntityArgumentException('You can only seach in folders')
+        results = []
+        pattern = compile(regex)
+        folders_to_explore = [self]
+        while len(folders_to_explore) > 0:
+            current_folder = folders_to_explore.pop()
+            for entity in current_folder.children:
+                if match(pattern, entity.name):
+                    results.append(entity)
+                if entity.entity_type == 'folder':
+                    folders_to_explore.insert(0, entity)
+        return results
 
     def load_to_service(self, destination_path=None, destination_uuid=None, subtree=False):
         if not self.__client:
