@@ -1,10 +1,12 @@
-# pylint: disable=unused-argument, too-many-public-methods, too-many-arguments
+# pylint: disable=unused-argument, too-many-public-methods, too-many-arguments, too-many-lines
 #  - unused-argument: This is needed for the unused params, which are not used
 # because they are gathered via locals()
 #  - too-many-public-methods: If we keep adding methods then we should consider
 # about splitting this into smaller chunks
 #  - too-many-arguments: if we keep adding parameters related to paging then we
 # should consider creating a specific object
+#  - too-many-lines: we reached the limit of 1000 lines but no new methods
+# should be added
 
 '''HBP Storage Service low-level REST API client'''
 
@@ -504,7 +506,7 @@ class ApiClient(object):
                         u'parent': u'3abd8742-d069-44cf-a66b-2370df74a682',
                         u'uuid': u'eac11058-4ae0-4ea9-ada8-d3ea23887509'}]
                 }
-
+x
 
         Raises:
             StorageArgumentException: Ivalid parameters
@@ -530,7 +532,7 @@ class ApiClient(object):
             collab_id (int): The id of the collab the project should be created in.
 
         Returns:
-            A dictionary of details of the created project:
+            A dictionary of details of the created project::
 
                 {
                     u'collab_id': 12998,
