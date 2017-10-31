@@ -473,6 +473,70 @@ class TestApiClient(object):
         )
 
     #
+    # Create project
+    #
+
+    def test_create_project_returns_the_response_body(self):
+        some_json = {"a": "123456", "b": [2, 3, 4], "c": {"x": "y"}}
+        httpretty.register_uri(
+            httpretty.POST,
+            'https://document/service/project/',
+            body=json.dumps(some_json),
+            content_type="application/json"
+        )
+        assert_that(
+            self.client.create_project(12345),
+            equal_to(some_json)
+        )
+
+    def test_create_project_sends_the_right_body(self):
+        httpretty.register_uri(
+            httpretty.POST,
+            'https://document/service/project/'
+        )
+
+        self.client.create_project(12345)
+
+        assert_that(
+            httpretty.last_request().parsed_body,
+            equal_to({'collab_id': 12345})
+        )
+
+    #
+    # delete project
+    #
+
+    def test_delete_project_uses_the_right_method(self):
+        httpretty.register_uri(
+            httpretty.DELETE,
+            'https://document/service/project/{}/'.format(self.a_uuid),
+        )
+
+        self.client.delete_project(self.a_uuid)
+
+        assert_that(
+            httpretty.last_request().method,
+            'DELETE'
+        )
+
+    def test_delete_project_verifies_uuids(self):
+        assert_that(
+            calling(self.client.delete_project).with_args('1'),
+            raises(StorageArgumentException)
+        )
+
+    def test_delete_project_returns_none(self):
+        httpretty.register_uri(
+            httpretty.DELETE,
+            'https://document/service/project/{}/'.format(self.a_uuid),
+        )
+
+        assert_that(
+            self.client.delete_project(self.a_uuid),
+            none()
+        )
+
+    #
     # Folder endpoint
     #
     # create_folder

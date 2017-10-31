@@ -523,6 +523,61 @@ class ApiClient(object):
             .return_body() \
             .get()
 
+    def create_project(self, collab_id):
+        '''Create a new project.
+
+        Args:
+            collab_id (int): The id of the collab the project should be created in.
+
+        Returns:
+            A dictionary of details of the created project:
+
+                {
+                    u'collab_id': 12998,
+                    u'created_by': u'303447',
+                    u'created_on': u'2017-03-21T14:06:32.293902Z',
+                    u'description': u'',
+                    u'entity_type': u'project',
+                    u'modified_by': u'303447',
+                    u'modified_on': u'2017-03-21T14:06:32.293967Z',
+                    u'name': u'12998',
+                    u'uuid': u'2516442e-1e26-4de1-8ed8-94523224cc40'
+                }
+
+        Raises:
+            StorageArgumentException: Invalid arguments
+            StorageForbiddenException: Server response code 403
+            StorageNotFoundException: Server response code 404
+            StorageException: other 400-600 error codes
+        '''
+        return self._authenticated_request \
+            .to_endpoint('project/') \
+            .with_json_body(self._prep_params(locals())) \
+            .return_body() \
+            .post()
+
+    def delete_project(self, project):
+        '''Delete a project. It will recursively delete all the content.
+
+        Args:
+            project_id (str): The UUID of the project to be deleted.
+
+        Returns:
+            None
+
+        Raises:
+            StorageArgumentException: Invalid arguments
+            StorageForbiddenException: 403
+            StorageNotFoundException: 404
+            HTTPError: other non-20x error codes
+        '''
+        if not is_valid_uuid(project):
+            raise StorageArgumentException(
+                'Invalid UUID for project: {0}'.format(project))
+        self._authenticated_request \
+            .to_endpoint('project/{}/'.format(project)) \
+            .delete()
+
     #
     # Folder endpoint
     #
