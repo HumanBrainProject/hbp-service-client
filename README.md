@@ -8,30 +8,47 @@ This library is intended to help Collaboratory Application developers communicat
 
 For the compiled html documentation visit https://developer.humanbrainproject.eu/docs/hbp-service-client/latest/
 
-## Setup
+## Installation
 
-Install the requirements
+Install the module
+```bash
+pip install hbp_service_client
+```
+## Development
+
+### Install the module in editable mode
+
+Install the requirements first
+
 ```bash
 pip install -r requirements.txt \
   -r test/requirements_tests.txt \
   -r doc/requirements_documentation.txt
 ```
 
-Install the module
+In the project root directory execute
+
 ```bash
-pip install hbp_service_client
+pip install -e .
 ```
 
-## Tests
-Run the tests
+### Tests
+
+To run the tests execute the following command from the project root directory.
+
 ```bash
-pytest hbp_service_client
+pytest
 ```
 
-## Generating documentation
+### Generating documentation
 
-To compile the HTML documentation execute:
+To compile the HTML documentation execute the following command
+after having the module installed in editable mode.
 
 ```bash
 sphinx-build -d doc/build/doctree doc/source doc/build/html
 ```
+
+Some RST files in the doc/source directory are not re-generated if they exist already. This might mean that newly added
+methods won't get their documentation added to the class's member list. You may have to edit the RST file by hand, or
+delete it to have sphinx re-generate it. In the latter case, you might want to rearrange the order of the class members.
