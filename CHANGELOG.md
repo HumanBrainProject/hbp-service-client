@@ -5,6 +5,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+
+ * Adding the following methods in  `hbp_service_client.storage_service.client.Client.api_client`:
+   * `create_project` - Create the project for a given collab.
+   * `delete_project` - Delete a project given its UUID.
+
 ## [1.0.0] - 25.09.2017
 
 ### Added

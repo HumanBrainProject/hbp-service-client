@@ -506,7 +506,6 @@ class ApiClient(object):
                         u'parent': u'3abd8742-d069-44cf-a66b-2370df74a682',
                         u'uuid': u'eac11058-4ae0-4ea9-ada8-d3ea23887509'}]
                 }
-x
 
         Raises:
             StorageArgumentException: Ivalid parameters
@@ -547,7 +546,6 @@ x
                 }
 
         Raises:
-            StorageArgumentException: Invalid arguments
             StorageForbiddenException: Server response code 403
             StorageNotFoundException: Server response code 404
             StorageException: other 400-600 error codes
@@ -562,7 +560,7 @@ x
         '''Delete a project. It will recursively delete all the content.
 
         Args:
-            project_id (str): The UUID of the project to be deleted.
+            project (str): The UUID of the project to be deleted.
 
         Returns:
             None
