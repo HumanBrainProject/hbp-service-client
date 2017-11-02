@@ -9,11 +9,13 @@ class Entity(object):
     _SUBTREE_TYPES = ['project', 'folder']
     __client = None
 
-    def __init__(self, entity_type, uuid, name, description):
+    def __init__(self, entity_type, uuid, name, description, created_by, modified_by):
         self.entity_type = entity_type
         self.uuid = uuid
         self.name = name
         self.description = description
+        self.created_by = created_by
+        self.modified_by = modified_by
         self.children = []
         # _path is always relative to the root of the tree
         # in the root it's the entity name
@@ -38,7 +40,9 @@ class Entity(object):
                 entity_type=dictionary['entity_type'],
                 uuid=dictionary['uuid'],
                 name=dictionary['name'],
-                description=dictionary['description'])
+                description=dictionary['description'],
+                created_by=dictionary['created_by'],
+                modified_by=dictionary['modified_by'])
         except (TypeError, KeyError) as exc:
             raise EntityArgumentException(exc)
 
