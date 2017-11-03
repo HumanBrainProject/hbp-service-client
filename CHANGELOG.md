@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [1.1.0] - 03.10.2017
+
 ### Added
 
  * Adding the following methods in  `hbp_service_client.storage_service.client.Client.api_client`:
