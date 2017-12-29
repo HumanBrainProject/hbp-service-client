@@ -185,10 +185,10 @@ class Entity(object):
 
         self.__write(destination, use_path=subtree)
         if subtree:
-            self.__process_subtree('__write', destination, use_path=subtree)
+            self.__process_subtree('__write', destination=destination, use_path=subtree)
 
 
-    def __process_subtree(self, method, *args):
+    def __process_subtree(self, method, *args, **kwargs):
         '''Iterate subtree and call method(*args) on nodes'''
 
         if self.entity_type not in self._SUBTREE_TYPES:
@@ -203,7 +203,7 @@ class Entity(object):
                     child,
                     '_{classname}{methodname}'.format(
                         classname=self.__class__.__name__, # FIXME ugly hack to call the private methods
-                        methodname=method))(*args)
+                        methodname=method))(*args, **kwargs)
 
     def __load(self, destination):
         parent_uuid = destination if destination else self.parent.uuid
