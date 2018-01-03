@@ -1,6 +1,7 @@
 from os import (mkdir, listdir, getcwd)
 from os.path import (exists, isdir, isfile, basename, join)
 from re import (compile, search)
+from validators import uuid as is_valid_uuid
 from hbp_service_client.storage_service.api import ApiClient
 from hbp_service_client.storage_service.exceptions import EntityArgumentException
 
@@ -49,8 +50,9 @@ class Entity(object):
     @classmethod
     def from_uuid(cls, uuid):
         if not cls.__client:
-            raise Exception('This method requires a client set')
-        # TODO exception handling
+            raise EntityException('This method requires a client set')
+        if not is_valid_uuid(uuid):
+            raise EntityArgumentException('This method expects a valid UUID.')
         return cls.from_dictionary(cls.__client.get_entity_details(uuid))
 
     @classmethod

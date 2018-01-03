@@ -6,7 +6,7 @@ from mock import Mock, call
 
 from hamcrest import (assert_that, has_properties, calling, raises)
 
-from hbp_service_client.storage_service.exceptions import EntityArgumentException
+from hbp_service_client.storage_service.exceptions import EntityArgumentException, StorageNotFoundException
 from hbp_service_client.storage_service.entity import Entity
 from hbp_service_client.storage_service.api import ApiClient
 
@@ -109,3 +109,32 @@ class TestEntity(object):
                 'children': [],
                 '_path': mydictionary['name']})
         )
+
+    def test_from_uuid_raises_exception_for_notfoud_uuid(self):
+        #given
+        missing_uuid = '2ddb5666-a0a7-439a-8653-68c825a0b483'
+        httpretty.register_uri(
+            httpretty.GET,
+            'https://document/service/entity/{0}/'.format(missing_uuid),
+            status=404)
+
+        #then
+        assert_that(
+            calling(Entity.from_uuid).with_args(missing_uuid),
+            raises(StorageNotFoundException)
+        )
+
+    def test_from_uuid_raises_exception_for_invalid_parameter(self):
+        #given
+        missing_uuid = 'foo'
+        httpretty.register_uri(
+            httpretty.GET,
+            'https://document/service/entity/{0}/'.format(missing_uuid),
+            status=404)
+
+        #then
+        assert_that(
+            calling(Entity.from_uuid).with_args(missing_uuid),
+            raises(EntityArgumentException)
+        )
+
