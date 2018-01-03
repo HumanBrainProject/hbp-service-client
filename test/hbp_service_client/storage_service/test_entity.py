@@ -11,19 +11,17 @@ from hbp_service_client.storage_service.api import ApiClient
 
 class TestEntity(object):
 
-    @classmethod
-    def setUpClass(cls):
-        # Define some hard coded convenience fixtures
-        cls.valid_entity_dictionary = {
-            u'created_by': u'123456',
-            u'created_on': u'2017-05-04T11:22:01.779536Z',
-            u'description': u'Awesome entity',
-            u'entity_type': u'folder',
-            u'modified_by': u'123457',
-            u'modified_on': u'2017-05-04T11:22:01.779590Z',
-            u'name': u'Foo',
-            u'parent': u'766cde4c-e452-49e0-a517-6ddd15c9494b',
-            u'uuid': u'2e608db7-cf2e-4e5b-b4c0-4dd4063d0cab'}
+    # Define some hard coded convenience fixtures
+    VALID_ENTITY_DICTIONARY = {
+        u'created_by': u'123456',
+        u'created_on': u'2017-05-04T11:22:01.779536Z',
+        u'description': u'Awesome entity',
+        u'entity_type': u'folder',
+        u'modified_by': u'123457',
+        u'modified_on': u'2017-05-04T11:22:01.779590Z',
+        u'name': u'Foo',
+        u'parent': u'766cde4c-e452-49e0-a517-6ddd15c9494b',
+        u'uuid': u'2e608db7-cf2e-4e5b-b4c0-4dd4063d0cab'}
 
 
     def setup_method(self):
@@ -60,7 +58,7 @@ class TestEntity(object):
 
     def test_from_dictionary_builds_proper_entity_from_valid_dict(self):
         #given
-        mydictionary = self.valid_entity_dictionary
+        mydictionary = self.VALID_ENTITY_DICTIONARY
 
         #when
         entity = Entity.from_dictionary(mydictionary)
@@ -91,7 +89,7 @@ class TestEntity(object):
 
     def test_from_uuid_builds_proper_entity_from_valid_uuid(self):
         #given
-        mydictionary = self.valid_entity_dictionary
+        mydictionary = self.VALID_ENTITY_DICTIONARY
         myuuid = mydictionary['uuid']
         self.register_uri(
             'https://document/service/entity/{0}'.format(myuuid),
