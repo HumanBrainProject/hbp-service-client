@@ -1,6 +1,7 @@
 import json
 import re
 import httpretty
+import pytest
 from mock import Mock, call
 
 from hamcrest import (assert_that, has_properties, calling, raises)
@@ -24,7 +25,9 @@ class TestEntity(object):
         u'uuid': u'2e608db7-cf2e-4e5b-b4c0-4dd4063d0cab'}
 
 
-    def setup_method(self):
+
+    @pytest.fixture(autouse=True, scope='class')
+    def init_client(self):
         httpretty.enable()
         # Fakes the service locator call to the services.json file
         httpretty.register_uri(
@@ -39,9 +42,6 @@ class TestEntity(object):
         # this setup everywhere.
         # FIXME
         Entity.set_client(self.client)
-
-    def teardown_method(self):
-        pass
 
     @staticmethod
     def register_uri(uri, returns):
