@@ -1,5 +1,5 @@
 from os import (mkdir, listdir, getcwd)
-from os.path import (exists, isdir, isfile, basename, join)
+from os.path import (exists, isdir, isfile, isabs, basename, join)
 from re import (compile, search)
 from validators import uuid as is_valid_uuid
 from hbp_service_client.storage_service.api import ApiClient
@@ -57,14 +57,25 @@ class Entity(object):
 
     @classmethod
     def from_disk(cls, path):
-        ''' Create an entity from the disk
+        ''' Create an entity from the disk using an absolute path
         '''
+        if not isinstance(path, str) or len(path) == 0:
+            raise EntityArgumentException('The path must be given as a string.')
+
+        if not isabs(path):
+            raise EntityArgumentException('The path must be given as an absolute path')
+
+        if path[-1] == '/':
+            path = path[:-1]
+
         if not exists(path):
             raise EntityArgumentException('The given path does not exist on the disk.')
 
         entity_dict = {
             'uuid': None,
             'description': None,
+            'created_by': None,
+            'modified_by': None,
             'name': basename(path)} # TODO check basename of /tmp/a/
         if isdir(path):
             entity_dict['entity_type'] = 'folder'

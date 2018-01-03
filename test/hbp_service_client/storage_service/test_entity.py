@@ -2,6 +2,7 @@ import json
 import re
 import httpretty
 import pytest
+from tempfile import NamedTemporaryFile, TemporaryDirectory
 from mock import Mock, call
 
 from hamcrest import (assert_that, has_properties, calling, raises)
@@ -138,3 +139,82 @@ class TestEntity(object):
             raises(EntityArgumentException)
         )
 
+
+    #
+    # from_disk
+    #
+
+    def test_from_disk_builds_proper_entity_from_file(self):
+        #given
+        myfile = NamedTemporaryFile()
+
+        #when
+        entity = Entity.from_disk(myfile.name)
+        myfile.close()
+
+        #then
+        assert_that(
+            entity,
+            has_properties({
+                'name': myfile.name.split('/')[-1],
+                'description': None,
+                'children': [],
+                'created_by': None,
+                'modified_by': None,
+                'entity_type': 'file'})
+        )
+
+    def test_from_disk_builds_proper_entity_from_directory(self):
+        #given
+        mydir = TemporaryDirectory()
+
+        #when
+        entity = Entity.from_disk(mydir.name)
+        mydir.cleanup()
+
+        #then
+        assert_that(
+            entity,
+            has_properties({
+                'name': mydir.name.split('/')[-1],
+                'description': None,
+                'children': [],
+                'created_by': None,
+                'modified_by': None,
+                'entity_type': 'folder'})
+        )
+
+    def test_from_disk_handles_paths_with_trailing_slashes(self):
+        #given
+        mydir = TemporaryDirectory()
+        mypath = '{}/'.format(mydir.name)
+
+        #when
+        entity = Entity.from_disk(mypath)
+
+        #then
+        assert_that(
+            entity,
+            has_properties({
+                'name': mydir.name.split('/')[-1],
+                'description': None,
+                'children': [],
+                'created_by': None,
+                'modified_by': None,
+                'entity_type': 'folder'})
+        )
+
+    def test_from_disk_only_accepts_absolute_paths(self):
+        #then
+        assert_that(
+            calling(Entity.from_disk).with_args('./idontexist'),
+            raises(EntityArgumentException)
+        )
+
+
+    def test_from_disk_raises_exception_for_invalid_path(self):
+        #then
+        assert_that(
+            calling(Entity.from_disk).with_args('/idontexist'),
+            raises(EntityArgumentException)
+        )
