@@ -7,7 +7,7 @@ from hamcrest import (assert_that, has_properties, calling, raises)
 
 from hbp_service_client.storage_service.exceptions import EntityArgumentException
 from hbp_service_client.storage_service.entity import Entity
-from hbp_service_client.client import Client
+from hbp_service_client.storage_service.api import ApiClient
 
 class TestEntity(object):
 
@@ -33,7 +33,7 @@ class TestEntity(object):
             httpretty.GET, 'https://collab.humanbrainproject.eu/services.json',
             body=json.dumps({'document': {'v1': 'https://document/service'}})
         )
-        self.client = Client.new('access_token')
+        self.client = ApiClient.new('access_token')
 
         # If set_client is broken, it will break all tests
         # Perhaps this should be somewhere else? But it's needed for all other
