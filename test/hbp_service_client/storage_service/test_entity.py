@@ -2,12 +2,15 @@ import json
 import re
 import httpretty
 import pytest
+import uuid
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 from mock import Mock, call
 
-from hamcrest import (assert_that, has_properties, calling, raises)
+from hamcrest import (assert_that, has_properties, has_length, calling, raises)
 
-from hbp_service_client.storage_service.exceptions import EntityArgumentException, StorageNotFoundException
+from hbp_service_client.storage_service.exceptions import (
+    EntityArgumentException, StorageNotFoundException,
+    EntityInvalidOperationException)
 from hbp_service_client.storage_service.entity import Entity
 from hbp_service_client.storage_service.api import ApiClient
 
@@ -21,15 +24,17 @@ class TestEntity(object):
         u'entity_type': u'folder',
         u'modified_by': u'123457',
         u'modified_on': u'2017-05-04T11:22:01.779590Z',
-        u'name': u'Foo',
+        u'name': u'Folder_A',
         u'parent': u'766cde4c-e452-49e0-a517-6ddd15c9494b',
-        u'uuid': u'2e608db7-cf2e-4e5b-b4c0-4dd4063d0cab'}
+        u'uuid': u'eac11058-4ae0-4ea9-ada8-d3ea23887509'}
 
 
 
     @pytest.fixture(autouse=True, scope='class')
     def init_client(self):
         httpretty.enable()
+        # Block any unmocked network connection
+        httpretty.HTTPretty.allow_net_connect = False
         # Fakes the service locator call to the services.json file
         httpretty.register_uri(
             httpretty.GET, 'https://collab.humanbrainproject.eu/services.json',
@@ -44,11 +49,101 @@ class TestEntity(object):
         # FIXME
         Entity.set_client(self.client)
 
+    @pytest.fixture(scope='class')
+    def storage_tree(self):
+        ''' A fixture to mimic the following structure in the storage service
+              A
+             /  \
+            B   C
+            |
+            D
+        '''
+        uuids = {
+            'A': str(uuid.uuid4()),
+            'B': str(uuid.uuid4()),
+            'C': str(uuid.uuid4()),
+            'D': str(uuid.uuid4())
+        }
+
+        contents = {
+            'A': {
+                u'count': 2,
+                u'next': None,
+                u'previous': None,
+                u'results': [{
+                    u'content_type': u'plain/text',
+                    u'created_by': u'303447',
+                    u'created_on': u'2017-03-13T10:17:01.688472Z',
+                    u'description': u'This is folder B',
+                    u'entity_type': u'folder',
+                    u'modified_by': u'303447',
+                    u'modified_on': u'2017-03-13T10:17:01.688632Z',
+                    u'name': u'folder_B',
+                    u'parent': uuids['A'],
+                    u'uuid': uuids['B']
+                }, {
+                    u'content_type': u'plain/text',
+                    u'created_by': u'03447',
+                    u'created_on': u'2017-03-13T10:17:01.688472Z',
+                    u'description': u'',
+                    u'entity_type': u'file',
+                    u'modified_by': u'303447',
+                    u'modified_on': u'2017-03-13T10:17:01.688632Z',
+                    u'name': u'file_C',
+                    u'parent': uuids['A'],
+                    u'uuid': uuids['C']}]}}
+
+        details = {
+            'A': {
+                u'collab_id': 123,
+                u'created_by': u'303447',
+                u'created_on': u'2017-03-10T12:50:06.077891Z',
+                u'description': u'',
+                u'entity_type': u'folder',
+                u'modified_by': u'303447',
+                u'modified_on': u'2017-03-10T12:50:06.077946Z',
+                u'name': u'folder_A',
+                u'uuid': uuids['A']
+            },
+            'C': {
+                u'content_type': u'plain/text',
+                u'created_by': u'03447',
+                u'created_on': u'2017-03-13T10:17:01.688472Z',
+                u'description': u'',
+                u'entity_type': u'file',
+                u'modified_by': u'303447',
+                u'modified_on': u'2017-03-13T10:17:01.688632Z',
+                u'name': u'file_C',
+                u'uuid': uuids['C']}
+        }
+
+        for entity in uuids:
+            try:
+                self.register_uri(
+                    'https://document/service/folder/{0}/children'.format(uuids[entity]),
+                    returns=contents[entity],
+                    match_query=False
+                )
+            except KeyError:
+                # this entity has no matching data in contents, no need to mock for it
+                pass
+            try:
+                self.register_uri(
+                    'https://document/service/entity/{0}'.format(uuids[entity]),
+                    returns=details[entity],
+                    match_query=False
+                )
+            except KeyError:
+                pass
+
+
+        yield {'uuids': uuids, 'contents': contents, 'details': details}
+
     @staticmethod
-    def register_uri(uri, returns):
+    def register_uri(uri, returns, match_query=True):
         httpretty.register_uri(
             httpretty.GET, re.compile(re.escape(uri)),
-            match_querystring=True,
+            match_querystring=match_query,
             body=json.dumps(returns),
             content_type="application/json"
         )
@@ -217,4 +312,66 @@ class TestEntity(object):
         assert_that(
             calling(Entity.from_disk).with_args('/idontexist'),
             raises(EntityArgumentException)
+        )
+
+    #
+    # explore_children
+    #
+
+
+    def test_children_are_found_from_storage(self, storage_tree):
+        #given
+        entity = Entity.from_uuid(storage_tree['uuids']['A'])
+
+        #when
+        entity.explore_children()
+
+        #then
+        assert_that(
+            entity.children,
+            has_length(2)
+        )
+
+    def test_children_are_correctly_built(self, storage_tree):
+        #given
+        entity = Entity.from_uuid(storage_tree['uuids']['A'])
+
+        #when
+        entity.explore_children()
+
+        #then
+        assert_that(
+            entity.children[0],
+            has_properties({
+                'uuid': storage_tree['uuids']['B'],
+                'parent': entity,
+                '_path': 'folder_A/folder_B',
+                'name': 'folder_B'
+            })
+        )
+
+    def test_children_are_not_added_repeatedly(self, storage_tree):
+        ''' Test whether repeated exploration increase the number of children'''
+        #given
+        entity = Entity.from_uuid(storage_tree['uuids']['A'])
+        entity.explore_children()
+
+        #when
+        entity.explore_children()
+
+        #then
+        assert_that(
+            entity.children,
+            has_length(2)
+        )
+
+    def test_children_valid_on_browseable_only(self, storage_tree):
+        '''Test whether file type entities allow exporation'''
+        #given
+        entity = Entity.from_uuid(storage_tree['uuids']['C'])
+
+        #then
+        assert_that(
+            calling(entity.explore_children),
+            raises(EntityInvalidOperationException)
         )

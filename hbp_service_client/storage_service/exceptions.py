@@ -29,3 +29,7 @@ class EntityException(Exception):
 class EntityArgumentException(EntityException):
     '''Wrong argument'''
     pass
+
+class EntityInvalidOperationException(EntityException):
+    '''Operation cannot be performed on given Entity'''
+    pass

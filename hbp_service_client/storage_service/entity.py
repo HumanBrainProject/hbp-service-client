@@ -3,7 +3,8 @@ from os.path import (exists, isdir, isfile, isabs, basename, join)
 from re import (compile, search)
 from validators import uuid as is_valid_uuid
 from hbp_service_client.storage_service.api import ApiClient
-from hbp_service_client.storage_service.exceptions import EntityArgumentException
+from hbp_service_client.storage_service.exceptions import (EntityArgumentException,
+    EntityInvalidOperationException)
 
 class Entity(object):
 
@@ -109,13 +110,14 @@ class Entity(object):
 
     def explore_children(self):
         if not self.entity_type in self._SUBTREE_TYPES:
-            raise ValueError('This method is only valid on folders.')
+            raise EntityInvalidOperationException('This method is only valid on folders.')
+        # reset children to avoid duplicating, this way we refresh the cache
+        self.children = []
+
         if self.uuid:
-            # this is what we do when the entity came from the service
+            # If it has a UUID, then entity is present in the service, we explore there
             if not self.__client:
                 raise Exception('This method requires a client set')
-            self.children = []
-            # reset children to avoid duplicating, this way we refresh the cache
             more = True
             page = 1
             while more:
@@ -125,8 +127,7 @@ class Entity(object):
                 more = partial_results['next'] is not None
                 page += 1
         else:
-            # there is no uuid, so we explore on disk
-            self.children = []
+            # There is no UUID, so we explore on disk
             for child in listdir(self.__disk_path):
                 self.children.append(self.from_disk(join(self.__disk_path, child)))
         for child in self.children:
