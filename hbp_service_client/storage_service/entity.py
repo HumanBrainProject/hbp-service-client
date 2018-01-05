@@ -135,15 +135,22 @@ class Entity(object):
 
 
     def explore_subtree(self):
-        # reset children to avoid duplicating, this way we refresh the cache
-        self.children = []
-        folders_to_explore = [self]
-        while len(folders_to_explore) > 0:
-            current_folder = folders_to_explore.pop()
-            current_folder.explore_children()
-            for entity in current_folder.children:
-                if entity.entity_type == 'folder':
-                    folders_to_explore.insert(0, entity)
+        '''Explore descendents from an Entity.
+
+        If the Entity is a file do nothing.
+        '''
+
+        if self.entity_type in self._SUBTREE_TYPES:
+            # reset children to avoid duplicating, this way we refresh the cache
+            self.children = []
+            folders_to_explore = [self]
+            while len(folders_to_explore) > 0:
+                current_folder = folders_to_explore.pop()
+                current_folder.__explore_children()
+                for entity in current_folder.children:
+                    if entity.entity_type == 'folder':
+                        folders_to_explore.insert(0, entity)
+
 
     def search_subtree(self, regex):
         if self.entity_type not in self._SUBTREE_TYPES:

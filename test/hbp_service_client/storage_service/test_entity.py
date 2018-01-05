@@ -91,7 +91,23 @@ class TestEntity(object):
                     u'modified_on': u'2017-03-13T10:17:01.688632Z',
                     u'name': u'file_C',
                     u'parent': uuids['A'],
-                    u'uuid': uuids['C']}]}}
+                    u'uuid': uuids['C']}]},
+            'B':{
+                u'count': 1,
+                u'next': None,
+                u'previous': None,
+                u'results': [{
+                    u'content_type': u'plain/text',
+                    u'created_by': u'303447',
+                    u'created_on': u'2017-03-13T10:17:01.688472Z',
+                    u'description': u'This is folder D',
+                    u'entity_type': u'file',
+                    u'modified_by': u'303447',
+                    u'modified_on': u'2017-03-13T10:17:01.688632Z',
+                    u'name': u'file_D',
+                    u'parent': uuids['B'],
+                    u'uuid': uuids['D']}]}}
+
 
         details = {
             'A': {
@@ -375,3 +391,57 @@ class TestEntity(object):
             calling(entity._Entity__explore_children),
             raises(EntityInvalidOperationException)
         )
+
+    #
+    # explore_subtree
+    #
+
+    def test_explore_subtree_from_storage(self, storage_tree):
+        '''Test that not just the direct descendents are explored'''
+        #given
+        entity = Entity.from_uuid(storage_tree['uuids']['A'])
+
+        #when
+        entity.explore_subtree()
+
+        #then
+        assert_that(
+            entity.children[0].children,
+            has_length(1)
+        )
+
+    def test_explore_subtree_builds_entities_correctly(self, storage_tree):
+        '''Test that indirect descendents are correctly built'''
+        #given
+        entity = Entity.from_uuid(storage_tree['uuids']['A'])
+
+        #when
+        entity.explore_subtree()
+
+        #then
+        assert_that(
+            entity.children[0].children[0],
+            has_properties({
+                'uuid': storage_tree['uuids']['D'],
+                'parent': entity.children[0],
+                '_path': 'folder_A/folder_B/file_D',
+                'name': 'file_D'
+            })
+        )
+
+    def test_subtree_valid_on_all_types(self, storage_tree):
+        '''Test whether file type entities allow exporation'''
+        #given
+        entity = Entity.from_uuid(storage_tree['uuids']['C'])
+
+        #when
+        entity.explore_subtree()
+        #then
+        assert_that(
+            entity.children,
+            has_length(0)
+        )
+
+    #
+    #
+    #
