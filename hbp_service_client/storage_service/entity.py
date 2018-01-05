@@ -153,18 +153,34 @@ class Entity(object):
 
 
     def search_subtree(self, regex):
+        ''' Search the subtree under the entity in the name field.
+
+        The list of resulting entities will still have their links (parent and
+        children) in the tree.
+
+        Args:
+            regex (str): The regular expression to use for the search
+
+        Returns:
+            A list of entities with a matching name.
+
+        '''
         if self.entity_type not in self._SUBTREE_TYPES:
-            raise EntityArgumentException('You can only seach in folders')
+            raise EntityInvalidOperationException('You can only seach in folders')
+        if not self.children:
+            self.explore_subtree()
+        if not isinstance(regex, str):
+            raise EntityArgumentException('The expression needs to be given as a string')
+
         results = []
         pattern = compile(regex)
-        folders_to_explore = [self]
-        while len(folders_to_explore) > 0:
-            current_folder = folders_to_explore.pop()
-            for entity in current_folder.children:
-                if pattern.search(entity.name):
-                    results.append(entity)
-                if entity.entity_type == 'folder':
-                    folders_to_explore.insert(0, entity)
+        entities_to_check = [self]
+        while entities_to_check:
+            current_entity = entities_to_check.pop()
+            if pattern.search(current_entity.name):
+                results.append(current_entity)
+            for entity in current_entity.children:
+                entities_to_check.insert(0, entity)
         return results
 
     def load_to_service(self, destination_path=None, destination_uuid=None, subtree=False):

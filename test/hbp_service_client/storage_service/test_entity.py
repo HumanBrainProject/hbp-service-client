@@ -6,7 +6,8 @@ import uuid
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 from mock import Mock, call
 
-from hamcrest import (assert_that, has_properties, has_length, calling, raises)
+from hamcrest import (assert_that, has_properties, has_length, calling, raises,
+    contains_inanyorder, equal_to)
 
 from hbp_service_client.storage_service.exceptions import (
     EntityArgumentException, StorageNotFoundException,
@@ -443,5 +444,54 @@ class TestEntity(object):
         )
 
     #
+    # search_subtree
     #
-    #
+
+    def test_search_subtree_finds_results(self, storage_tree):
+
+        #given
+        entity = Entity.from_uuid(storage_tree['uuids']['A'])
+
+        #when
+        results = entity.search_subtree('folder')
+
+        #then
+        assert_that(
+            [result.name for result in results],
+            contains_inanyorder('folder_A', 'folder_B')
+        )
+
+    def test_search_subtree_descendes_to_leaves(self, storage_tree):
+        #given
+        entity = Entity.from_uuid(storage_tree['uuids']['A'])
+
+        #when
+        results = entity.search_subtree('D')
+
+        #then
+        assert_that(
+            [result.name for result in results],
+            equal_to(['file_D'])
+        )
+
+    def test_search_subtree_valid_on_browseable_only(self, storage_tree):
+        '''Test whether file type entities allow searching'''
+        #given
+        entity = Entity.from_uuid(storage_tree['uuids']['C'])
+
+        #then
+        assert_that(
+            calling(entity.search_subtree).with_args('foo'),
+            raises(EntityInvalidOperationException)
+        )
+
+    def test_search_subtree_checks_input_is_correct_type(self, storage_tree):
+        '''Test wheter an exception is raiesd with wrong argument types'''
+        #given
+        entity = Entity.from_uuid(storage_tree['uuids']['A'])
+
+        #then
+        assert_that(
+            calling(entity.search_subtree).with_args(123),
+            raises(EntityArgumentException)
+        )
