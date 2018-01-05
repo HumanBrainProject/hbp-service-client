@@ -79,11 +79,11 @@ class TestEntity(object):
     @pytest.fixture(scope='class')
     def storage_tree(self):
         ''' A fixture to mimic the following structure in the storage service
-              A
+              A      > A - folder
              /  \
-            B   C
+            B   C    > B - folder; C - file
             |
-            D
+            D        > D - file
         '''
         uuids = {
             'A': str(uuid.uuid4()),
