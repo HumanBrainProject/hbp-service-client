@@ -51,6 +51,32 @@ class TestEntity(object):
         Entity.set_client(self.client)
 
     @pytest.fixture(scope='class')
+    def disk_tree(self):
+        ''' Create a tree in the filesystem
+              A      > A - folder
+             /  \
+            B   C    > B - folder; C - file
+            |
+            D        > D - file'''
+
+        folder_a = TemporaryDirectory()
+        folder_b = TemporaryDirectory(dir=folder_a.name)
+        file_c = NamedTemporaryFile(dir=folder_a.name)
+        file_d = NamedTemporaryFile(dir=folder_b.name)
+
+        file_c.write(b'Hello\n')
+        file_c.flush()
+
+        file_d.write(b'World!')
+        file_d.flush()
+
+        yield {'A': folder_a, 'B': folder_b, 'C': file_c, 'D': file_d}
+
+        file_d.close()
+        file_d.close()
+        folder_a.cleanup()
+
+    @pytest.fixture(scope='class')
     def storage_tree(self):
         ''' A fixture to mimic the following structure in the storage service
               A
@@ -256,19 +282,18 @@ class TestEntity(object):
     # from_disk
     #
 
-    def test_from_disk_builds_proper_entity_from_file(self):
+    def test_from_disk_builds_proper_entity_from_file(self, disk_tree):
         #given
-        myfile = NamedTemporaryFile()
+        myfile = disk_tree['C'].name
 
         #when
-        entity = Entity.from_disk(myfile.name)
-        myfile.close()
+        entity = Entity.from_disk(myfile)
 
         #then
         assert_that(
             entity,
             has_properties({
-                'name': myfile.name.split('/')[-1],
+                'name': myfile.split('/')[-1],
                 'description': None,
                 'children': [],
                 'created_by': None,
@@ -276,19 +301,18 @@ class TestEntity(object):
                 'entity_type': 'file'})
         )
 
-    def test_from_disk_builds_proper_entity_from_directory(self):
+    def test_from_disk_builds_proper_entity_from_directory(self, disk_tree):
         #given
-        mydir = TemporaryDirectory()
+        mydir = disk_tree['A'].name
 
         #when
-        entity = Entity.from_disk(mydir.name)
-        mydir.cleanup()
+        entity = Entity.from_disk(mydir)
 
         #then
         assert_that(
             entity,
             has_properties({
-                'name': mydir.name.split('/')[-1],
+                'name': mydir.split('/')[-1],
                 'description': None,
                 'children': [],
                 'created_by': None,
@@ -296,10 +320,10 @@ class TestEntity(object):
                 'entity_type': 'folder'})
         )
 
-    def test_from_disk_handles_paths_with_trailing_slashes(self):
+    def test_from_disk_handles_paths_with_trailing_slashes(self, disk_tree):
         #given
-        mydir = TemporaryDirectory()
-        mypath = '{}/'.format(mydir.name)
+        mydir = disk_tree['A'].name
+        mypath = '{}/'.format(mydir)
 
         #when
         entity = Entity.from_disk(mypath)
@@ -308,7 +332,7 @@ class TestEntity(object):
         assert_that(
             entity,
             has_properties({
-                'name': mydir.name.split('/')[-1],
+                'name': mydir.split('/')[-1],
                 'description': None,
                 'children': [],
                 'created_by': None,
