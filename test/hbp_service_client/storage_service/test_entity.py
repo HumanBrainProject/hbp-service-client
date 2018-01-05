@@ -315,7 +315,7 @@ class TestEntity(object):
         )
 
     #
-    # explore_children
+    # _Entity__explore_children
     #
 
 
@@ -324,7 +324,7 @@ class TestEntity(object):
         entity = Entity.from_uuid(storage_tree['uuids']['A'])
 
         #when
-        entity.explore_children()
+        entity._Entity__explore_children()
 
         #then
         assert_that(
@@ -337,7 +337,7 @@ class TestEntity(object):
         entity = Entity.from_uuid(storage_tree['uuids']['A'])
 
         #when
-        entity.explore_children()
+        entity._Entity__explore_children()
 
         #then
         assert_that(
@@ -354,10 +354,10 @@ class TestEntity(object):
         ''' Test whether repeated exploration increase the number of children'''
         #given
         entity = Entity.from_uuid(storage_tree['uuids']['A'])
-        entity.explore_children()
+        entity._Entity__explore_children()
 
         #when
-        entity.explore_children()
+        entity._Entity__explore_children()
 
         #then
         assert_that(
@@ -372,6 +372,6 @@ class TestEntity(object):
 
         #then
         assert_that(
-            calling(entity.explore_children),
+            calling(entity._Entity__explore_children),
             raises(EntityInvalidOperationException)
         )

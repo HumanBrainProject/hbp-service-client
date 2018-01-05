@@ -108,7 +108,7 @@ class Entity(object):
     def __repr__(self):
         return self.__str__()
 
-    def explore_children(self):
+    def __explore_children(self):
         if not self.entity_type in self._SUBTREE_TYPES:
             raise EntityInvalidOperationException('This method is only valid on folders.')
         # reset children to avoid duplicating, this way we refresh the cache
