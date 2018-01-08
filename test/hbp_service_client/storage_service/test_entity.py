@@ -3,11 +3,12 @@ import re
 import httpretty
 import pytest
 import uuid
+from os.path import isfile, isdir, join
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 from mock import Mock, call
 
 from hamcrest import (assert_that, has_properties, has_length, calling, raises,
-    contains_inanyorder, equal_to)
+    contains_inanyorder, equal_to, all_of)
 
 from hbp_service_client.storage_service.exceptions import (
     EntityArgumentException, StorageNotFoundException,
@@ -72,9 +73,21 @@ class TestEntity(object):
 
         yield {'A': folder_a, 'B': folder_b, 'C': file_c, 'D': file_d}
 
+        file_c.close()
         file_d.close()
-        file_d.close()
+        folder_b.cleanup()
         folder_a.cleanup()
+
+    @pytest.fixture
+    def working_directory(self):
+        '''Create a directory for downloads, then wipe it'''
+
+        download_folder = TemporaryDirectory()
+
+        yield download_folder
+
+        download_folder.cleanup()
+
 
     @pytest.fixture(scope='class')
     def storage_tree(self):
@@ -157,10 +170,31 @@ class TestEntity(object):
                 u'modified_by': u'303447',
                 u'modified_on': u'2017-03-13T10:17:01.688632Z',
                 u'name': u'file_C',
-                u'uuid': uuids['C']}
+                u'uuid': uuids['C']},
+            'D': {
+                u'content_type': u'plain/text',
+                u'created_by': u'303447',
+                u'created_on': u'2017-03-13T10:17:01.688472Z',
+                u'description': u'This is folder D',
+                u'entity_type': u'file',
+                u'modified_by': u'303447',
+                u'modified_on': u'2017-03-13T10:17:01.688632Z',
+                u'name': u'file_D',
+                u'uuid': uuids['D']}
+        }
+
+        file_contents = {
+            'C': "I am file C!",
+            'D': "I am file D!"
+        }
+
+        signed_urls = {
+            'C': {'signed_url': 'signed_url/C'},
+            'D': {'signed_url':'signed_url/D'}
         }
 
         for entity in uuids:
+            # Mask folder content calls
             try:
                 self.register_uri(
                     'https://document/service/folder/{0}/children'.format(uuids[entity]),
@@ -170,6 +204,8 @@ class TestEntity(object):
             except KeyError:
                 # this entity has no matching data in contents, no need to mock for it
                 pass
+
+            # Mask entity detail calls
             try:
                 self.register_uri(
                     'https://document/service/entity/{0}'.format(uuids[entity]),
@@ -179,16 +215,40 @@ class TestEntity(object):
             except KeyError:
                 pass
 
+            # Mask signed_url_requests
+            try:
+                self.register_uri(
+                    'https://document/service/file/{0}/content/secure_link'.format(uuids[entity]),
+                    returns=signed_urls[entity],
+                    match_query=False
+                )
+            except KeyError:
+                pass
+
+            # Mask signed url content calls
+            try:
+                self.register_uri(
+                    'https://document/service/{0}'.format(signed_urls[entity]['signed_url']),
+                    returns=file_contents[entity],
+                    match_query=False,
+                )
+            except KeyError:
+                pass
+
+
+
+
 
         yield {'uuids': uuids, 'contents': contents, 'details': details}
 
     @staticmethod
-    def register_uri(uri, returns, match_query=True):
+    def register_uri(uri, returns, match_query=True, headers={}):
         httpretty.register_uri(
             httpretty.GET, re.compile(re.escape(uri)),
             match_querystring=match_query,
             body=json.dumps(returns),
-            content_type="application/json"
+            content_type="application/json",
+            adding_headers=headers
         )
 
     #
@@ -518,4 +578,72 @@ class TestEntity(object):
         assert_that(
             calling(entity.search_subtree).with_args(123),
             raises(EntityArgumentException)
+        )
+
+    #
+    # download
+    #
+
+    def test_download_creates_files_with_content(self, storage_tree, working_directory):
+        '''Test that a single file can be downloaded with its contents'''
+        #given
+        entity = Entity.from_uuid(storage_tree['uuids']['C'])
+
+        #when
+        entity.download(working_directory.name)
+
+        #then
+        with open(join(working_directory.name, 'file_C')) as file_c:
+            assert_that(
+                file_c.readlines(),
+                equal_to(['"I am file C!"'])
+            )
+
+    def test_download_creates_directory_structure(self, storage_tree, working_directory):
+        '''Test that downloading a directory recreates its subfolder structure'''
+        #given
+        entity = Entity.from_uuid(storage_tree['uuids']['A'])
+
+        #when
+        entity.download(working_directory.name)
+
+        #then
+        assert isfile(join(working_directory.name, 'folder_A/folder_B/file_D'))
+
+    def test_download_can_recursively_download_folders_in_the_middle_of_the_tree(self, storage_tree, working_directory):
+        '''Test that a folder can be downloaded even if it was not the root of
+        exploration'''
+        #given
+        entity = Entity.from_uuid(storage_tree['uuids']['A'])
+        entity.explore_subtree()
+        folder_B = list(filter(lambda entity: entity.name == 'folder_B', entity.children))[0]
+
+        #when
+        folder_B.download(working_directory.name)
+
+        #then
+        assert isfile(join(working_directory.name, 'folder_B/file_D'))
+
+    def test_search_results_download_correctly(self, storage_tree, working_directory):
+        '''Test then downloading search results creates the correct directory
+        structures for all of them'''
+        #given
+        prefix = working_directory.name
+        entity = Entity.from_uuid(storage_tree['uuids']['A'])
+        folders = entity.search_subtree('folder')
+        files = entity.search_subtree('file')
+        combined = folders + files
+
+        #when
+        for entity in combined:
+            entity.download(prefix)
+
+        #then
+        assert_that(
+            all_of(
+                isfile(join(prefix, 'folder_A/folder_B/file_D')),
+                isfile(join(prefix, 'folder_B/file_D')),
+                isfile(join(prefix, 'file_C')),
+                isfile(join(prefix, 'file_D'))
+            )
         )

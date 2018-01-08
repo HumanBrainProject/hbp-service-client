@@ -21,7 +21,9 @@ class Entity(object):
         self.children = []
         # _path is always relative to the root of the tree
         # in the root it's the entity name
+        self.__parent = None
         self._path = name
+        self._write_destination = None
         self.__disk_path = None
 
     @classmethod
@@ -91,13 +93,13 @@ class Entity(object):
 
     @property
     def parent(self):
-        return self._parent
+        return self.__parent
 
     @parent.setter
     def parent(self, parent):
         if not isinstance(parent, type(self)):
             raise ValueError("Parent must be of type {0}", type(self))
-        self._parent = parent
+        self.__parent = parent
         # if it has a parent, it's under it in the path
         self._path = '{0}/{1}'.format(parent._path, self.name)
 
@@ -123,7 +125,8 @@ class Entity(object):
             while more:
                 partial_results = self.__client.list_folder_content(
                     self.uuid, page=page, ordering='name')
-                self.children.extend([self.from_dictionary(entity) for entity in partial_results['results']])
+                self.children.extend(
+                    [self.from_dictionary(entity) for entity in partial_results['results']])
                 more = partial_results['next'] is not None
                 page += 1
         else:
@@ -206,41 +209,36 @@ class Entity(object):
             self.__process_subtree('__load', None)
 
 
-    def write_to_disk(self, destination=None, subtree=False):
-        '''Write entity to disk
+    def download(self, destination=None):
+        '''Download an entity recursively from the service to local disk.
 
         Args:
-            destination: the (existing) folder on disk under which it should be written. If none it will be the home directory
-            subtree: to indicate whether we want to write the whole subtree
+            destination (str): An existing folder on disk in which the entity
+                should be downloaded. If not given it will the be current working
+                directory.
+            subtree (bool): to indicate whether we want to write the whole subtree
 
         '''
-        # TODO if subtree then do explore_subtree
-
-        if subtree and not self.entity_type in self._SUBTREE_TYPES:
-            raise ValueError('This setting is only valid on folders.')
+        if self.entity_type in self._SUBTREE_TYPES and not self.children:
+            self.explore_subtree()
         destination = destination or getcwd()
 
-        self.__write(destination, use_path=subtree)
-        if subtree:
-            self.__process_subtree('__write', destination=destination, use_path=subtree)
+        self.__process_subtree('__write', destination=destination, relative_root=self)
 
 
     def __process_subtree(self, method, *args, **kwargs):
-        '''Iterate subtree and call method(*args) on nodes'''
+        '''Iterate subtree and call private method(**args)(**kwargs) on nodes'''
 
-        if self.entity_type not in self._SUBTREE_TYPES:
-            raise ValueError('This setting is only valid on folders.')
-        folders_to_process = [self]
-        while len(folders_to_process) > 0:
-            current_folder = folders_to_process.pop()
-            for child in current_folder.children:
-                if child.entity_type in self._SUBTREE_TYPES:
-                    folders_to_process.insert(0, child)
-                getattr(
-                    child,
-                    '_{classname}{methodname}'.format(
-                        classname=self.__class__.__name__, # FIXME ugly hack to call the private methods
-                        methodname=method))(*args, **kwargs)
+        entities_to_process = [self]
+        while entities_to_process:
+            current_entity = entities_to_process.pop()
+            for child in current_entity.children:
+                entities_to_process.insert(0, child)
+            getattr(
+                current_entity,
+                '_{classname}{methodname}'.format(
+                    classname=self.__class__.__name__,
+                    methodname=method))(*args, **kwargs)
 
     def __load(self, destination):
         parent_uuid = destination if destination else self.parent.uuid
@@ -265,15 +263,25 @@ class Entity(object):
         new_folder = self.__client.create_folder(name=self.name, parent=parent_uuid)
         self.uuid = new_folder['uuid']
 
-    def __write(self, destination, use_path=True):
-        suffix = self._path if use_path else self.name
-        target_path = '{0}/{1}'.format(destination, suffix)
-        if self.entity_type in self._SUBTREE_TYPES:
-            self.__create_directory(target_path)
-        elif self.entity_type == 'file':
-            self.__write_file(target_path)
+    def __write(self, destination, relative_root):
+        '''Write entities to disk
 
-    def __write_file(self, path):
+        Their position in the tree will be determined by the relative_root.
+        The write operation assumes that the directory structure up to the
+        relative_root has been created already.
+        '''
+
+        self._write_destination = join(
+            destination if self == relative_root else self.parent._write_destination,
+            self.name)
+
+        if self.entity_type in self._SUBTREE_TYPES:
+            self.__create_directory()
+        elif self.entity_type == 'file':
+            self.__write_file()
+
+
+    def __write_file(self):
         # The line below is difficult because we only the entity's path relative
         # to the root of the subtree
         # In order to get the full path we need the full path of the root and
@@ -286,10 +294,9 @@ class Entity(object):
         signed_url = self.__client.get_signed_url(self.uuid)
         response = self.__client.download_signed_url(signed_url)
 
-        with open(path, "wb") as output:
+        with open(self._write_destination, "wb") as output:
             for chunk in response.iter_content(chunk_size=1024):
                 output.write(chunk)
 
-    @staticmethod
-    def __create_directory(path):
-        mkdir(path)
+    def __create_directory(self):
+        mkdir(self._write_destination)
