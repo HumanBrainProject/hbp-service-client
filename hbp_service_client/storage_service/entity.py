@@ -110,7 +110,7 @@ class Entity(object):
     def __repr__(self):
         return self.__str__()
 
-    def __explore_children(self):
+    def explore_children(self):
         if not self.entity_type in self._SUBTREE_TYPES:
             raise EntityInvalidOperationException('This method is only valid on folders.')
         # reset children to avoid duplicating, this way we refresh the cache
@@ -149,7 +149,7 @@ class Entity(object):
             folders_to_explore = [self]
             while len(folders_to_explore) > 0:
                 current_folder = folders_to_explore.pop()
-                current_folder.__explore_children()
+                current_folder.explore_children()
                 for entity in current_folder.children:
                     if entity.entity_type == 'folder':
                         folders_to_explore.insert(0, entity)
