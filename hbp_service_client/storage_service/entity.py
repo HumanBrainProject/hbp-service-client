@@ -186,14 +186,21 @@ class Entity(object):
                 entities_to_check.insert(0, entity)
         return results
 
-    def load_to_service(self, destination_path=None, destination_uuid=None, subtree=False):
+    def upload(self, destination_path=None, destination_uuid=None):
+        '''Upload an entity into the storage service.
+
+        The parent can be identified either via path or uuid.
+
+        Args:
+            destination_path: The path of the parent folder/project in the service
+            destination_uuid: The uuid of the parent folder/project in the service
+        '''
         if not self.__client:
-            raise Exception('This method requires a client set')
+            raise EntityException('This method requires a client set')
 
         if (not (destination_path or destination_uuid) or (destination_path and destination_uuid)):
             raise EntityArgumentException('Exactly one destination is required.')
-        if subtree and not self.entity_type in self._SUBTREE_TYPES:
-            raise ValueError('This setting is only valid on folders.')
+
         query = {}
         if destination_path:
             query = {'path': destination_path}
@@ -204,9 +211,10 @@ class Entity(object):
         if parent['entity_type'] not in self._SUBTREE_TYPES:
             raise EntityArgumentException('The destination must be a project or folder')
 
-        self.__load(parent['uuid'])
-        if subtree:
-            self.__process_subtree('__load', None)
+        if self.entity_type in self._SUBTREE_TYPES and not self.children:
+            self.explore_subtree()
+
+        self.__process_subtree('__load', None)
 
 
     def download(self, destination=None):
@@ -245,7 +253,10 @@ class Entity(object):
                     methodname=method))(*args, **kwargs)
 
     def __load(self, destination):
-        parent_uuid = destination if destination else self.parent.uuid
+        if self.uuid:
+            raise EntityException('This entity alrady has a UUID, it cannot be reuploded')
+
+        parent_uuid = self.parent.uuid if self.parent and self.parent.uuid else destination
         if self.entity_type == 'folder':
             self.__load_directory(parent_uuid)
         else:
@@ -256,7 +267,7 @@ class Entity(object):
         new_file = self.__client.create_file(
             name=self.name,
             parent=parent_uuid,
-            content_type='foo') #FIXME
+            content_type='') #FIXME
         self.uuid = new_file['uuid']
         self.__client.upload_file_content(
             file_id=self.uuid,
