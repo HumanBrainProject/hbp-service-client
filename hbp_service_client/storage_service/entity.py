@@ -4,7 +4,7 @@ from re import (compile, search)
 from validators import uuid as is_valid_uuid
 from hbp_service_client.storage_service.api import ApiClient
 from hbp_service_client.storage_service.exceptions import (EntityArgumentException,
-    EntityInvalidOperationException)
+    EntityInvalidOperationException, EntityException)
 
 class Entity(object):
 
@@ -231,6 +231,10 @@ class Entity(object):
             FileNotFoundError: If the destination directory is missing.
 
         '''
+
+        if not self.__client:
+            raise EntityException('This method requires a client set')
+
         if self.entity_type in self._SUBTREE_TYPES and not self.children:
             self.explore_subtree()
         destination = destination or getcwd()
