@@ -217,6 +217,9 @@ class Entity(object):
                 should be downloaded. If not given it will the be current working
                 directory.
             subtree (bool): to indicate whether we want to write the whole subtree
+        Raises:
+            FileExistsError: If a file/folder with the entity's name already FileExistsError
+                on disk.
 
         '''
         if self.entity_type in self._SUBTREE_TYPES and not self.children:
@@ -290,6 +293,9 @@ class Entity(object):
         # self.__client.download_file(path=self._path, target_path=path)
 
         # For now just use the code ..
+
+        if isfile(self._write_destination):
+            raise FileExistsError('The target file already exists')
 
         signed_url = self.__client.get_signed_url(self.uuid)
         response = self.__client.download_signed_url(signed_url)

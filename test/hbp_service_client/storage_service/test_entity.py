@@ -4,6 +4,7 @@ import httpretty
 import pytest
 import uuid
 from os.path import isfile, isdir, join
+from os import mkdir
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 from mock import Mock, call
 
@@ -12,7 +13,7 @@ from hamcrest import (assert_that, has_properties, has_length, calling, raises,
 
 from hbp_service_client.storage_service.exceptions import (
     EntityArgumentException, StorageNotFoundException,
-    EntityInvalidOperationException)
+    EntityInvalidOperationException, EntityDownloadException)
 from hbp_service_client.storage_service.entity import Entity
 from hbp_service_client.storage_service.api import ApiClient
 
@@ -646,4 +647,28 @@ class TestEntity(object):
                 isfile(join(prefix, 'file_C')),
                 isfile(join(prefix, 'file_D'))
             )
+        )
+
+    def test_download_fails_if_files_already_exist(self, storage_tree, working_directory):
+        '''Test that the method does not overwrite content but rather fails'''
+        #given
+        entity = Entity.from_uuid(storage_tree['uuids']['C'])
+        open(join(working_directory.name, 'file_C'), 'a').close()
+
+        #then
+        assert_that(
+            calling(entity.download).with_args(working_directory.name),
+            raises(FileExistsError)
+        )
+
+    def test_download_fails_if_folder_already_exists(self, storage_tree, working_directory):
+        '''Test the method does not try to download into already existing fodlers'''
+        #given
+        entity = Entity.from_uuid(storage_tree['uuids']['A'])
+        mkdir(join(working_directory.name, 'folder_A'))
+
+        #then
+        assert_that(
+            calling(entity.download).with_args(working_directory.name),
+            raises(FileExistsError)
         )
