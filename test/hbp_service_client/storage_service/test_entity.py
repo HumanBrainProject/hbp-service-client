@@ -3,7 +3,7 @@ import re
 import httpretty
 import pytest
 import uuid
-from os.path import isfile, isdir, join
+from os.path import isfile, isdir, join, basename
 from os import mkdir
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 from mock import Mock, call
@@ -433,8 +433,23 @@ class TestEntity(object):
             entity.children,
             has_length(2)
         )
+    def test_children_are_found_from_disk(self, disk_tree):
+        '''Test exploration also works on disk'''
+        #given
+        entity = Entity.from_disk(disk_tree['A'].name)
 
-    def test_children_are_correctly_built(self, storage_tree):
+        #when
+        entity.explore_children()
+
+        #then
+        assert_that(
+            [ent.name for ent in entity.children],
+            contains_inanyorder(
+                basename(disk_tree['B'].name),
+                basename(disk_tree['C'].name))
+        )
+
+    def test_children_are_correctly_built_from_storage(self, storage_tree):
         #given
         entity = Entity.from_uuid(storage_tree['uuids']['A'])
 
@@ -452,7 +467,28 @@ class TestEntity(object):
             })
         )
 
-    def test_children_are_not_added_repeatedly(self, storage_tree):
+    def test_children_are_correctly_built_from_disk(self, disk_tree):
+        #given
+        entity = Entity.from_disk(disk_tree['B'].name)
+
+        #when
+        entity.explore_children()
+
+        #then
+        assert_that(
+            entity.children[0],
+            has_properties({
+                'uuid': None,
+                'parent': entity,
+                '_path': '{}/{}'.format(
+                    basename(disk_tree['B'].name),
+                    basename(disk_tree['D'].name)),
+                'entity_type': 'file',
+                'name': basename(disk_tree['D'].name)
+            })
+        )
+
+    def test_children_are_not_added_repeatedly_from_storage(self, storage_tree):
         ''' Test whether repeated exploration increase the number of children'''
         #given
         entity = Entity.from_uuid(storage_tree['uuids']['A'])
@@ -467,7 +503,22 @@ class TestEntity(object):
             has_length(2)
         )
 
-    def test_children_valid_on_browseable_only(self, storage_tree):
+    def test_children_are_not_added_repeatedly_from_disk(self, disk_tree):
+        ''' Test whether repeated exploration increase the number of children'''
+        #given
+        entity = Entity.from_disk(disk_tree['A'].name)
+        entity.explore_children()
+
+        #when
+        entity.explore_children()
+
+        #then
+        assert_that(
+            entity.children,
+            has_length(2)
+        )
+
+    def test_children_valid_on_browseable_only_from_storage(self, storage_tree):
         '''Test whether file type entities allow exporation'''
         #given
         entity = Entity.from_uuid(storage_tree['uuids']['C'])
