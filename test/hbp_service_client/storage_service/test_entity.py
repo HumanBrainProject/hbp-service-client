@@ -672,3 +672,15 @@ class TestEntity(object):
             calling(entity.download).with_args(working_directory.name),
             raises(FileExistsError)
         )
+
+    def test_download_fails_when_target_dir_is_missing(self, storage_tree):
+        '''Test the method raising an error when the destination folder is missing'''
+
+        #given
+        entity = Entity.from_uuid(storage_tree['uuids']['A'])
+
+        #then
+        assert_that(
+            calling(entity.download).with_args('/idontexist'),
+            raises(FileNotFoundError)
+        )

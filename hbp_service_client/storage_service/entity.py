@@ -220,6 +220,7 @@ class Entity(object):
         Raises:
             FileExistsError: If a file/folder with the entity's name already FileExistsError
                 on disk.
+            FileNotFoundError: If the destination directory is missing.
 
         '''
         if self.entity_type in self._SUBTREE_TYPES and not self.children:
