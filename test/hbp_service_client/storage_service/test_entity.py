@@ -416,6 +416,25 @@ class TestEntity(object):
             raises(EntityArgumentException)
         )
 
+    def test_from_disk_accepts_unicode_paths(self, disk_tree):
+        #given
+        myfile = u'{}'.format(disk_tree['C'].name)
+
+        #when
+        entity = Entity.from_disk(myfile)
+
+        #then
+        assert_that(
+            entity,
+            has_properties({
+                'name': myfile.split('/')[-1],
+                'description': None,
+                'children': [],
+                'created_by': None,
+                'modified_by': None,
+                'entity_type': 'file'})
+        )
+
     #
     # explore_children
     #
