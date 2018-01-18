@@ -195,6 +195,10 @@ class Entity(object):
         Args:
             destination_path: The path of the parent folder/project in the service
             destination_uuid: The uuid of the parent folder/project in the service
+
+        Raises:
+            EntityArgumentException: Too many or little arguments were provided.
+            StorageNotFoundException: The parent entity could not be found.
         '''
         if not self.__client:
             raise EntityException('This method requires a client set')
@@ -215,7 +219,7 @@ class Entity(object):
         if self.entity_type in self._SUBTREE_TYPES and not self.children:
             self.explore_subtree()
 
-        self.__process_subtree('__load', None)
+        self.__process_subtree('__load', parent['uuid'])
 
 
     def download(self, destination=None):

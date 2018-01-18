@@ -3,6 +3,7 @@ import re
 import httpretty
 import pytest
 import uuid
+
 from os.path import isfile, isdir, join, basename
 from os import mkdir
 from tempfile import NamedTemporaryFile, TemporaryDirectory
@@ -90,6 +91,46 @@ class TestEntity(object):
         download_folder.cleanup()
 
 
+    @pytest.fixture
+    def uploads(self, storage_tree):
+
+        self.register_uri(
+            'https://document/service/entity/?uuid={}'.format(storage_tree['uuids']['A']),
+            returns=storage_tree['details']['A'],
+            match_query=True,
+            method=httpretty.GET
+        )
+
+        httpretty.register_uri(
+            httpretty.GET,
+            re.compile(re.escape('https://document/service/entity/?path=%2Fidont%2Fexist')),
+            status=404,
+            match_querystring=True,
+            content_type="application/json")
+
+
+        self.register_uri(
+            'https://document/service/file/',
+            returns=storage_tree['details']['C'],
+            match_query=False,
+            method=httpretty.POST,
+            headers={'ETag':'someetag'}
+        )
+
+        self.register_uri(
+            'https://document/service/folder/',
+            returns=storage_tree['details']['B'],
+            match_query=False,
+            method=httpretty.POST
+        )
+
+        self.register_uri(
+            'https://document/servicel/folder/',
+            returns=None,
+            match_query=False,
+            method=httpretty.POST
+        )
+
     @pytest.fixture(scope='class')
     def storage_tree(self):
         ''' A fixture to mimic the following structure in the storage service
@@ -161,6 +202,16 @@ class TestEntity(object):
                 u'modified_on': u'2017-03-10T12:50:06.077946Z',
                 u'name': u'folder_A',
                 u'uuid': uuids['A']
+            },
+            'B':{
+                u'created_by': u'303447',
+                u'created_on': u'2017-03-13T10:17:01.688472Z',
+                u'description': u'This is folder B',
+                u'entity_type': u'folder',
+                u'modified_by': u'303447',
+                u'modified_on': u'2017-03-13T10:17:01.688632Z',
+                u'name': u'folder_B',
+                u'uuid': uuids['B']
             },
             'C': {
                 u'content_type': u'plain/text',
@@ -243,9 +294,9 @@ class TestEntity(object):
         yield {'uuids': uuids, 'contents': contents, 'details': details}
 
     @staticmethod
-    def register_uri(uri, returns, match_query=True, headers={}):
+    def register_uri(uri, returns, match_query=True, headers={}, method=httpretty.GET):
         httpretty.register_uri(
-            httpretty.GET, re.compile(re.escape(uri)),
+            method, re.compile(re.escape(uri)),
             match_querystring=match_query,
             body=json.dumps(returns),
             content_type="application/json",
@@ -753,4 +804,82 @@ class TestEntity(object):
         assert_that(
             calling(entity.download).with_args('/idontexist'),
             raises(FileNotFoundError)
+        )
+
+    #
+    # upload
+    #
+
+    def test_upload_creates_file_in_storage(self, disk_tree, storage_tree, uploads):
+        '''Test whether a single file is created in the storage service'''
+        #given
+        entity = Entity.from_disk(disk_tree['C'].name)
+
+        #when
+        a_uuid = storage_tree['uuids']['A']
+        entity.upload(destination_uuid=a_uuid)
+        last_two_requests = httpretty.httpretty.latest_requests[-2:]
+
+        #then
+        assert_that(
+            all_of(
+                last_two_requests[-1].method == 'POST',
+                last_two_requests[-2].method == 'POST',
+                last_two_requests[0].path == '/service/file',
+                re.compile('/service/file/\w+/content/upload').match(last_two_requests[1].path))
+        )
+
+    def test_upload_processes_directories_in_storage(self, disk_tree, storage_tree, uploads):
+        '''Test whether a single directory is created in the storage service'''
+        #given
+        entity = Entity.from_disk(disk_tree['B'].name)
+
+        #when
+        a_uuid = storage_tree['uuids']['A']
+
+        entity.upload(destination_uuid=a_uuid)
+        last_three_requests = httpretty.httpretty.latest_requests[-3:]
+        #then
+        assert_that(
+            all_of(
+                last_three_requests[0].method == 'POST',
+                last_three_requests[1].method == 'POST',
+                last_three_requests[2].method == 'POST',
+                last_three_requests[0].path == '/service/folder',
+                last_three_requests[1].path == '/service/file',
+                re.compile('/service/file/\w+/content/upload').match(last_three_requests[2].path))
+        )
+
+
+    def test_upload_requires_a_destination(self, disk_tree):
+        '''Test the method throws an exception when called without arguments'''
+        #given
+        entity = Entity.from_disk(disk_tree['C'].name)
+
+        #then
+        assert_that(
+            calling(entity.upload),
+            raises(EntityArgumentException)
+        )
+
+    def test_upload_accepts_one_destination(self, disk_tree):
+        '''Test the method throws an exception when called with 2 arguments'''
+        #given
+        entity = Entity.from_disk(disk_tree['C'].name)
+
+        #then
+        assert_that(
+            calling(entity.upload).with_args(destination_path='/foo', destination_uuid='foo'),
+            raises(EntityArgumentException)
+        )
+
+    def test_upload_throws_error_when_parent_doesnt_exist(self, disk_tree, uploads):
+        '''Test the method throws an exception when called without arguments'''
+        #given
+        entity = Entity.from_disk(disk_tree['C'].name)
+
+        #then
+        assert_that(
+            calling(entity.upload).with_args(destination_path='/idont/exist'),
+            raises(StorageNotFoundException)
         )
