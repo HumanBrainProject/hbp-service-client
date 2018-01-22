@@ -1,14 +1,16 @@
+'''Abstract tree representation of storage srevice entities'''
+
 from os import (mkdir, listdir, getcwd)
 from os.path import (exists, isdir, isfile, isabs, basename, join)
-from re import (compile, search)
+import re
 from mimetypes import guess_type
 from validators import uuid as is_valid_uuid
 from hbp_service_client.storage_service.api import ApiClient
-from hbp_service_client.storage_service.exceptions import (EntityArgumentException,
-    EntityInvalidOperationException, EntityException)
+from hbp_service_client.storage_service.exceptions import (
+    EntityArgumentException, EntityInvalidOperationException, EntityException)
 
 class Entity(object):
-
+    '''A class to represent an storage service entity in a tree.'''
     _SUBTREE_TYPES = ['project', 'folder']
     __client = None
 
@@ -45,6 +47,23 @@ class Entity(object):
 
     @classmethod
     def from_dictionary(cls, dictionary):
+        ''' Create an Entity from a dictionary.
+
+        The dictionary must contain the following keys: entity_type, uuid,
+            name, description, created_by, modified_by.
+
+        Args:
+            dictionary (dict): The dictionary used to construct the entity.
+
+        Returns:
+            A properly configured Entity.
+
+        Raises:
+            EntityArgumentException: If the supllied argument is of wrong type,
+                or has missing keys.
+
+
+        '''
         try:
             return cls(
                 entity_type=dictionary['entity_type'],
@@ -58,6 +77,22 @@ class Entity(object):
 
     @classmethod
     def from_uuid(cls, uuid):
+        ''' Create an Entity from a uuid.
+
+        The given uuid will be looked up in the storage service, and the results
+        are used to create the Entiy object.
+
+        Args:
+            uuid (uuid): The uuid of an entity in the storage service.
+
+        Returns:
+            A properly configured Entity.
+
+        Raises:
+            EntityException: If a client was not set earlier.
+            EntityArgumentException: If the supllied argument is of wrong type.
+            StorageNotFoundException: If the uuid could not be looked up.
+        '''
         if not cls.__client:
             raise EntityException('This method requires a client set')
         if not is_valid_uuid(uuid):
@@ -69,7 +104,7 @@ class Entity(object):
         ''' Create an entity from the disk using an absolute path
         '''
         path = str(path)
-        if not isinstance(path, str) or len(path) == 0:
+        if not isinstance(path, str) or not path:
             raise EntityArgumentException('The path must be given as a string.')
 
         if not isabs(path):
@@ -100,10 +135,14 @@ class Entity(object):
 
     @property
     def parent(self):
+        '''Get the parent of the Entity'''
+
         return self.__parent
 
     @parent.setter
     def parent(self, parent):
+        '''Set the parent of the entity'''
+
         if not isinstance(parent, type(self)):
             raise ValueError("Parent must be of type {0}", type(self))
         self.__parent = parent
@@ -116,6 +155,11 @@ class Entity(object):
         return self.__str__()
 
     def explore_children(self):
+        '''Find the direct descendents of the Entity in the storage services
+
+        Children entities are constructed from the results and made available in
+        the 'children' attribute.
+        '''
         if not self.entity_type in self._SUBTREE_TYPES:
             raise EntityInvalidOperationException('This method is only valid on folders.')
         # reset children to avoid duplicating, this way we refresh the cache
@@ -152,7 +196,7 @@ class Entity(object):
             # reset children to avoid duplicating, this way we refresh the cache
             self.children = []
             folders_to_explore = [self]
-            while len(folders_to_explore) > 0:
+            while folders_to_explore:
                 current_folder = folders_to_explore.pop()
                 current_folder.explore_children()
                 for entity in current_folder.children:
@@ -181,7 +225,7 @@ class Entity(object):
             raise EntityArgumentException('The expression needs to be given as a string')
 
         results = []
-        pattern = compile(regex)
+        pattern = re.compile(regex)
         entities_to_check = [self]
         while entities_to_check:
             current_entity = entities_to_check.pop()
@@ -207,7 +251,7 @@ class Entity(object):
         if not self.__client:
             raise EntityException('This method requires a client set')
 
-        if (not (destination_path or destination_uuid) or (destination_path and destination_uuid)):
+        if not (destination_path or destination_uuid) or (destination_path and destination_uuid):
             raise EntityArgumentException('Exactly one destination is required.')
 
         query = {}
@@ -265,6 +309,7 @@ class Entity(object):
                     methodname=method))(*args, **kwargs)
 
     def __load(self, destination):
+        '''Load entities to the storage service'''
         if self.uuid:
             raise EntityException('This entity alrady has a UUID, it cannot be reuploded')
 
@@ -276,6 +321,7 @@ class Entity(object):
 
 
     def __load_file(self, parent_uuid):
+        '''Load a single file into the storage service'''
         new_file = self.__client.create_file(
             name=self.name,
             parent=parent_uuid,
@@ -287,6 +333,7 @@ class Entity(object):
 
 
     def __load_directory(self, parent_uuid):
+        '''Load a single directory into the storage service.'''
         new_folder = self.__client.create_folder(name=self.name, parent=parent_uuid)
         self.uuid = new_folder['uuid']
 
@@ -309,15 +356,7 @@ class Entity(object):
 
 
     def __write_file(self):
-        # The line below is difficult because we only the entity's path relative
-        # to the root of the subtree
-        # In order to get the full path we need the full path of the root and
-        # concatenating the entity's relative path
-
-        # self.__client.download_file(path=self._path, target_path=path)
-
-        # For now just use the code ..
-
+        '''Write a single file to disc'''
         if isfile(self._write_destination):
             raise OSError('The target file already exists')
 
@@ -329,4 +368,5 @@ class Entity(object):
                 output.write(chunk)
 
     def __create_directory(self):
+        '''Write a single directory to the disk'''
         mkdir(self._write_destination)
