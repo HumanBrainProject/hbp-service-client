@@ -771,7 +771,7 @@ class TestEntity(object):
         #then
         assert_that(
             calling(entity.download).with_args(working_directory.name),
-            raises(FileExistsError)
+            raises(OSError)
         )
 
     def test_download_fails_if_folder_already_exists(self, storage_tree, working_directory):
@@ -783,7 +783,7 @@ class TestEntity(object):
         #then
         assert_that(
             calling(entity.download).with_args(working_directory.name),
-            raises(FileExistsError)
+            raises(OSError)
         )
 
     def test_download_fails_when_target_dir_is_missing(self, storage_tree):
@@ -795,7 +795,7 @@ class TestEntity(object):
         #then
         assert_that(
             calling(entity.download).with_args('/idontexist'),
-            raises(FileNotFoundError)
+            raises(OSError)
         )
 
     #
