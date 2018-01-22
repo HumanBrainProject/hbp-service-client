@@ -64,7 +64,7 @@ class TestEntity(object):
 
         folder_a = TemporaryDirectory()
         folder_b = TemporaryDirectory(dir=folder_a.name)
-        file_c = NamedTemporaryFile(dir=folder_a.name)
+        file_c = NamedTemporaryFile(dir=folder_a.name, suffix=".txt")
         file_d = NamedTemporaryFile(dir=folder_b.name)
 
         file_c.write(b'Hello\n')
@@ -831,6 +831,37 @@ class TestEntity(object):
                     method='POST',
                     path=matches_regexp(r'/service/file/[\w\-]+/content/upload/')))
         )
+
+    def test_upload_guesses_the_mimetype(self, disk_tree, storage_tree, uploads):
+        '''Test whether the mimetype is guessed for an uploaded file'''
+        #given
+        entity = Entity.from_disk(disk_tree['C'].name)
+
+        #when
+        a_uuid = storage_tree['uuids']['A']
+        entity.upload(destination_uuid=a_uuid)
+        last_two_requests = httpretty.httpretty.latest_requests[-2:]
+
+        #then
+        assert_that(
+            last_two_requests[0].parsed_body,
+            has_entry('content_type', 'text/plain')
+        )
+
+    def test_upload_does_not_send_empty_mimetype(self, disk_tree, storage_tree, uploads):
+        '''Test whether the mimetype is guessed for an uploaded file'''
+        #given
+        entity = Entity.from_disk(disk_tree['D'].name)
+
+        #when
+        a_uuid = storage_tree['uuids']['A']
+        entity.upload(destination_uuid=a_uuid)
+        last_two_requests = httpretty.httpretty.latest_requests[-2:]
+
+        #then
+        assert_that(
+            last_two_requests[0].parsed_body,
+            has_entry('content_type', 'application/octet-stream')
         )
 
     def test_upload_processes_directories_in_storage(self, disk_tree, storage_tree, uploads):

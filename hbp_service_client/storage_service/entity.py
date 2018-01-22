@@ -1,6 +1,7 @@
 from os import (mkdir, listdir, getcwd)
 from os.path import (exists, isdir, isfile, isabs, basename, join)
 from re import (compile, search)
+from mimetypes import guess_type
 from validators import uuid as is_valid_uuid
 from hbp_service_client.storage_service.api import ApiClient
 from hbp_service_client.storage_service.exceptions import (EntityArgumentException,
@@ -276,7 +277,7 @@ class Entity(object):
         new_file = self.__client.create_file(
             name=self.name,
             parent=parent_uuid,
-            content_type='') #FIXME
+            content_type=guess_type(self.__disk_path)[0] or 'application/octet-stream')
         self.uuid = new_file['uuid']
         self.__client.upload_file_content(
             file_id=self.uuid,
