@@ -6,3 +6,4 @@ pytest
 pytest-watch
 pylint
 pycodestyle
+backports.tempfile; python_version < '3.2'

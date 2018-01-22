@@ -6,8 +6,12 @@ import uuid
 
 from os.path import isfile, isdir, join, basename
 from os import mkdir
-from tempfile import NamedTemporaryFile, TemporaryDirectory
 from mock import Mock, call
+from tempfile import NamedTemporaryFile
+try:
+    from tempfile import TemporaryDirectory
+except ImportError:
+    from backports.tempfile import TemporaryDirectory
 
 from hamcrest import (assert_that, has_properties, has_length, calling, raises,
     contains, contains_inanyorder, equal_to, has_entry, matches_regexp)
