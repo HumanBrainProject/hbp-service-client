@@ -319,8 +319,7 @@ class TestEntity(object):
                 'uuid': mydictionary['uuid'],
                 'name': mydictionary['name'],
                 'description': mydictionary['description'],
-                'children': [],
-                '_path': mydictionary['name']})
+                'children': []})
         )
 
     def test_from_dictionary_raises_exception_for_invalid_argument(self):
@@ -355,8 +354,7 @@ class TestEntity(object):
                 'uuid': mydictionary['uuid'],
                 'name': mydictionary['name'],
                 'description': mydictionary['description'],
-                'children': [],
-                '_path': mydictionary['name']})
+                'children': []})
         )
 
     def test_from_uuid_raises_exception_for_notfoud_uuid(self):
@@ -530,7 +528,6 @@ class TestEntity(object):
             has_properties({
                 'uuid': storage_tree['uuids']['B'],
                 'parent': entity,
-                '_path': 'folder_A/folder_B',
                 'name': 'folder_B'
             })
         )
@@ -548,9 +545,6 @@ class TestEntity(object):
             has_properties({
                 'uuid': None,
                 'parent': entity,
-                '_path': '{}/{}'.format(
-                    basename(disk_tree['B'].name),
-                    basename(disk_tree['D'].name)),
                 'entity_type': 'file',
                 'name': basename(disk_tree['D'].name)
             })
@@ -629,7 +623,6 @@ class TestEntity(object):
             has_properties({
                 'uuid': storage_tree['uuids']['D'],
                 'parent': entity.children[0],
-                '_path': 'folder_A/folder_B/file_D',
                 'name': 'file_D'
             })
         )

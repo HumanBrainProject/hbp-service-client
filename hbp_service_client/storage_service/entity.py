@@ -20,10 +20,8 @@ class Entity(object):
         self.created_by = created_by
         self.modified_by = modified_by
         self.children = []
-        # _path is always relative to the root of the tree
-        # in the root it's the entity name
+
         self.__parent = None
-        self._path = name
         self._write_destination = None
         self.__disk_path = None
 
@@ -102,8 +100,6 @@ class Entity(object):
         if not isinstance(parent, type(self)):
             raise ValueError("Parent must be of type {0}", type(self))
         self.__parent = parent
-        # if it has a parent, it's under it in the path
-        self._path = '{0}/{1}'.format(parent._path, self.name)
 
     def __str__(self):
         return "({id}: {name}[{type}])".format(
