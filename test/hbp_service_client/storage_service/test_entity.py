@@ -10,7 +10,7 @@ from tempfile import NamedTemporaryFile, TemporaryDirectory
 from mock import Mock, call
 
 from hamcrest import (assert_that, has_properties, has_length, calling, raises,
-    contains_inanyorder, equal_to, all_of)
+    contains, contains_inanyorder, equal_to, has_entry, matches_regexp)
 
 from hbp_service_client.storage_service.exceptions import (
     EntityArgumentException, StorageNotFoundException,
@@ -761,13 +761,11 @@ class TestEntity(object):
             entity.download(prefix)
 
         #then
-        assert_that(
-            all_of(
-                isfile(join(prefix, 'folder_A/folder_B/file_D')),
-                isfile(join(prefix, 'folder_B/file_D')),
-                isfile(join(prefix, 'file_C')),
-                isfile(join(prefix, 'file_D'))
-            )
+        assert(
+            isfile(join(prefix, 'folder_A/folder_B/file_D')) and
+            isfile(join(prefix, 'folder_B/file_D')) and
+            isfile(join(prefix, 'file_C')) and
+            isfile(join(prefix, 'file_D'))
         )
 
     def test_download_fails_if_files_already_exist(self, storage_tree, working_directory):
@@ -822,11 +820,17 @@ class TestEntity(object):
 
         #then
         assert_that(
-            all_of(
-                last_two_requests[-1].method == 'POST',
-                last_two_requests[-2].method == 'POST',
-                last_two_requests[0].path == '/service/file',
-                re.compile('/service/file/\w+/content/upload').match(last_two_requests[1].path))
+            last_two_requests,
+            contains(
+                # 1st call is create entity
+                has_properties({
+                    'method': 'POST',
+                    'path': '/service/file/'}),
+                #2nd call is to upload content
+                has_properties(
+                    method='POST',
+                    path=matches_regexp(r'/service/file/[\w\-]+/content/upload/')))
+        )
         )
 
     def test_upload_processes_directories_in_storage(self, disk_tree, storage_tree, uploads):
@@ -841,13 +845,20 @@ class TestEntity(object):
         last_three_requests = httpretty.httpretty.latest_requests[-3:]
         #then
         assert_that(
-            all_of(
-                last_three_requests[0].method == 'POST',
-                last_three_requests[1].method == 'POST',
-                last_three_requests[2].method == 'POST',
-                last_three_requests[0].path == '/service/folder',
-                last_three_requests[1].path == '/service/file',
-                re.compile('/service/file/\w+/content/upload').match(last_three_requests[2].path))
+            last_three_requests,
+            contains(
+                # 1st call is create directory
+                has_properties({
+                    'method': 'POST',
+                    'path': '/service/folder/'}),
+                # 2nd call is create file
+                has_properties({
+                    'method': 'POST',
+                    'path': '/service/file/'}),
+                # 3rd call is upload file content
+                has_properties({
+                    'method': 'POST',
+                    'path': matches_regexp(r'/service/file/[\w\-]+/content/upload/')}))
         )
 
 
