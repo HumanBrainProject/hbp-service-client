@@ -27,13 +27,20 @@ class Entity(object):
 
     @classmethod
     def set_client(cls, client):
+        ''' Set the required API Storage Client for the class
+
+        Args:
+            client (ApiClient): The instantiated API Client
+        Raises:
+            TypeError: If the specified client is of the wrong type.
+        '''
         # #verify the interface
         # if (not hasattr(client, 'storage') and
         #         hasattr(client.storage, 'list_folder_content') and
         #         callable(client.storage.list_folder_content)):
         #     raise ValueError('The client is of invalid specifications')
         if not isinstance(client, ApiClient):
-            raise ValueError('The client is of invalid specifications')
+            raise TypeError('The client is of invalid specifications')
         cls.__client = client
 
     @classmethod
