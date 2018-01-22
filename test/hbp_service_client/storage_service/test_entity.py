@@ -45,12 +45,6 @@ class TestEntity(object):
             body=json.dumps({'document': {'v1': 'https://document/service'}})
         )
         self.client = ApiClient.new('access_token')
-
-        # If set_client is broken, it will break all tests
-        # Perhaps this should be somewhere else? But it's needed for all other
-        # tests where we fake network calls. it would be a pain to manually do
-        # this setup everywhere.
-        # FIXME
         Entity.set_client(self.client)
 
     @pytest.fixture(scope='class')

@@ -81,7 +81,7 @@ class Entity(object):
             'description': None,
             'created_by': None,
             'modified_by': None,
-            'name': basename(path)} # TODO check basename of /tmp/a/
+            'name': basename(path)}
         if isdir(path):
             entity_dict['entity_type'] = 'folder'
         elif isfile(path):
