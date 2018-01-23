@@ -101,6 +101,27 @@ class Entity(object):
         return cls.from_dictionary(cls.__client.get_entity_details(uuid))
 
     @classmethod
+    def from_path(cls, path):
+        ''' Create an Entity from a uuid.
+
+        The given path will be looked up in the storage service, and the results
+        are used to create the Entiy object.
+
+        Args:
+            path (str): The path of an entity in the storage service.
+
+        Returns:
+            A properly configured Entity.
+
+        Raises:
+            EntityException: If a client was not set earlier.
+            StorageNotFoundException: If the path could not be looked up.
+        '''
+        if not cls.__client:
+            raise EntityException('This method requires a client set')
+        return cls.from_dictionary(cls.__client.get_entity_by_query(path=path))
+
+    @classmethod
     def from_disk(cls, path):
         ''' Create an entity from the disk using an absolute path
         '''

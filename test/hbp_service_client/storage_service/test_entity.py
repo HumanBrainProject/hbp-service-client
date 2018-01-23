@@ -406,6 +406,47 @@ class TestEntity(object):
 
 
     #
+    # from_path
+    #
+
+    def test_from_path_builds_proper_entity_from_valid_path(self):
+        #given
+        mydictionary = self.VALID_ENTITY_DICTIONARY
+        mypath = '/123/folder_A'
+        self.register_uri(
+            'https://document/service/entity/?path=%2F123%2Ffolder_A',
+            returns=mydictionary
+        )
+
+        #when
+        entity = Entity.from_path(mypath)
+
+        #then
+        assert_that(
+            entity,
+            has_properties({
+                'uuid': mydictionary['uuid'],
+                'name': mydictionary['name'],
+                'description': mydictionary['description'],
+                'children': []})
+        )
+
+    def test_from_path_raises_exception_for_notfoud_path(self):
+        #given
+        missing_path = '/789/idontexist'
+        httpretty.register_uri(
+            httpretty.GET,
+            'https://document/service/entity/?path=%2F789%2Fidontexist',
+            match_querystring=True,
+            status=404)
+
+        #then
+        assert_that(
+            calling(Entity.from_path).with_args(missing_path),
+            raises(StorageNotFoundException)
+        )
+
+    #
     # from_disk
     #
 
