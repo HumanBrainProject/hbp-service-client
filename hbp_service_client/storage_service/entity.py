@@ -1,4 +1,4 @@
-'''Abstract tree representation of storage srevice entities'''
+'''Abstract tree representation of storage service entities'''
 
 from os import (mkdir, listdir, getcwd)
 from os.path import (exists, isdir, isfile, isabs, basename, join)
@@ -9,8 +9,9 @@ from hbp_service_client.storage_service.api import ApiClient
 from hbp_service_client.storage_service.exceptions import (
     EntityArgumentException, EntityInvalidOperationException, EntityException)
 
+
 class Entity(object):
-    '''A class to represent an storage service entity in a tree.'''
+    '''A class to represent a storage service entity in a tree.'''
     _SUBTREE_TYPES = ['project', 'folder']
     __client = None
 
@@ -59,7 +60,7 @@ class Entity(object):
             A properly configured Entity.
 
         Raises:
-            EntityArgumentException: If the supllied argument is of wrong type,
+            EntityArgumentException: If the supplied argument is of wrong type,
                 or has missing keys.
 
 
@@ -103,8 +104,7 @@ class Entity(object):
     def from_disk(cls, path):
         ''' Create an entity from the disk using an absolute path
         '''
-        path = str(path)
-        if not isinstance(path, str) or not path:
+        if not isinstance(path, basestring) or not path:
             raise EntityArgumentException('The path must be given as a string.')
 
         if not isabs(path):
@@ -127,7 +127,7 @@ class Entity(object):
         elif isfile(path):
             entity_dict['entity_type'] = 'file'
         else:
-            raise EntityArgumentException('Links are not supported.')
+            raise EntityArgumentException('Only regular files and directories are supported.')
 
         entity = cls.from_dictionary(entity_dict)
         entity.__disk_path = path

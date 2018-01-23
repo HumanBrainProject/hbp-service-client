@@ -78,6 +78,25 @@ class TestEntity(object):
         folder_b.cleanup()
         folder_a.cleanup()
 
+    @pytest.fixture(scope='class')
+    def disk_tree_with_unicode(self):
+        ''' Create a tree in the filesystem
+              A         > A - folder
+              |
+              e-acute   > b - file
+        '''
+
+        folder_a = TemporaryDirectory()
+        file_b = NamedTemporaryFile(dir=folder_a.name, prefix=u'\xe9', suffix=".txt")
+
+        file_b.write(b'Hello\n')
+        file_b.flush()
+
+        yield {'A': folder_a, 'B': file_b}
+
+        file_b.close()
+        folder_a.cleanup()
+
     @pytest.fixture
     def working_directory(self):
         '''Create a directory for downloads, then wipe it'''
@@ -463,9 +482,9 @@ class TestEntity(object):
             raises(EntityArgumentException)
         )
 
-    def test_from_disk_accepts_unicode_paths(self, disk_tree):
+    def test_from_disk_accepts_unicode_paths(self, disk_tree_with_unicode):
         #given
-        myfile = u'{}'.format(disk_tree['C'].name)
+        myfile = u'{}'.format(disk_tree_with_unicode['B'].name)
 
         #when
         entity = Entity.from_disk(myfile)
@@ -581,7 +600,7 @@ class TestEntity(object):
         )
 
     def test_children_valid_on_browseable_only_from_storage(self, storage_tree):
-        '''Test whether file type entities allow exporation'''
+        '''Test whether file type entities allow exploration'''
         #given
         entity = Entity.from_uuid(storage_tree['uuids']['C'])
 
