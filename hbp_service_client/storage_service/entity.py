@@ -91,7 +91,7 @@ class Entity(object):
 
         Raises:
             EntityException: If a client was not set earlier.
-            EntityArgumentException: If the supllied argument is of wrong type.
+            EntityArgumentException: If the supplied argument is of wrong type.
             StorageNotFoundException: If the uuid could not be looked up.
         '''
         if not cls.__client:
