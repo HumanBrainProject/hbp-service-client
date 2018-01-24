@@ -125,7 +125,12 @@ class Entity(object):
     def from_disk(cls, path):
         ''' Create an entity from the disk using an absolute path
         '''
-        if not isinstance(path, basestring) or not path:
+        if not path:
+            raise EntityArgumentException('The path must not be empty.')
+
+        try:
+            '' + path
+        except TypeError as e:
             raise EntityArgumentException('The path must be given as a string.')
 
         if not isabs(path):
