@@ -382,7 +382,8 @@ class TestEntity(object):
         httpretty.register_uri(
             httpretty.GET,
             'https://document/service/entity/{0}/'.format(missing_uuid),
-            status=404)
+            status=404,
+            match_querystring=True)
 
         #then
         assert_that(
@@ -396,7 +397,8 @@ class TestEntity(object):
         httpretty.register_uri(
             httpretty.GET,
             'https://document/service/entity/{0}/'.format(missing_uuid),
-            status=404)
+            status=404,
+            match_querystring=True)
 
         #then
         assert_that(
