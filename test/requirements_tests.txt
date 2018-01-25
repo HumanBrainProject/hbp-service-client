@@ -1,6 +1,7 @@
 PyHamcrest
 mock
 mock-matchers
+responses
 HTTPretty
 pytest
 pytest-watch
