@@ -715,6 +715,20 @@ class TestEntity(object):
             raises(EntityArgumentException)
         )
 
+    def test_search_works_on_entities_created_from_disk(self, disk_tree):
+        '''Test whether it is possible to search in a tree contructed from the disk'''
+        #given
+        entity = Entity.from_disk(disk_tree["A"].name)
+
+        #when
+        results = entity.search_subtree('txt')
+
+        #then
+        assert_that(
+            [result.name for result in results],
+            equal_to([basename(disk_tree['C'].name)])
+        )
+
     #
     # download
     #
