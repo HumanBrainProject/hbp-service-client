@@ -1,3 +1,10 @@
+# pylint: disable=too-many-instance-attributes, too-many-arguments, protected-access
+#  - too-many-instance-attributes: An entity has too many attribues, but most of
+#      them come from the service
+#  - too-many-arguments: Same reason as above
+#  - protected-access: we need to access parents' private members. Think of
+#      those attributes as private to the class.
+
 '''Abstract tree representation of storage service entities'''
 
 from os import (mkdir, listdir, getcwd)
@@ -130,7 +137,7 @@ class Entity(object):
 
         try:
             '' + path
-        except TypeError as e:
+        except TypeError:
             raise EntityArgumentException('The path must be given as a string.')
 
         if not isabs(path):
