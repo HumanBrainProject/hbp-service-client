@@ -177,7 +177,7 @@ class Entity(object):
         '''Set the parent of the entity'''
 
         if not isinstance(parent, type(self)):
-            raise ValueError("Parent must be of type {0}", type(self))
+            raise ValueError("Parent must be of type {0}".format(type(self)))
         self.__parent = parent
 
     def __str__(self):
@@ -193,7 +193,7 @@ class Entity(object):
         Children entities are constructed from the results and made available in
         the 'children' attribute.
         '''
-        if not self.entity_type in self._SUBTREE_TYPES:
+        if self.entity_type not in self._SUBTREE_TYPES:
             raise EntityInvalidOperationException('This method is only valid on folders.')
         # reset children to avoid duplicating, this way we refresh the cache
         self.children = []
@@ -218,7 +218,6 @@ class Entity(object):
         for child in self.children:
             child.parent = self
 
-
     def explore_subtree(self):
         '''Explore descendents from an Entity.
 
@@ -235,7 +234,6 @@ class Entity(object):
                 for entity in current_folder.children:
                     if entity.entity_type == 'folder':
                         folders_to_explore.insert(0, entity)
-
 
     def search_subtree(self, regex):
         ''' Search the subtree under the entity in the name field.
@@ -302,7 +300,6 @@ class Entity(object):
 
         self.__process_subtree('__load', parent['uuid'])
 
-
     def download(self, destination=None):
         '''Download an entity recursively from the service to local disk.
 
@@ -325,7 +322,6 @@ class Entity(object):
         destination = destination or getcwd()
 
         self.__process_subtree('__write', destination=destination, relative_root=self)
-
 
     def __process_subtree(self, method, *args, **kwargs):
         '''Iterate subtree and call private method(**args)(**kwargs) on nodes'''
@@ -352,7 +348,6 @@ class Entity(object):
         else:
             self.__load_file(parent_uuid)
 
-
     def __load_file(self, parent_uuid):
         '''Load a single file into the storage service'''
         new_file = self.__client.create_file(
@@ -363,7 +358,6 @@ class Entity(object):
         self.__client.upload_file_content(
             file_id=self.uuid,
             source=self.__disk_path)
-
 
     def __load_directory(self, parent_uuid):
         '''Load a single directory into the storage service.'''
@@ -386,7 +380,6 @@ class Entity(object):
             self.__create_directory()
         elif self.entity_type == 'file':
             self.__write_file()
-
 
     def __write_file(self):
         '''Write a single file to disc'''

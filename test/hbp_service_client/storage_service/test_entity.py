@@ -13,7 +13,8 @@ try:
 except ImportError:
     from backports.tempfile import TemporaryDirectory
 
-from hamcrest import (assert_that, has_properties, has_length, calling, raises,
+from hamcrest import (
+    assert_that, has_properties, has_length, calling, raises,
     contains, contains_inanyorder, equal_to, has_entry, has_entries, matches_regexp)
 
 from hbp_service_client.storage_service.exceptions import (
@@ -21,6 +22,7 @@ from hbp_service_client.storage_service.exceptions import (
     EntityInvalidOperationException, EntityDownloadException)
 from hbp_service_client.storage_service.entity import Entity
 from hbp_service_client.storage_service.api import ApiClient
+
 
 class TestEntity(object):
 
@@ -68,7 +70,7 @@ class TestEntity(object):
                 u'name': u'file_C',
                 u'parent': __UUIDS['A'],
                 u'uuid': __UUIDS['C']}]},
-        'B':{
+        'B': {
             u'count': 1,
             u'next': None,
             u'previous': None,
@@ -95,7 +97,7 @@ class TestEntity(object):
             u'name': u'folder_A',
             u'uuid': __UUIDS['A']
         },
-        'B':{
+        'B': {
             u'created_by': u'303447',
             u'created_on': u'2017-03-13T10:17:01.688472Z',
             u'description': u'This is folder B',
@@ -130,7 +132,7 @@ class TestEntity(object):
         'D': "I am file D!"}
     __SIGNED_URLS = {
         'C': {'signed_url': 'signed_url/C/'},
-        'D': {'signed_url':'signed_url/D/'}}
+        'D': {'signed_url': 'signed_url/D/'}}
 
     ''' A fixture to mimic the following structure in the storage service
           A      > A - folder
@@ -194,7 +196,7 @@ class TestEntity(object):
             re.compile(re.escape('https://document/service/file/')),
             returns=self.STORAGE_TREE['details']['C'],
             method='POST',
-            headers={'ETag':'someetag'})
+            headers={'ETag': 'someetag'})
 
         self.register_uri(
             'https://document/service/folder/',
@@ -207,7 +209,8 @@ class TestEntity(object):
             # Mask folder content calls
             try:
                 self.register_uri(
-                    'https://document/service/folder/{0}/children/'.format(self.STORAGE_TREE['uuids'][entity]),
+                    'https://document/service/folder/{0}/children/'.format(
+                        self.STORAGE_TREE['uuids'][entity]),
                     returns=self.STORAGE_TREE['contents'][entity],
                     match_query=False
                 )
@@ -218,7 +221,8 @@ class TestEntity(object):
             # Mask entity detail calls
             try:
                 self.register_uri(
-                    'https://document/service/entity/{0}/'.format(self.STORAGE_TREE['uuids'][entity]),
+                    'https://document/service/entity/{0}/'.format(
+                        self.STORAGE_TREE['uuids'][entity]),
                     returns=self.STORAGE_TREE['details'][entity],
                     match_query=False
                 )
@@ -228,7 +232,8 @@ class TestEntity(object):
             # Mask signed_url_requests
             try:
                 self.register_uri(
-                    'https://document/service/file/{0}/content/secure_link/'.format(self.STORAGE_TREE['uuids'][entity]),
+                    'https://document/service/file/{0}/content/secure_link/'.format(
+                        self.STORAGE_TREE['uuids'][entity]),
                     returns=self.STORAGE_TREE['signed_urls'][entity]
                 )
             except KeyError:
@@ -237,7 +242,8 @@ class TestEntity(object):
             # Mask signed url content calls
             try:
                 self.register_uri(
-                    'https://document/service/{0}'.format(self.STORAGE_TREE['signed_urls'][entity]['signed_url']),
+                    'https://document/service/{0}'.format(
+                        self.STORAGE_TREE['signed_urls'][entity]['signed_url']),
                     returns=self.STORAGE_TREE['file_contents'][entity]
                 )
             except KeyError:
@@ -302,19 +308,18 @@ class TestEntity(object):
 
         download_folder.cleanup()
 
-
     #
     # from_dictionary
     #
 
     def test_from_dictionary_builds_proper_entity_from_valid_dict(self):
-        #given
+        # given
         mydictionary = self.VALID_ENTITY_DICTIONARY
 
-        #when
+        # when
         entity = Entity.from_dictionary(mydictionary)
 
-        #then
+        # then
         assert_that(
             entity,
             has_properties({
@@ -325,10 +330,10 @@ class TestEntity(object):
         )
 
     def test_from_dictionary_raises_exception_for_invalid_argument(self):
-        #given
+        # given
         mydictionary = "foo"
 
-        #then
+        # then
         assert_that(
             calling(Entity.from_dictionary).with_args(mydictionary),
             raises(EntityArgumentException))
@@ -338,13 +343,13 @@ class TestEntity(object):
     #
 
     def test_from_uuid_builds_proper_entity_from_valid_uuid(self):
-        #given
+        # given
         myuuid = self.STORAGE_TREE['uuids']['A']
 
-        #when
+        # when
         entity = Entity.from_uuid(myuuid)
 
-        #then
+        # then
         assert_that(
             entity,
             has_properties({
@@ -355,39 +360,38 @@ class TestEntity(object):
         )
 
     def test_from_uuid_raises_exception_for_notfoud_uuid(self):
-        #given
+        # given
         missing_uuid = self.MISSING_UUID
 
-        #then
+        # then
         assert_that(
             calling(Entity.from_uuid).with_args(missing_uuid),
             raises(StorageNotFoundException)
         )
 
     def test_from_uuid_raises_exception_for_invalid_parameter(self):
-        #given
+        # given
         invalid_uuid = 'foo'
 
-        #then
+        # then
         assert_that(
             calling(Entity.from_uuid).with_args(invalid_uuid),
             raises(EntityArgumentException)
         )
-
 
     #
     # from_path
     #
 
     def test_from_path_builds_proper_entity_from_valid_path(self):
-        #given
+        # given
         mydictionary = self.STORAGE_TREE['details']['A']
         mypath = '/123/folder_A'
 
-        #when
+        # when
         entity = Entity.from_path(mypath)
 
-        #then
+        # then
         assert_that(
             entity,
             has_properties({
@@ -398,10 +402,10 @@ class TestEntity(object):
         )
 
     def test_from_path_raises_exception_for_notfoud_path(self):
-        #given
+        # given
         missing_path = '/idont/exist'
 
-        #then
+        # then
         assert_that(
             calling(Entity.from_path).with_args(missing_path),
             raises(StorageNotFoundException)
@@ -412,13 +416,13 @@ class TestEntity(object):
     #
 
     def test_from_disk_builds_proper_entity_from_file(self, disk_tree):
-        #given
+        # given
         myfile = disk_tree['C'].name
 
-        #when
+        # when
         entity = Entity.from_disk(myfile)
 
-        #then
+        # then
         assert_that(
             entity,
             has_properties({
@@ -431,13 +435,13 @@ class TestEntity(object):
         )
 
     def test_from_disk_builds_proper_entity_from_directory(self, disk_tree):
-        #given
+        # given
         mydir = disk_tree['A'].name
 
-        #when
+        # when
         entity = Entity.from_disk(mydir)
 
-        #then
+        # then
         assert_that(
             entity,
             has_properties({
@@ -450,14 +454,14 @@ class TestEntity(object):
         )
 
     def test_from_disk_handles_paths_with_trailing_slashes(self, disk_tree):
-        #given
+        # given
         mydir = disk_tree['A'].name
         mypath = '{}/'.format(mydir)
 
-        #when
+        # when
         entity = Entity.from_disk(mypath)
 
-        #then
+        # then
         assert_that(
             entity,
             has_properties({
@@ -470,28 +474,27 @@ class TestEntity(object):
         )
 
     def test_from_disk_only_accepts_absolute_paths(self):
-        #then
+        # then
         assert_that(
             calling(Entity.from_disk).with_args('./idontexist'),
             raises(EntityArgumentException)
         )
 
-
     def test_from_disk_raises_exception_for_invalid_path(self):
-        #then
+        # then
         assert_that(
             calling(Entity.from_disk).with_args('/idontexist'),
             raises(EntityArgumentException)
         )
 
     def test_from_disk_accepts_unicode_paths(self, disk_tree_with_unicode):
-        #given
+        # given
         myfile = u'{}'.format(disk_tree_with_unicode['B'].name)
 
-        #when
+        # when
         entity = Entity.from_disk(myfile)
 
-        #then
+        # then
         assert_that(
             entity,
             has_properties({
@@ -507,15 +510,14 @@ class TestEntity(object):
     # explore_children
     #
 
-
     def test_children_are_found_from_storage(self):
-        #given
+        # given
         entity = Entity.from_uuid(self.STORAGE_TREE['uuids']['A'])
 
-        #when
+        # when
         entity.explore_children()
 
-        #then
+        # then
         assert_that(
             entity.children,
             has_length(2)
@@ -523,13 +525,13 @@ class TestEntity(object):
 
     def test_children_are_found_from_disk(self, disk_tree):
         '''Test exploration also works on disk'''
-        #given
+        # given
         entity = Entity.from_disk(disk_tree['A'].name)
 
-        #when
+        # when
         entity.explore_children()
 
-        #then
+        # then
         assert_that(
             [ent.name for ent in entity.children],
             contains_inanyorder(
@@ -538,13 +540,13 @@ class TestEntity(object):
         )
 
     def test_children_are_correctly_built_from_storage(self):
-        #given
+        # given
         entity = Entity.from_uuid(self.STORAGE_TREE['uuids']['A'])
 
-        #when
+        # when
         entity.explore_children()
 
-        #then
+        # then
         assert_that(
             entity.children[0],
             has_properties({
@@ -555,13 +557,13 @@ class TestEntity(object):
         )
 
     def test_children_are_correctly_built_from_disk(self, disk_tree):
-        #given
+        # given
         entity = Entity.from_disk(disk_tree['B'].name)
 
-        #when
+        # when
         entity.explore_children()
 
-        #then
+        # then
         assert_that(
             entity.children[0],
             has_properties({
@@ -574,14 +576,14 @@ class TestEntity(object):
 
     def test_children_are_not_added_repeatedly_from_storage(self):
         ''' Test whether repeated exploration increase the number of children'''
-        #given
+        # given
         entity = Entity.from_uuid(self.STORAGE_TREE['uuids']['A'])
         entity.explore_children()
 
-        #when
+        # when
         entity.explore_children()
 
-        #then
+        # then
         assert_that(
             entity.children,
             has_length(2)
@@ -589,14 +591,14 @@ class TestEntity(object):
 
     def test_children_are_not_added_repeatedly_from_disk(self, disk_tree):
         ''' Test whether repeated exploration increase the number of children'''
-        #given
+        # given
         entity = Entity.from_disk(disk_tree['A'].name)
         entity.explore_children()
 
-        #when
+        # when
         entity.explore_children()
 
-        #then
+        # then
         assert_that(
             entity.children,
             has_length(2)
@@ -604,10 +606,10 @@ class TestEntity(object):
 
     def test_children_valid_on_browseable_only_from_storage(self):
         '''Test whether file type entities allow exploration'''
-        #given
+        # given
         entity = Entity.from_uuid(self.STORAGE_TREE['uuids']['C'])
 
-        #then
+        # then
         assert_that(
             calling(entity.explore_children),
             raises(EntityInvalidOperationException)
@@ -619,13 +621,13 @@ class TestEntity(object):
 
     def test_explore_subtree_from_storage(self):
         '''Test that not just the direct descendents are explored'''
-        #given
+        # given
         entity = Entity.from_uuid(self.STORAGE_TREE['uuids']['A'])
 
-        #when
+        # when
         entity.explore_subtree()
 
-        #then
+        # then
         assert_that(
             entity.children[0].children,
             has_length(1)
@@ -633,13 +635,13 @@ class TestEntity(object):
 
     def test_explore_subtree_builds_entities_correctly(self):
         '''Test that indirect descendents are correctly built'''
-        #given
+        # given
         entity = Entity.from_uuid(self.STORAGE_TREE['uuids']['A'])
 
-        #when
+        # when
         entity.explore_subtree()
 
-        #then
+        # then
         assert_that(
             entity.children[0].children[0],
             has_properties({
@@ -651,12 +653,12 @@ class TestEntity(object):
 
     def test_subtree_valid_on_all_types(self):
         '''Test whether file type entities allow exporation'''
-        #given
+        # given
         entity = Entity.from_uuid(self.STORAGE_TREE['uuids']['C'])
 
-        #when
+        # when
         entity.explore_subtree()
-        #then
+        # then
         assert_that(
             entity.children,
             has_length(0)
@@ -668,26 +670,26 @@ class TestEntity(object):
 
     def test_search_subtree_finds_results(self):
 
-        #given
+        # given
         entity = Entity.from_uuid(self.STORAGE_TREE['uuids']['A'])
 
-        #when
+        # when
         results = entity.search_subtree('folder')
 
-        #then
+        # then
         assert_that(
             [result.name for result in results],
             contains_inanyorder('folder_A', 'folder_B')
         )
 
     def test_search_subtree_descendes_to_leaves(self):
-        #given
+        # given
         entity = Entity.from_uuid(self.STORAGE_TREE['uuids']['A'])
 
-        #when
+        # when
         results = entity.search_subtree('D')
 
-        #then
+        # then
         assert_that(
             [result.name for result in results],
             equal_to(['file_D'])
@@ -695,10 +697,10 @@ class TestEntity(object):
 
     def test_search_subtree_valid_on_browseable_only(self):
         '''Test whether file type entities allow searching'''
-        #given
+        # given
         entity = Entity.from_uuid(self.STORAGE_TREE['uuids']['C'])
 
-        #then
+        # then
         assert_that(
             calling(entity.search_subtree).with_args('foo'),
             raises(EntityInvalidOperationException)
@@ -706,10 +708,10 @@ class TestEntity(object):
 
     def test_search_subtree_checks_input_is_correct_type(self):
         '''Test wheter an exception is raiesd with wrong argument types'''
-        #given
+        # given
         entity = Entity.from_uuid(self.STORAGE_TREE['uuids']['A'])
 
-        #then
+        # then
         assert_that(
             calling(entity.search_subtree).with_args(123),
             raises(EntityArgumentException)
@@ -717,13 +719,13 @@ class TestEntity(object):
 
     def test_search_works_on_entities_created_from_disk(self, disk_tree):
         '''Test whether it is possible to search in a tree contructed from the disk'''
-        #given
+        # given
         entity = Entity.from_disk(disk_tree["A"].name)
 
-        #when
+        # when
         results = entity.search_subtree('txt')
 
-        #then
+        # then
         assert_that(
             [result.name for result in results],
             equal_to([basename(disk_tree['C'].name)])
@@ -735,13 +737,13 @@ class TestEntity(object):
 
     def test_download_creates_files_with_content(self, working_directory):
         '''Test that a single file can be downloaded with its contents'''
-        #given
+        # given
         entity = Entity.from_uuid(self.STORAGE_TREE['uuids']['C'])
 
-        #when
+        # when
         entity.download(working_directory.name)
 
-        #then
+        # then
         with open(join(working_directory.name, 'file_C')) as file_c:
             assert_that(
                 file_c.readlines(),
@@ -750,44 +752,44 @@ class TestEntity(object):
 
     def test_download_creates_directory_structure(self, working_directory):
         '''Test that downloading a directory recreates its subfolder structure'''
-        #given
+        # given
         entity = Entity.from_uuid(self.STORAGE_TREE['uuids']['A'])
 
-        #when
+        # when
         entity.download(working_directory.name)
 
-        #then
+        # then
         assert isfile(join(working_directory.name, 'folder_A/folder_B/file_D'))
 
     def test_download_can_recursively_download_folders_in_the_middle_of_the_tree(self, working_directory):
         '''Test that a folder can be downloaded even if it was not the root of
         exploration'''
-        #given
+        # given
         entity = Entity.from_uuid(self.STORAGE_TREE['uuids']['A'])
         entity.explore_subtree()
         folder_B = list(filter(lambda entity: entity.name == 'folder_B', entity.children))[0]
 
-        #when
+        # when
         folder_B.download(working_directory.name)
 
-        #then
+        # then
         assert isfile(join(working_directory.name, 'folder_B/file_D'))
 
     def test_search_results_download_correctly(self, working_directory):
         '''Test then downloading search results creates the correct directory
         structures for all of them'''
-        #given
+        # given
         prefix = working_directory.name
         entity = Entity.from_uuid(self.STORAGE_TREE['uuids']['A'])
         folders = entity.search_subtree('folder')
         files = entity.search_subtree('file')
         combined = folders + files
 
-        #when
+        # when
         for entity in combined:
             entity.download(prefix)
 
-        #then
+        # then
         assert(
             isfile(join(prefix, 'folder_A/folder_B/file_D')) and
             isfile(join(prefix, 'folder_B/file_D')) and
@@ -797,23 +799,23 @@ class TestEntity(object):
 
     def test_download_fails_if_files_already_exist(self, working_directory):
         '''Test that the method does not overwrite content but rather fails'''
-        #given
+        # given
         entity = Entity.from_uuid(self.STORAGE_TREE['uuids']['C'])
         open(join(working_directory.name, 'file_C'), 'a').close()
 
-        #then
+        # then
         assert_that(
             calling(entity.download).with_args(working_directory.name),
             raises(OSError)
         )
 
     def test_download_fails_if_folder_already_exists(self, working_directory):
-        '''Test the method does not try to download into already existing fodlers'''
-        #given
+        '''Test the method does not try to download into already existing folders'''
+        # given
         entity = Entity.from_uuid(self.STORAGE_TREE['uuids']['A'])
         mkdir(join(working_directory.name, 'folder_A'))
 
-        #then
+        # then
         assert_that(
             calling(entity.download).with_args(working_directory.name),
             raises(OSError)
@@ -822,10 +824,10 @@ class TestEntity(object):
     def test_download_fails_when_target_dir_is_missing(self):
         '''Test the method raising an error when the destination folder is missing'''
 
-        #given
+        # given
         entity = Entity.from_uuid(self.STORAGE_TREE['uuids']['A'])
 
-        #then
+        # then
         assert_that(
             calling(entity.download).with_args('/idontexist'),
             raises(OSError)
@@ -834,21 +836,20 @@ class TestEntity(object):
     def test_entities_download_to_different_directories(self, working_directory):
         '''Test that entities can be downloaded to mulitple directories in
             sequence without being re-initialized.'''
-        #given
+        # given
         entity = Entity.from_uuid(self.STORAGE_TREE['uuids']['C'])
         entity.download(working_directory.name)
         new_work_dir = TemporaryDirectory()
 
-        #when
+        # when
         entity.download(new_work_dir.name)
 
-
-        #then
+        # then
         with open(join(new_work_dir.name, 'file_C')) as file_c:
             assert_that(
                 file_c.readlines(),
                 equal_to(['"I am file C!"'])
-        )
+            )
         new_work_dir.cleanup()
     #
     # upload
@@ -856,15 +857,15 @@ class TestEntity(object):
 
     def test_upload_creates_file_in_storage(self, disk_tree):
         '''Test whether a single file is created in the storage service'''
-        #given
+        # given
         entity = Entity.from_disk(disk_tree['C'].name)
 
-        #when
+        # when
         a_uuid = self.STORAGE_TREE['uuids']['A']
         entity.upload(destination_uuid=a_uuid)
         last_two_requests = [response.request for response in responses.calls[-2:]]
 
-        #then
+        # then
         assert_that(
             last_two_requests,
             contains(
@@ -872,7 +873,7 @@ class TestEntity(object):
                 has_properties({
                     'method': 'POST',
                     'path_url': '/service/file/'}),
-                #2nd call is to upload content
+                # 2nd call is to upload content
                 has_properties(
                     method='POST',
                     path_url=matches_regexp(r'/service/file/[\w\-]+/content/upload/')))
@@ -880,14 +881,14 @@ class TestEntity(object):
 
     def test_upload_guesses_the_mimetype(self, disk_tree):
         '''Test whether the mimetype is guessed for an uploaded file'''
-        #given
+        # given
         entity = Entity.from_disk(disk_tree['C'].name)
 
-        #when
+        # when
         a_uuid = self.STORAGE_TREE['uuids']['A']
         entity.upload(destination_uuid=a_uuid)
         last_two_requests = [response.request for response in responses.calls[-2:]]
-        #then
+        # then
         assert_that(
             json.loads(last_two_requests[0].body.decode('utf-8')),
             has_entries("content_type", "text/plain")
@@ -895,15 +896,15 @@ class TestEntity(object):
 
     def test_upload_does_not_send_empty_mimetype(self, disk_tree):
         '''Test whether the mimetype is guessed for an uploaded file'''
-        #given
+        # given
         entity = Entity.from_disk(disk_tree['D'].name)
 
-        #when
+        # when
         a_uuid = self.STORAGE_TREE['uuids']['A']
         entity.upload(destination_uuid=a_uuid)
         last_two_requests = [response.request for response in responses.calls[-2:]]
 
-        #then
+        # then
         assert_that(
             json.loads(last_two_requests[0].body.decode('utf-8')),
             has_entry('content_type', 'application/octet-stream')
@@ -911,15 +912,15 @@ class TestEntity(object):
 
     def test_upload_processes_directories_in_storage(self, disk_tree):
         '''Test whether a single directory is created in the storage service'''
-        #given
+        # given
         entity = Entity.from_disk(disk_tree['B'].name)
 
-        #when
+        # when
         a_uuid = self.STORAGE_TREE['uuids']['A']
 
         entity.upload(destination_uuid=a_uuid)
         last_three_requests = [response.request for response in responses.calls[-3:]]
-        #then
+        # then
         assert_that(
             last_three_requests,
             contains(
@@ -937,13 +938,12 @@ class TestEntity(object):
                     'path_url': matches_regexp(r'/service/file/[\w\-]+/content/upload/')}))
         )
 
-
     def test_upload_requires_a_destination(self, disk_tree):
         '''Test the method throws an exception when called without arguments'''
-        #given
+        # given
         entity = Entity.from_disk(disk_tree['C'].name)
 
-        #then
+        # then
         assert_that(
             calling(entity.upload),
             raises(EntityArgumentException)
@@ -951,10 +951,10 @@ class TestEntity(object):
 
     def test_upload_accepts_one_destination(self, disk_tree):
         '''Test the method throws an exception when called with 2 arguments'''
-        #given
+        # given
         entity = Entity.from_disk(disk_tree['C'].name)
 
-        #then
+        # then
         assert_that(
             calling(entity.upload).with_args(destination_path='/foo', destination_uuid='foo'),
             raises(EntityArgumentException)
@@ -962,10 +962,10 @@ class TestEntity(object):
 
     def test_upload_throws_error_when_parent_doesnt_exist(self, disk_tree):
         '''Test the method throws an exception when called without arguments'''
-        #given
+        # given
         entity = Entity.from_disk(disk_tree['C'].name)
 
-        #then
+        # then
         assert_that(
             calling(entity.upload).with_args(destination_path='/idont/exist'),
             raises(StorageNotFoundException)

@@ -25,13 +25,16 @@ class EntityException(Exception):
     '''Exception for the Entity class'''
     pass
 
+
 class EntityDownloadException(Exception):
     '''Error during download'''
     pass
 
+
 class EntityArgumentException(EntityException):
     '''Wrong argument'''
     pass
+
 
 class EntityInvalidOperationException(EntityException):
     '''Operation cannot be performed on given Entity'''
