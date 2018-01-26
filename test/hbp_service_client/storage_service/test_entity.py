@@ -831,6 +831,25 @@ class TestEntity(object):
             raises(OSError)
         )
 
+    def test_entities_download_to_different_directories(self, working_directory):
+        '''Test that entities can be downloaded to mulitple directories in
+            sequence without being re-initialized.'''
+        #given
+        entity = Entity.from_uuid(self.STORAGE_TREE['uuids']['C'])
+        entity.download(working_directory.name)
+        new_work_dir = TemporaryDirectory()
+
+        #when
+        entity.download(new_work_dir.name)
+
+
+        #then
+        with open(join(new_work_dir.name, 'file_C')) as file_c:
+            assert_that(
+                file_c.readlines(),
+                equal_to(['"I am file C!"'])
+        )
+        new_work_dir.cleanup()
     #
     # upload
     #
