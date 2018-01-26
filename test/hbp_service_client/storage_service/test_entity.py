@@ -261,10 +261,10 @@ class TestEntity(object):
             |
             D        > D - file'''
 
-        folder_a = TemporaryDirectory()
-        folder_b = TemporaryDirectory(dir=folder_a.name)
-        file_c = NamedTemporaryFile(dir=folder_a.name, suffix=".txt")
-        file_d = NamedTemporaryFile(dir=folder_b.name)
+        folder_a = TemporaryDirectory(prefix='folder_')
+        folder_b = TemporaryDirectory(prefix='folder_', dir=folder_a.name)
+        file_c = NamedTemporaryFile(dir=folder_a.name, prefix="file_", suffix=".txt")
+        file_d = NamedTemporaryFile(dir=folder_b.name, prefix="file_")
 
         file_c.write(b'Hello\n')
         file_c.flush()
@@ -723,12 +723,12 @@ class TestEntity(object):
         entity = Entity.from_disk(disk_tree["A"].name)
 
         # when
-        results = entity.search_subtree('txt')
+        results = entity.search_subtree('file')
 
         # then
         assert_that(
             [result.name for result in results],
-            equal_to([basename(disk_tree['C'].name)])
+            equal_to([basename(disk_tree['C'].name), basename(disk_tree['D'].name)])
         )
 
     #
