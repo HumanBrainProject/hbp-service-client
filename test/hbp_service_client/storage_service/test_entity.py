@@ -970,3 +970,33 @@ class TestEntity(object):
             calling(entity.upload).with_args(destination_path='/idont/exist'),
             raises(StorageNotFoundException)
         )
+
+    def test_search_results_upload_correctly(self, disk_tree):
+        '''Test then uploading search results they are uploaded to the same
+        parent'''
+        # given
+        entity = Entity.from_disk(disk_tree['A'].name)
+        files = entity.search_subtree('file')
+
+        # when
+        for entity in files:
+            entity.upload(destination_uuid=self.STORAGE_TREE['uuids']['A'])
+        # This is probably too much knowledge of the internals: knowing how many
+        # requests are made per entity.. but I have no better idea for now.
+        last_six_requests = [response.request for response in responses.calls[-6:]]
+        create_commands = [json.loads(request.body.decode('utf-8')) for request in
+                           last_six_requests if request.path_url == '/service/file/']
+
+        # then
+        assert_that(
+            create_commands,
+            contains_inanyorder(
+                # 1st create command
+                has_entries({
+                    'parent': self.STORAGE_TREE['uuids']['A'],
+                    'name': basename(disk_tree['C'].name)}),
+                # 2nd create command, same parent
+                has_entries({
+                    'parent': self.STORAGE_TREE['uuids']['A'],
+                    'name': basename(disk_tree['D'].name)}))
+        )
