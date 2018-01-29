@@ -33,8 +33,7 @@ class Entity(object):
         self.children = []
 
         self.__parent = None
-        self._write_destination = None
-        self.__disk_path = None
+        self._disk_location = None
 
     @classmethod
     def set_client(cls, client):
@@ -164,7 +163,7 @@ class Entity(object):
             raise EntityArgumentException('Only regular files and directories are supported.')
 
         entity = cls.from_dictionary(entity_dict)
-        entity.__disk_path = path
+        entity._disk_location = path
         return entity
 
     @property
@@ -214,8 +213,8 @@ class Entity(object):
                 page += 1
         else:
             # There is no UUID, so we explore on disk
-            for child in listdir(self.__disk_path):
-                self.children.append(self.from_disk(join(self.__disk_path, child)))
+            for child in listdir(self._disk_location):
+                self.children.append(self.from_disk(join(self._disk_location, child)))
         for child in self.children:
             child.parent = self
 
@@ -359,11 +358,11 @@ class Entity(object):
         new_file = self.__client.create_file(
             name=self.name,
             parent=parent_uuid,
-            content_type=guess_type(self.__disk_path)[0] or 'application/octet-stream')
+            content_type=guess_type(self._disk_location)[0] or 'application/octet-stream')
         self.uuid = new_file['uuid']
         self.__client.upload_file_content(
             file_id=self.uuid,
-            source=self.__disk_path)
+            source=self._disk_location)
 
     def __load_directory(self, parent_uuid):
         '''Load a single directory into the storage service.'''
@@ -378,8 +377,8 @@ class Entity(object):
         relative_root has been created already.
         '''
 
-        self._write_destination = join(
-            destination if self == relative_root else self.parent._write_destination,
+        self._disk_location = join(
+            destination if self == relative_root else self.parent._disk_location,
             self.name)
 
         if self.entity_type in self._SUBTREE_TYPES:
@@ -389,16 +388,16 @@ class Entity(object):
 
     def __write_file(self):
         '''Write a single file to disc'''
-        if isfile(self._write_destination):
+        if isfile(self._disk_location):
             raise OSError('The target file already exists')
 
         signed_url = self.__client.get_signed_url(self.uuid)
         response = self.__client.download_signed_url(signed_url)
 
-        with open(self._write_destination, "wb") as output:
+        with open(self._disk_location, "wb") as output:
             for chunk in response.iter_content(chunk_size=1024):
                 output.write(chunk)
 
     def __create_directory(self):
         '''Write a single directory to the disk'''
-        mkdir(self._write_destination)
+        mkdir(self._disk_location)
