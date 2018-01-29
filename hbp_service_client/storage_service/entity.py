@@ -38,18 +38,14 @@ class Entity(object):
 
     @classmethod
     def set_client(cls, client):
-        ''' Set the required API Storage Client for the class
+        ''' Set the required API Storage Client for the class.
 
         Args:
             client (ApiClient): The instantiated API Client
         Raises:
             TypeError: If the specified client is of the wrong type.
         '''
-        # #verify the interface
-        # if (not hasattr(client, 'storage') and
-        #         hasattr(client.storage, 'list_folder_content') and
-        #         callable(client.storage.list_folder_content)):
-        #     raise ValueError('The client is of invalid specifications')
+
         if not isinstance(client, ApiClient):
             raise TypeError('The client is of invalid specifications')
         cls.__client = client
@@ -70,9 +66,8 @@ class Entity(object):
         Raises:
             EntityArgumentException: If the supplied argument is of wrong type,
                 or has missing keys.
-
-
         '''
+
         try:
             return cls(
                 entity_type=dictionary['entity_type'],
@@ -92,7 +87,7 @@ class Entity(object):
         are used to create the Entiy object.
 
         Args:
-            uuid (uuid): The uuid of an entity in the storage service.
+            uuid (str): The uuid of an entity in the storage service.
 
         Returns:
             A properly configured Entity.
@@ -131,7 +126,16 @@ class Entity(object):
 
     @classmethod
     def from_disk(cls, path):
-        ''' Create an entity from the disk using an absolute path
+        ''' Create an entity from the disk using an absolute path.
+
+        Args:
+            path (str): The path of an entity on the disk.
+
+        Returns:
+            A properly configured Entity.
+
+        Raises:
+            EntityArgumentException: If the path was not matching specifications.
         '''
         if not path:
             raise EntityArgumentException('The path must not be empty.')
@@ -194,7 +198,15 @@ class Entity(object):
 
         Children entities are constructed from the results and made available in
         the 'children' attribute.
+
+        Returns:
+            None
+
+        Raises:
+            EntityInvalidOperationException: If the method was called on a file.
+            StorageException: An exception occured while talking to the service.
         '''
+
         if self.entity_type not in self._SUBTREE_TYPES:
             raise EntityInvalidOperationException('This method is only valid on folders.')
         # reset children to avoid duplicating, this way we refresh the cache
@@ -223,7 +235,14 @@ class Entity(object):
     def explore_subtree(self):
         '''Explore descendents from an Entity.
 
-        If the Entity is a file do nothing.
+        Children entities are constructed from the results and made available in
+        the 'children' attribute. If the Entity is a file it does nothing.
+
+        Returns:
+            None
+
+        Raises:
+            StorageException: An exception occured while talking to the service.
         '''
 
         if self.entity_type in self._SUBTREE_TYPES:
@@ -241,15 +260,20 @@ class Entity(object):
         ''' Search the subtree under the entity in the name field.
 
         The list of resulting entities will still have their links (parent and
-        children) in the tree.
+        children) in the tree. The search explores the tree first if it has not
+        been explored yet.
 
         Args:
-            regex (str): The regular expression to use for the search
+            regex (str): The regular expression given as a string to use for the search.
 
         Returns:
             A list of entities with a matching name.
 
+        Raises:
+            EntityInvalidOperationException: The search was called on a file Entity.
+            EntityArgumentException: The search pattern was not give as a string.
         '''
+
         if self.entity_type not in self._SUBTREE_TYPES:
             raise EntityInvalidOperationException('You can only seach in folders')
         if not self.children:
@@ -310,15 +334,14 @@ class Entity(object):
     def download(self, destination=None):
         '''Download an entity recursively from the service to local disk.
 
+        The download explores the tree first if it has not been explored yet.
         Args:
             destination (str): An existing folder on disk in which the entity
-                should be downloaded. If not given it will the be current working
-                directory.
-            subtree (bool): to indicate whether we want to write the whole subtree
+                should be downloaded. If not given the current working
+                directory will be used.
         Raises:
-            OSError: If a file/folder with the entity's name already FileExistsError
+            OSError: If a file/folder with the entity's name already exists
                 on disk, or the destination directory is missing.
-
         '''
 
         if not self.__client:
