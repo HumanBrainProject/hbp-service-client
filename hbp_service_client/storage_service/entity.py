@@ -34,6 +34,7 @@ class Entity(object):
 
         self.__parent = None
         self._disk_location = None
+        self._from_service = True
 
     @classmethod
     def set_client(cls, client):
@@ -164,6 +165,7 @@ class Entity(object):
 
         entity = cls.from_dictionary(entity_dict)
         entity._disk_location = path
+        entity._from_service = False
         return entity
 
     @property
@@ -198,8 +200,8 @@ class Entity(object):
         # reset children to avoid duplicating, this way we refresh the cache
         self.children = []
 
-        if self.uuid:
-            # If it has a UUID, then entity is present in the service, we explore there
+        if self._from_service:
+            # The entity came from the service, we explore there
             if not self.__client:
                 raise Exception('This method requires a client set')
             more = True
@@ -212,7 +214,7 @@ class Entity(object):
                 more = partial_results['next'] is not None
                 page += 1
         else:
-            # There is no UUID, so we explore on disk
+            # We explore on disk
             for child in listdir(self._disk_location):
                 self.children.append(self.from_disk(join(self._disk_location, child)))
         for child in self.children:
@@ -344,8 +346,9 @@ class Entity(object):
 
     def __load(self, destination):
         '''Load entities to the storage service'''
-        if self.uuid:
-            raise EntityException('This entity alrady has a UUID, it cannot be reuploded')
+        if self._from_service:
+            raise EntityException('This entity was constructed from the service,'
+                                  ' it cannot be reuploded')
 
         parent_uuid = self.parent.uuid if self.parent and self.parent.uuid else destination
         if self.entity_type == 'folder':
