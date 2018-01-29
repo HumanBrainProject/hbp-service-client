@@ -31,6 +31,11 @@ class EntityDownloadException(Exception):
     pass
 
 
+class EntityUploadException(Exception):
+    '''Error during upload'''
+    pass
+
+
 class EntityArgumentException(EntityException):
     '''Wrong argument'''
     pass

@@ -19,7 +19,7 @@ from hamcrest import (
 
 from hbp_service_client.storage_service.exceptions import (
     EntityArgumentException, StorageNotFoundException,
-    EntityInvalidOperationException, EntityDownloadException)
+    EntityInvalidOperationException, EntityDownloadException, EntityUploadException)
 from hbp_service_client.storage_service.entity import Entity
 from hbp_service_client.storage_service.api import ApiClient
 
@@ -872,6 +872,7 @@ class TestEntity(object):
                 equal_to(['"I am file C!"'])
             )
         new_work_dir.cleanup()
+
     #
     # upload
     #
@@ -1020,4 +1021,20 @@ class TestEntity(object):
                 has_entries({
                     'parent': self.STORAGE_TREE['uuids']['U'],
                     'name': basename(disk_tree['D'].name)}))
+        )
+
+    def test_upload_checks_destinations_children(self, disk_tree):
+        '''Test that the upload raises an Exception if the destination parent entity
+        already has an entity with the same name as we're about to upload.
+        This is simmetric with the download behavior where we do not overwrite
+        files and folders.'''
+
+        # given
+        entity = Entity.from_disk(disk_tree['C'].name)
+        entity.name = 'file_C'  # a little hack to reuse existing network mocks
+
+        # then
+        assert_that(
+            calling(entity.upload).with_args(destination_uuid=self.STORAGE_TREE['uuids']['A']),
+            raises(EntityUploadException)
         )

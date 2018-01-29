@@ -14,7 +14,8 @@ from mimetypes import guess_type
 from validators import uuid as is_valid_uuid
 from hbp_service_client.storage_service.api import ApiClient
 from hbp_service_client.storage_service.exceptions import (
-    EntityArgumentException, EntityInvalidOperationException, EntityException)
+    EntityArgumentException, EntityInvalidOperationException, EntityException,
+    EntityUploadException)
 
 
 class Entity(object):
@@ -294,6 +295,11 @@ class Entity(object):
         parent = self.__client.get_entity_by_query(**query)
         if parent['entity_type'] not in self._SUBTREE_TYPES:
             raise EntityArgumentException('The destination must be a project or folder')
+
+        if self.__client.list_folder_content(parent['uuid'], entity_type=self.entity_type,
+                                             name=self.name)['count'] != 0:
+            raise EntityUploadException('An entity with the same name and '
+                                        'type already exists at the destination')
 
         if self.entity_type in self._SUBTREE_TYPES and not self.children:
             self.explore_subtree()
