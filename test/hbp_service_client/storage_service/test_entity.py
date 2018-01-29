@@ -42,7 +42,8 @@ class TestEntity(object):
         'A': str(uuid.uuid4()),
         'B': str(uuid.uuid4()),
         'C': str(uuid.uuid4()),
-        'D': str(uuid.uuid4())}
+        'D': str(uuid.uuid4()),
+        'U': str(uuid.uuid4())}
     __CONTENTS = {
         'A': {
             u'count': 2,
@@ -84,7 +85,12 @@ class TestEntity(object):
                 u'modified_on': u'2017-03-13T10:17:01.688632Z',
                 u'name': u'file_D',
                 u'parent': __UUIDS['B'],
-                u'uuid': __UUIDS['D']}]}}
+                u'uuid': __UUIDS['D']}]},
+        'U': {
+            u'count': 0,
+            u'next': None,
+            u'previous': None,
+            u'results': []}}
     __DETAILS = {
         'A': {
             u'collab_id': 123,
@@ -126,7 +132,18 @@ class TestEntity(object):
             u'modified_by': u'303447',
             u'modified_on': u'2017-03-13T10:17:01.688632Z',
             u'name': u'file_D',
-            u'uuid': __UUIDS['D']}}
+            u'uuid': __UUIDS['D']},
+        'U': {
+            u'collab_id': 123,
+            u'created_by': u'303447',
+            u'created_on': u'2017-03-10T12:50:06.077891Z',
+            u'description': u'',
+            u'entity_type': u'folder',
+            u'modified_by': u'303447',
+            u'modified_on': u'2017-03-10T12:50:06.077946Z',
+            u'name': u'folder_U',
+            u'uuid': __UUIDS['U']}
+        }
     __FILE_CONTENTS = {
         'C': "I am file C!",
         'D': "I am file D!"}
@@ -135,7 +152,7 @@ class TestEntity(object):
         'D': {'signed_url': 'signed_url/D/'}}
 
     ''' A fixture to mimic the following structure in the storage service
-          A      > A - folder
+          A    U > A - folder, U - empty folder
          /  \
         B   C    > B - folder; C - file
         |
@@ -185,6 +202,10 @@ class TestEntity(object):
         self.register_uri(
             'https://document/service/entity/?uuid={}'.format(self.STORAGE_TREE['uuids']['A']),
             returns=self.STORAGE_TREE['details']['A'])
+
+        self.register_uri(
+            'https://document/service/entity/?uuid={}'.format(self.STORAGE_TREE['uuids']['U']),
+            returns=self.STORAGE_TREE['details']['U'])
 
         self.register_uri(
             'https://document/service/entity/?path=%2F123%2Ffolder_A',
@@ -861,7 +882,7 @@ class TestEntity(object):
         entity = Entity.from_disk(disk_tree['C'].name)
 
         # when
-        a_uuid = self.STORAGE_TREE['uuids']['A']
+        a_uuid = self.STORAGE_TREE['uuids']['U']
         entity.upload(destination_uuid=a_uuid)
         last_two_requests = [response.request for response in responses.calls[-2:]]
 
@@ -885,7 +906,7 @@ class TestEntity(object):
         entity = Entity.from_disk(disk_tree['C'].name)
 
         # when
-        a_uuid = self.STORAGE_TREE['uuids']['A']
+        a_uuid = self.STORAGE_TREE['uuids']['U']
         entity.upload(destination_uuid=a_uuid)
         last_two_requests = [response.request for response in responses.calls[-2:]]
         # then
@@ -900,7 +921,7 @@ class TestEntity(object):
         entity = Entity.from_disk(disk_tree['D'].name)
 
         # when
-        a_uuid = self.STORAGE_TREE['uuids']['A']
+        a_uuid = self.STORAGE_TREE['uuids']['U']
         entity.upload(destination_uuid=a_uuid)
         last_two_requests = [response.request for response in responses.calls[-2:]]
 
@@ -916,7 +937,7 @@ class TestEntity(object):
         entity = Entity.from_disk(disk_tree['B'].name)
 
         # when
-        a_uuid = self.STORAGE_TREE['uuids']['A']
+        a_uuid = self.STORAGE_TREE['uuids']['U']
 
         entity.upload(destination_uuid=a_uuid)
         last_three_requests = [response.request for response in responses.calls[-3:]]
@@ -980,7 +1001,7 @@ class TestEntity(object):
 
         # when
         for entity in files:
-            entity.upload(destination_uuid=self.STORAGE_TREE['uuids']['A'])
+            entity.upload(destination_uuid=self.STORAGE_TREE['uuids']['U'])
         # This is probably too much knowledge of the internals: knowing how many
         # requests are made per entity.. but I have no better idea for now.
         last_six_requests = [response.request for response in responses.calls[-6:]]
@@ -993,10 +1014,10 @@ class TestEntity(object):
             contains_inanyorder(
                 # 1st create command
                 has_entries({
-                    'parent': self.STORAGE_TREE['uuids']['A'],
+                    'parent': self.STORAGE_TREE['uuids']['U'],
                     'name': basename(disk_tree['C'].name)}),
                 # 2nd create command, same parent
                 has_entries({
-                    'parent': self.STORAGE_TREE['uuids']['A'],
+                    'parent': self.STORAGE_TREE['uuids']['U'],
                     'name': basename(disk_tree['D'].name)}))
         )
