@@ -23,13 +23,15 @@ class Entity(object):
     _SUBTREE_TYPES = ['project', 'folder']
     __client = None
 
-    def __init__(self, entity_type, uuid, name, description, created_by, modified_by):
+    def __init__(self, entity_type, uuid, name, description, created_by, modified_by,
+                 content_type=None):
         self.entity_type = entity_type
         self.uuid = uuid
         self.name = name
         self.description = description
         self.created_by = created_by
         self.modified_by = modified_by
+        self.content_type = content_type
         self.children = []
 
         self.__parent = None
@@ -75,7 +77,8 @@ class Entity(object):
                 name=dictionary['name'],
                 description=dictionary['description'],
                 created_by=dictionary['created_by'],
-                modified_by=dictionary['modified_by'])
+                modified_by=dictionary['modified_by'],
+                content_type=dictionary.get('content_type', None))
         except (TypeError, KeyError) as exc:
             raise EntityArgumentException(exc)
 
@@ -159,7 +162,8 @@ class Entity(object):
             'description': None,
             'created_by': None,
             'modified_by': None,
-            'name': basename(path)}
+            'name': basename(path),
+            'content_type': None}
         if isdir(path):
             entity_dict['entity_type'] = 'folder'
         elif isfile(path):
@@ -384,7 +388,7 @@ class Entity(object):
         new_file = self.__client.create_file(
             name=self.name,
             parent=parent_uuid,
-            content_type=guess_type(self._disk_location)[0] or 'application/octet-stream')
+            content_type=self.content_type)
         self.uuid = new_file['uuid']
         self.__client.upload_file_content(
             file_id=self.uuid,

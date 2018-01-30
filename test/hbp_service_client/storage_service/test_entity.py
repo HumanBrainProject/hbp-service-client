@@ -14,7 +14,7 @@ except ImportError:
     from backports.tempfile import TemporaryDirectory
 
 from hamcrest import (
-    assert_that, has_properties, has_length, calling, raises,
+    assert_that, has_properties, has_length, calling, raises, not_none,
     contains, contains_inanyorder, equal_to, has_entry, has_entries, matches_regexp)
 
 from hbp_service_client.storage_service.exceptions import (
@@ -211,6 +211,10 @@ class TestEntity(object):
             'https://document/service/entity/?path=%2F123%2Ffolder_A',
             returns=self.STORAGE_TREE['details']['A'])
 
+        self.register_uri(
+            'https://document/service/entity/?path=%2F123%2Ffolder_A%2Ffile_C',
+            returns=self.STORAGE_TREE['details']['C'])
+
         # Uploads (POST)
 
         self.register_uri(
@@ -380,6 +384,20 @@ class TestEntity(object):
                 'children': []})
         )
 
+    def test_from_uuid_saves_content_type_from_files(self):
+        # given
+        myuuid = self.STORAGE_TREE['uuids']['C']
+
+        # when
+        entity = Entity.from_uuid(myuuid)
+
+        # then
+        assert_that(
+            entity,
+            has_properties({
+                'content_type': self.STORAGE_TREE['details']['C']['content_type']})
+        )
+
     def test_from_uuid_raises_exception_for_notfoud_uuid(self):
         # given
         missing_uuid = self.MISSING_UUID
@@ -420,6 +438,20 @@ class TestEntity(object):
                 'name': mydictionary['name'],
                 'description': mydictionary['description'],
                 'children': []})
+        )
+
+    def test_from_path_saves_content_type_from_files(self):
+        # given
+        mypath = '/123/folder_A/file_C'
+
+        # when
+        entity = Entity.from_path(mypath)
+
+        # then
+        assert_that(
+            entity,
+            has_properties({
+                'content_type': self.STORAGE_TREE['details']['C']['content_type']})
         )
 
     def test_from_path_raises_exception_for_notfoud_path(self):
@@ -494,6 +526,20 @@ class TestEntity(object):
                 'entity_type': 'folder'})
         )
 
+    def test_from_disk_fill_content_type_for_files(self, disk_tree):
+        '''Test whether content type is guessed for files'''
+        # given
+        myfile = disk_tree['C'].name
+
+        # when
+        entity = Entity.from_disk(myfile)
+
+        # then
+        assert_that(
+            entity,
+            has_properties({
+                'content_type': not_none()})
+        )
     def test_from_disk_only_accepts_absolute_paths(self):
         # then
         assert_that(
