@@ -10,7 +10,7 @@
 from os import (mkdir, listdir, getcwd)
 from os.path import (exists, isdir, isfile, isabs, basename, join)
 import re
-from mimetypes import guess_type
+from mimetypes import guess_type, add_type
 from validators import uuid as is_valid_uuid
 from hbp_service_client.storage_service.api import ApiClient
 from hbp_service_client.storage_service.exceptions import (
@@ -157,6 +157,7 @@ class Entity(object):
         if not exists(path):
             raise EntityArgumentException('The given path does not exist on the disk.')
 
+        add_type('application/x-ipynb+json', '.ipynb')
         entity_dict = {
             'uuid': None,
             'description': None,
@@ -168,6 +169,7 @@ class Entity(object):
             entity_dict['entity_type'] = 'folder'
         elif isfile(path):
             entity_dict['entity_type'] = 'file'
+            entity_dict['content_type'] = guess_type(path)[0] or 'application/octet-stream'
         else:
             raise EntityArgumentException('Only regular files and directories are supported.')
 

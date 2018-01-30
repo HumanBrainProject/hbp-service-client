@@ -283,13 +283,14 @@ class TestEntity(object):
               A      > A - folder
              /  \
             B   C    > B - folder; C - file
-            |
-            D        > D - file'''
+            |\
+            D E       > D - file; E - file'''
 
         folder_a = TemporaryDirectory(prefix='folder_')
         folder_b = TemporaryDirectory(prefix='folder_', dir=folder_a.name)
         file_c = NamedTemporaryFile(dir=folder_a.name, prefix="file_", suffix=".txt")
-        file_d = NamedTemporaryFile(dir=folder_b.name, prefix="file_")
+        file_d = NamedTemporaryFile(dir=folder_b.name, prefix="file_", suffix=".ipynb")
+        file_e = NamedTemporaryFile(dir=folder_b.name, prefix="file_")
 
         file_c.write(b'Hello\n')
         file_c.flush()
@@ -297,10 +298,14 @@ class TestEntity(object):
         file_d.write(b'World!')
         file_d.flush()
 
-        yield {'A': folder_a, 'B': folder_b, 'C': file_c, 'D': file_d}
+        file_e.write(b'Foo')
+        file_e.flush
+
+        yield {'A': folder_a, 'B': folder_b, 'C': file_c, 'D': file_d, 'E': file_e}
 
         file_c.close()
         file_d.close()
+        file_e.close()
         folder_b.cleanup()
         folder_a.cleanup()
 
@@ -540,6 +545,22 @@ class TestEntity(object):
             has_properties({
                 'content_type': not_none()})
         )
+
+    def test_from_disk_recognizes_notebook_content_type_for_files(self, disk_tree):
+        '''Test whether content type is guessed for files'''
+        # given
+        myfile = disk_tree['D'].name
+
+        # when
+        entity = Entity.from_disk(myfile)
+
+        # then
+        assert_that(
+            entity,
+            has_properties({
+                'content_type': 'application/x-ipynb+json'})
+        )
+
     def test_from_disk_only_accepts_absolute_paths(self):
         # then
         assert_that(
@@ -632,13 +653,18 @@ class TestEntity(object):
 
         # then
         assert_that(
-            entity.children[0],
-            has_properties({
-                'uuid': None,
-                'parent': entity,
-                'entity_type': 'file',
-                'name': basename(disk_tree['D'].name)
-            })
+            entity.children,
+            contains_inanyorder(
+                has_properties({
+                    'uuid': None,
+                    'parent': entity,
+                    'entity_type': 'file',
+                    'name': basename(disk_tree['D'].name)}),
+                has_properties({
+                    'uuid': None,
+                    'parent': entity,
+                    'entity_type': 'file',
+                    'name': basename(disk_tree['E'].name)}))
         )
 
     def test_children_are_not_added_repeatedly_from_storage(self):
@@ -795,7 +821,8 @@ class TestEntity(object):
         # then
         assert_that(
             [result.name for result in results],
-            equal_to([basename(disk_tree['C'].name), basename(disk_tree['D'].name)])
+            contains_inanyorder(basename(disk_tree['C'].name), basename(disk_tree['D'].name),
+                    basename(disk_tree['E'].name))
         )
 
     #
@@ -965,7 +992,7 @@ class TestEntity(object):
     def test_upload_does_not_send_empty_mimetype(self, disk_tree):
         '''Test whether the mimetype is guessed for an uploaded file'''
         # given
-        entity = Entity.from_disk(disk_tree['D'].name)
+        entity = Entity.from_disk(disk_tree['E'].name)
 
         # when
         a_uuid = self.STORAGE_TREE['uuids']['U']
@@ -987,16 +1014,24 @@ class TestEntity(object):
         a_uuid = self.STORAGE_TREE['uuids']['U']
 
         entity.upload(destination_uuid=a_uuid)
-        last_three_requests = [response.request for response in responses.calls[-3:]]
+        last_five_requests = [response.request for response in responses.calls[-5:]]
         # then
         assert_that(
-            last_three_requests,
+            last_five_requests,
             contains(
                 # 1st call is create directory
                 has_properties({
                     'method': 'POST',
                     'path_url': '/service/folder/'}),
-                # 2nd call is create file
+                # 2nd call is create file D
+                has_properties({
+                    'method': 'POST',
+                    'path_url': '/service/file/'}),
+                # 3rd call is upload file content
+                has_properties({
+                    'method': 'POST',
+                    'path_url': matches_regexp(r'/service/file/[\w\-]+/content/upload/')}),
+                # 4th call is create file E
                 has_properties({
                     'method': 'POST',
                     'path_url': '/service/file/'}),
@@ -1044,7 +1079,7 @@ class TestEntity(object):
         parent'''
         # given
         entity = Entity.from_disk(disk_tree['A'].name)
-        files = entity.search_subtree('file')
+        files = entity.search_subtree(r'file_\w+\.\w+')  # files with extensions
 
         # when
         for entity in files:
