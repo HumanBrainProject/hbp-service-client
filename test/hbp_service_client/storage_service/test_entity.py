@@ -1119,3 +1119,26 @@ class TestEntity(object):
             calling(entity.upload).with_args(destination_uuid=self.STORAGE_TREE['uuids']['A']),
             raises(EntityUploadException)
         )
+
+    def test_downloaded_entites_can_be_uploaded_to_a_different_destination(self, working_directory):
+        '''Test that the entites that were constructed from the storage can be
+        uploaded to a different destination, and the destination is set correctly
+
+        This is to catch a bug where uploading mid-level entities used their parents' original
+        location instead of the new destination'''
+        # given
+        entity = Entity.from_uuid(self.STORAGE_TREE['uuids']['B'])
+        entity.download(working_directory.name)
+        # we use an entity that has a parent with a uuid. that can cause problems
+        mid_level_entity = [e for e in entity.children if e.name == self.STORAGE_TREE['details']['D']['name']][0]
+
+        # when
+        mid_level_entity.upload(destination_uuid=self.STORAGE_TREE['uuids']['U'])
+
+        # then
+        last_two_requests = [response.request for response in responses.calls[-2:]]
+        create_body = json.loads(last_two_requests[0].body.decode('utf-8'))
+        assert_that(
+            create_body,
+            has_entries({'parent': self.STORAGE_TREE['uuids']['U']})
+        )

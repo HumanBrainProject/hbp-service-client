@@ -335,7 +335,7 @@ class Entity(object):
         if self.entity_type in self._SUBTREE_TYPES and not self.children:
             self.explore_subtree()
 
-        self.__process_subtree('__load', parent['uuid'])
+        self.__process_subtree('__load', destination=parent['uuid'], relative_root=self)
 
     def download(self, destination=None):
         '''Download an entity recursively from the service to local disk.
@@ -373,10 +373,10 @@ class Entity(object):
                     classname=self.__class__.__name__,
                     methodname=method))(*args, **kwargs)
 
-    def __load(self, destination):
+    def __load(self, destination, relative_root):
         '''Load entities to the storage service'''
 
-        parent_uuid = self.parent.uuid if self.parent and self.parent.uuid else destination
+        parent_uuid = destination if relative_root == self else self.parent.uuid
         if self.entity_type == 'folder':
             self.__load_directory(parent_uuid)
         else:
