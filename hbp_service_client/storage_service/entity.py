@@ -375,9 +375,6 @@ class Entity(object):
 
     def __load(self, destination):
         '''Load entities to the storage service'''
-        if self._from_service:
-            raise EntityException('This entity was constructed from the service,'
-                                  ' it cannot be reuploded')
 
         parent_uuid = self.parent.uuid if self.parent and self.parent.uuid else destination
         if self.entity_type == 'folder':
