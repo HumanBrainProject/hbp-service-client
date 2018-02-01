@@ -7,7 +7,7 @@
 
 '''Abstract tree representation of storage service entities'''
 
-from os import (mkdir, listdir, getcwd)
+from os import (mkdir, getcwd, walk)
 from os.path import (exists, isdir, isfile, isabs, basename, join)
 import re
 from mimetypes import guess_type, add_type
@@ -36,7 +36,6 @@ class Entity(object):
 
         self.__parent = None
         self._disk_location = None
-        self._from_service = True
 
     @classmethod
     def set_client(cls, client):
@@ -127,57 +126,6 @@ class Entity(object):
             raise EntityException('This method requires a client set')
         return cls.from_dictionary(cls.__client.get_entity_by_query(path=path))
 
-    @classmethod
-    def from_disk(cls, path):
-        ''' Create an entity from the disk using an absolute path.
-
-        Args:
-            path (str): The path of an entity on the disk.
-
-        Returns:
-            A properly configured Entity.
-
-        Raises:
-            EntityArgumentException: If the path was not matching specifications.
-        '''
-        if not path:
-            raise EntityArgumentException('The path must not be empty.')
-
-        try:
-            '' + path
-        except TypeError:
-            raise EntityArgumentException('The path must be given as a string.')
-
-        if not isabs(path):
-            raise EntityArgumentException('The path must be given as an absolute path')
-
-        if path[-1] == '/':
-            path = path[:-1]
-
-        if not exists(path):
-            raise EntityArgumentException('The given path does not exist on the disk.')
-
-        add_type('application/x-ipynb+json', '.ipynb')
-        entity_dict = {
-            'uuid': None,
-            'description': None,
-            'created_by': None,
-            'modified_by': None,
-            'name': basename(path),
-            'content_type': None}
-        if isdir(path):
-            entity_dict['entity_type'] = 'folder'
-        elif isfile(path):
-            entity_dict['entity_type'] = 'file'
-            entity_dict['content_type'] = guess_type(path)[0] or 'application/octet-stream'
-        else:
-            raise EntityArgumentException('Only regular files and directories are supported.')
-
-        entity = cls.from_dictionary(entity_dict)
-        entity._disk_location = path
-        entity._from_service = False
-        return entity
-
     @property
     def parent(self):
         '''Get the parent of the Entity'''
@@ -218,23 +166,17 @@ class Entity(object):
         # reset children to avoid duplicating, this way we refresh the cache
         self.children = []
 
-        if self._from_service:
-            # The entity came from the service, we explore there
-            if not self.__client:
-                raise Exception('This method requires a client set')
-            more = True
-            page = 1
-            while more:
-                partial_results = self.__client.list_folder_content(
-                    self.uuid, page=page, ordering='name')
-                self.children.extend(
-                    [self.from_dictionary(entity) for entity in partial_results['results']])
-                more = partial_results['next'] is not None
-                page += 1
-        else:
-            # We explore on disk
-            for child in listdir(self._disk_location):
-                self.children.append(self.from_disk(join(self._disk_location, child)))
+        if not self.__client:
+            raise Exception('This method requires a client set')
+        more = True
+        page = 1
+        while more:
+            partial_results = self.__client.list_folder_content(
+                self.uuid, page=page, ordering='name')
+            self.children.extend(
+                [self.from_dictionary(entity) for entity in partial_results['results']])
+            more = partial_results['next'] is not None
+            page += 1
         for child in self.children:
             child.parent = self
 
@@ -298,7 +240,7 @@ class Entity(object):
                 entities_to_check.insert(0, entity)
         return results
 
-    def upload(self, destination_path=None, destination_uuid=None):
+    def upload(self, path):
         '''Upload an entity into the storage service.
 
         The parent can be identified either via path or uuid.
@@ -314,28 +256,26 @@ class Entity(object):
         if not self.__client:
             raise EntityException('This method requires a client set')
 
-        if not (destination_path or destination_uuid) or (destination_path and destination_uuid):
-            raise EntityArgumentException('Exactly one destination is required.')
+        if self.entity_type not in self._SUBTREE_TYPES:
+            raise EntityInvalidOperationException('Files cannot be destinations')
 
-        query = {}
-        if destination_path:
-            query = {'path': destination_path}
-        elif destination_uuid:
-            query = {'uuid': destination_uuid}
+        if not isabs(path):
+            raise EntityArgumentException('The path must be given as an absolute path')
 
-        parent = self.__client.get_entity_by_query(**query)
-        if parent['entity_type'] not in self._SUBTREE_TYPES:
-            raise EntityArgumentException('The destination must be a project or folder')
+        if path[-1] == '/':
+            path = path[:-1]
 
-        if self.__client.list_folder_content(parent['uuid'], entity_type=self.entity_type,
-                                             name=self.name)['count'] != 0:
+        if not exists(path):
+            raise EntityArgumentException('The given path does not exist on the disk.')
+
+        if self.__client.list_folder_content(self.uuid, name=basename(path))['count'] != 0:
             raise EntityUploadException('An entity with the same name and '
                                         'type already exists at the destination')
 
         if self.entity_type in self._SUBTREE_TYPES and not self.children:
             self.explore_subtree()
 
-        self.__process_subtree('__load', destination=parent['uuid'], relative_root=self)
+        self.__load(path)
 
     def download(self, destination=None):
         '''Download an entity recursively from the service to local disk.
@@ -373,30 +313,44 @@ class Entity(object):
                     classname=self.__class__.__name__,
                     methodname=method))(*args, **kwargs)
 
-    def __load(self, destination, relative_root):
-        '''Load entities to the storage service'''
-
-        parent_uuid = destination if relative_root == self else self.parent.uuid
-        if self.entity_type == 'folder':
-            self.__load_directory(parent_uuid)
+    def __load(self, path):
+        '''Load fs object at path to the storage service under self'''
+        if isfile(path):
+            self.children.append(self.__load_file(self.uuid, path))
+        elif isdir(path):
+            newdir = self.__load_directory(self.uuid, path)
+            self.children.append(newdir)
+            created_folder_entities = {path: newdir}
+            for root, folders, files in walk(path):
+                parent = created_folder_entities[root]
+                for currentfile in files:
+                    newfile = self.__load_file(parent.uuid, join(root, currentfile))
+                    parent.children.append(newfile)
+                for currentfolder in folders:
+                    newdir = self.__load_directory(parent.uuid, join(root, currentfolder))
+                    created_folder_entities[join(root, currentfolder)] = newdir
+                    parent.children.append((newdir))
         else:
-            self.__load_file(parent_uuid)
+            raise EntityArgumentException('Only regular files and directories are supported.')
 
-    def __load_file(self, parent_uuid):
-        '''Load a single file into the storage service'''
-        new_file = self.__client.create_file(
-            name=self.name,
+    @classmethod
+    def __load_file(cls, parent_uuid, path):
+        '''Load a single file into the storage service. Return the description.'''
+        add_type('application/x-ipynb+json', '.ipynb')
+        new_file = cls.__client.create_file(
+            name=basename(path),
             parent=parent_uuid,
-            content_type=self.content_type)
-        self.uuid = new_file['uuid']
-        self.__client.upload_file_content(
-            file_id=self.uuid,
-            source=self._disk_location)
+            content_type=guess_type(basename(path))[0] or 'application/octet-stream')
+        cls.__client.upload_file_content(
+            file_id=new_file['uuid'],
+            source=path)
+        return Entity.from_dictionary(new_file)
 
-    def __load_directory(self, parent_uuid):
-        '''Load a single directory into the storage service.'''
-        new_folder = self.__client.create_folder(name=self.name, parent=parent_uuid)
-        self.uuid = new_folder['uuid']
+    @classmethod
+    def __load_directory(cls, parent_uuid, path):
+        '''Load a single directory into the storage service. Return the description.'''
+        return Entity.from_dictionary(
+            cls.__client.create_folder(name=basename(path), parent=parent_uuid))
 
     def __write(self, destination, relative_root):
         '''Write entities to disk
