@@ -319,10 +319,7 @@ class Entity(object):
         if not exists(path):
             raise EntityArgumentException('The given path does not exist on the disk.')
 
-        parent = self.__client.get_entity_by_query(uuid=self.uuid)
-
-        if self.__client.list_folder_content(parent['uuid'], entity_type=self.entity_type,
-                                             name=self.name)['count'] != 0:
+        if self.__client.list_folder_content(self.uuid, name=basename(path))['count'] != 0:
             raise EntityUploadException('An entity with the same name and '
                                         'type already exists at the destination')
 
@@ -367,40 +364,34 @@ class Entity(object):
                     classname=self.__class__.__name__,
                     methodname=method))(*args, **kwargs)
 
-    def __load_disk_tree(self, path):
+    def __load(self, path):
         '''Load fs object at path to the storage service under self'''
-        created_folder_entities = {}
-        for root, folders, files in walk(path):
-            # check if this is the first level processed
-            if root == path:
-                self.__load_directory(self.parent_uuid)
-                parent_uuid
-            parent_uuid = created_folder_entities[root]
+        if isfile(path):
+            self.__load_file(self.uuid, path)
+        elif isdir(path):
+            created_folder_entities = {path: self.__load_directory(self.uuid, path)}
+            for root, folders, files in walk(path):
+                parent_uuid = created_folder_entities[root]
 
-            for f in files:
-                self.__load_file(parent_uuid)
-            for f in folders:
-                self.__load_directory(parent_uuid)
-
-        if isdir(path):
-            new_entity = self.__load_directory(path)
-        elif isfile(path):
-            new_entity = self.__load_file(path)
+                for f in files:
+                    self.__load_file(parent_uuid)
+                for f in folders:
+                    self.__load_directory(parent_uuid)
         else:
             raise EntityArgumentException('Only regular files and directories are supported.')
-        self.children.append = new_entity
+
 
     @classmethod
     def __load_file(cls, parent_uuid, path):
         '''Load a single file into the storage service'''
-        new_file = self.__client.create_file(
-            name=self.name,
+        add_type('application/x-ipynb+json', '.ipynb')
+        new_file = cls.__client.create_file(
+            name=basename(path),
             parent=parent_uuid,
-            content_type=self.content_type)
-        self.uuid = new_file['uuid']
-        self.__client.upload_file_content(
-            file_id=self.uuid,
-            source=self._disk_location)
+            content_type=guess_type(basename(path))[0] or 'application/octet-stream')
+        cls.__client.upload_file_content(
+            file_id=new_file['uuid'],
+            source=path)
 
     @classmethod
     def __load_directory(self, parent_uuid):

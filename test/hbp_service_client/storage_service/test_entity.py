@@ -234,10 +234,10 @@ class TestEntity(object):
             # Mask folder content calls
             try:
                 self.register_uri(
-                    'https://document/service/folder/{0}/children/'.format(
+                    'https://document/service/folder/{0}/children/?ordering=name&page=1'.format(
                         self.STORAGE_TREE['uuids'][entity]),
                     returns=self.STORAGE_TREE['contents'][entity],
-                    match_query=False
+                    match_query=True
                 )
             except KeyError:
                 # this entity has no matching data in contents, no need to mock for it
@@ -949,36 +949,81 @@ class TestEntity(object):
     #
     # upload
     #
+    @pytest.fixture
+    def fake_destination_check(self, request):
+        '''A fixture that fakes the content count when checking the upload destination.
+        It can accept parameters from the test function to alter the request/response
+        for a given file_name and count'''
 
-    def test_upload_only_valid_on_folders(self):
-        '''Test that files cannot be used to upload destination'''
-        # given
-        entity = Entity.from_uuid(self.STORAGE_TREE['uuids']['C'])
+        fake_content_count = {
+            u'count': getattr(request.function, 'fake_count', 0),
+            u'next': None,
+            u'previous': None,
+            u'results': []}
+        fake_contents = responses.Response(
+            method='GET',
+            url=re.compile(r'https://document/service/folder/[\w\-]+/children/\?name={}'.format(
+                request.function.entity_name)),
+            match_querystring=True,
+            json=fake_content_count)
+        responses.add(fake_contents)
+        yield
 
-        # then
-        assert_that(
-            calling(entity.upload).with_args('/foo'),
-            raises(EntityInvalidOperationException)
-        )
+        responses.remove(fake_content_count)
 
-    def test_upload_checks_the_path(self):
+    # def test_upload_only_valid_on_folders(self):
+    #     '''Test that files cannot be used to upload destination'''
+    #     # given
+    #     entity = Entity.from_uuid(self.STORAGE_TREE['uuids']['C'])
+    #
+    #     # then
+    #     assert_that(
+    #         calling(entity.upload).with_args('/foo'),
+    #         raises(EntityInvalidOperationException)
+    #     )
+    #
+    # def test_upload_checks_the_path(self):
+    #     # given
+    #     entity = Entity.from_uuid(self.STORAGE_TREE['uuids']['U'])
+    #
+    #     # then
+    #     assert_that(
+    #         calling(entity.upload).with_args('/idont/exist'),
+    #         raises(EntityArgumentException)
+    #     )
+
+
+    def test_upload_checks_destinations_children(self, disk_tree, fake_destination_check):
+        '''Test that the upload raises an Exception if the destination parent entity
+        already has an entity with the same name as we're about to upload.
+        This is simmetric with the download behavior where we do not overwrite
+        files and folders.'''
+        # set fake destination check
+        fake_count = 1  # no entity with such name exists at the destinations
+        entity_name = basename(disk_tree['E'].name)  # when checked with this name
+
         # given
         entity = Entity.from_uuid(self.STORAGE_TREE['uuids']['U'])
 
         # then
         assert_that(
-            calling(entity.upload).with_args('/idont/exist'),
-            raises(EntityArgumentException)
+            calling(entity.upload).with_args(disk_tree['E'].name),
+            raises(EntityUploadException)
         )
+        responses.remove(fake_contents)
 
 
-    def test_upload_creates_file_in_storage(self, disk_tree):
+    def test_upload_creates_file_in_storage(self, disk_tree, fake_destination_check):
         '''Test whether a single file is created in the storage service'''
+        # set fake destination check
+        fake_count = 0  # no entity with such name exists at the destinations
+        entity_name = basename(disk_tree['C'].name)  # when checked with this name
+
         # given
         entity = Entity.from_uuid(self.STORAGE_TREE['uuids']['U'])
 
         # when
-        entity.upload(disk_tree['C'])
+        entity.upload(disk_tree['C'].name)
         last_two_requests = [response.request for response in responses.calls[-2:]]
 
         # then
@@ -996,39 +1041,13 @@ class TestEntity(object):
         )
 
     #
-    #
-    # def test_upload_creates_file_in_storage(self, disk_tree):
-    #     '''Test whether a single file is created in the storage service'''
-    #     # given
-    #     entity = Entity.from_disk(disk_tree['C'].name)
-    #
-    #     # when
-    #     a_uuid = self.STORAGE_TREE['uuids']['U']
-    #     entity.upload(destination_uuid=a_uuid)
-    #     last_two_requests = [response.request for response in responses.calls[-2:]]
-    #
-    #     # then
-    #     assert_that(
-    #         last_two_requests,
-    #         contains(
-    #             # 1st call is create entity
-    #             has_properties({
-    #                 'method': 'POST',
-    #                 'path_url': '/service/file/'}),
-    #             # 2nd call is to upload content
-    #             has_properties(
-    #                 method='POST',
-    #                 path_url=matches_regexp(r'/service/file/[\w\-]+/content/upload/')))
-    #     )
-    #
     # def test_upload_guesses_the_mimetype(self, disk_tree):
     #     '''Test whether the mimetype is guessed for an uploaded file'''
     #     # given
-    #     entity = Entity.from_disk(disk_tree['C'].name)
+    #     entity = Entity.from_uuid(self.STORAGE_TREE['uuids']['U'])
     #
     #     # when
-    #     a_uuid = self.STORAGE_TREE['uuids']['U']
-    #     entity.upload(destination_uuid=a_uuid)
+    #     entity.upload(disk_tree['C'].name)
     #     last_two_requests = [response.request for response in responses.calls[-2:]]
     #     # then
     #     assert_that(
@@ -1039,11 +1058,10 @@ class TestEntity(object):
     # def test_upload_does_not_send_empty_mimetype(self, disk_tree):
     #     '''Test whether the mimetype is guessed for an uploaded file'''
     #     # given
-    #     entity = Entity.from_disk(disk_tree['E'].name)
+    #     entity = Entity.from_uuid(self.STORAGE_TREE['uuids']['U'])
     #
     #     # when
-    #     a_uuid = self.STORAGE_TREE['uuids']['U']
-    #     entity.upload(destination_uuid=a_uuid)
+    #     entity.upload(disk_tree['E'].name)
     #     last_two_requests = [response.request for response in responses.calls[-2:]]
     #
     #     # then
@@ -1088,104 +1106,3 @@ class TestEntity(object):
     #                 'path_url': matches_regexp(r'/service/file/[\w\-]+/content/upload/')}))
     #     )
     #
-    # def test_upload_requires_a_destination(self, disk_tree):
-    #     '''Test the method throws an exception when called without arguments'''
-    #     # given
-    #     entity = Entity.from_disk(disk_tree['C'].name)
-    #
-    #     # then
-    #     assert_that(
-    #         calling(entity.upload),
-    #         raises(EntityArgumentException)
-    #     )
-    #
-    # def test_upload_accepts_one_destination(self, disk_tree):
-    #     '''Test the method throws an exception when called with 2 arguments'''
-    #     # given
-    #     entity = Entity.from_disk(disk_tree['C'].name)
-    #
-    #     # then
-    #     assert_that(
-    #         calling(entity.upload).with_args(destination_path='/foo', destination_uuid='foo'),
-    #         raises(EntityArgumentException)
-    #     )
-    #
-    # def test_upload_throws_error_when_parent_doesnt_exist(self, disk_tree):
-    #     '''Test the method throws an exception when called without arguments'''
-    #     # given
-    #     entity = Entity.from_disk(disk_tree['C'].name)
-    #
-    #     # then
-    #     assert_that(
-    #         calling(entity.upload).with_args(destination_path='/idont/exist'),
-    #         raises(StorageNotFoundException)
-    #     )
-    #
-    # def test_search_results_upload_correctly(self, disk_tree):
-    #     '''Test then uploading search results they are uploaded to the same
-    #     parent'''
-    #     # given
-    #     entity = Entity.from_disk(disk_tree['A'].name)
-    #     files = entity.search_subtree(r'file_\w+\.\w+')  # files with extensions
-    #
-    #     # when
-    #     for entity in files:
-    #         entity.upload(destination_uuid=self.STORAGE_TREE['uuids']['U'])
-    #     # This is probably too much knowledge of the internals: knowing how many
-    #     # requests are made per entity.. but I have no better idea for now.
-    #     last_six_requests = [response.request for response in responses.calls[-6:]]
-    #     create_commands = [json.loads(request.body.decode('utf-8')) for request in
-    #                        last_six_requests if request.path_url == '/service/file/']
-    #
-    #     # then
-    #     assert_that(
-    #         create_commands,
-    #         contains_inanyorder(
-    #             # 1st create command
-    #             has_entries({
-    #                 'parent': self.STORAGE_TREE['uuids']['U'],
-    #                 'name': basename(disk_tree['C'].name)}),
-    #             # 2nd create command, same parent
-    #             has_entries({
-    #                 'parent': self.STORAGE_TREE['uuids']['U'],
-    #                 'name': basename(disk_tree['D'].name)}))
-    #     )
-    #
-    # def test_upload_checks_destinations_children(self, disk_tree):
-    #     '''Test that the upload raises an Exception if the destination parent entity
-    #     already has an entity with the same name as we're about to upload.
-    #     This is simmetric with the download behavior where we do not overwrite
-    #     files and folders.'''
-    #
-    #     # given
-    #     entity = Entity.from_disk(disk_tree['C'].name)
-    #     entity.name = 'file_C'  # a little hack to reuse existing network mocks
-    #
-    #     # then
-    #     assert_that(
-    #         calling(entity.upload).with_args(destination_uuid=self.STORAGE_TREE['uuids']['A']),
-    #         raises(EntityUploadException)
-    #     )
-    #
-    # def test_downloaded_entites_can_be_uploaded_to_a_different_destination(self, working_directory):
-    #     '''Test that the entites that were constructed from the storage can be
-    #     uploaded to a different destination, and the destination is set correctly
-    #
-    #     This is to catch a bug where uploading mid-level entities used their parents' original
-    #     location instead of the new destination'''
-    #     # given
-    #     entity = Entity.from_uuid(self.STORAGE_TREE['uuids']['B'])
-    #     entity.download(working_directory.name)
-    #     # we use an entity that has a parent with a uuid. that can cause problems
-    #     mid_level_entity = [e for e in entity.children if e.name == self.STORAGE_TREE['details']['D']['name']][0]
-    #
-    #     # when
-    #     mid_level_entity.upload(destination_uuid=self.STORAGE_TREE['uuids']['U'])
-    #
-    #     # then
-    #     last_two_requests = [response.request for response in responses.calls[-2:]]
-    #     create_body = json.loads(last_two_requests[0].body.decode('utf-8'))
-    #     assert_that(
-    #         create_body,
-    #         has_entries({'parent': self.STORAGE_TREE['uuids']['U']})
-    #     )
