@@ -26,7 +26,7 @@ class Entity(object):
     def __init__(self, entity_type, uuid, name, description, created_by, modified_by,
                  content_type=None):
         self.entity_type = entity_type
-        self.uuid = uuid
+        self.__uuid = uuid
         self.name = name
         self.description = description
         self.created_by = created_by
@@ -125,6 +125,11 @@ class Entity(object):
         if not cls.__client:
             raise EntityException('This method requires a client set')
         return cls.from_dictionary(cls.__client.get_entity_by_query(path=path))
+
+    @property
+    def uuid(self):
+        '''Get the uuid of the Entity'''
+        return self.__uuid
 
     @property
     def parent(self):

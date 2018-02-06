@@ -355,6 +355,16 @@ class TestEntity(object):
             calling(Entity.from_dictionary).with_args(mydictionary),
             raises(EntityArgumentException))
 
+    def test_built_entity_uuid_immutable(self):
+        '''Test that entities' uuid cannot be changed after initialized'''
+        # given
+        entity = Entity.from_dictionary(self.VALID_ENTITY_DICTIONARY)
+
+        #  then
+        assert_that(
+            calling(setattr).with_args(entity, 'uuid', str(uuid.uuid4())),
+            raises(AttributeError))
+
     #
     # from_uuid
     #
