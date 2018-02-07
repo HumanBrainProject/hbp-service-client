@@ -5,6 +5,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+
+  * A new Entity tree class, that enables recursive downloads and uploads from
+  and to the storage service.
+
 ## [1.1.0] - 03.10.2017
 
 ### Added
