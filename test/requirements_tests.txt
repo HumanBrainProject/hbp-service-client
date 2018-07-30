@@ -1,8 +1,8 @@
 PyHamcrest
 mock
 mock-matchers
-HTTPretty
-pytest
+pytest==3.3.*
 pytest-watch
-pylint
+pylint<2
+httpretty==0.8.*
 pycodestyle

@@ -5,6 +5,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [1.1.1] - 30.07.2018
+
+### Changed
+
+ * `setup.py` no longer depends on pip internals
+ * Pinned test requirements to compatible versions
+
 ## [1.1.0] - 03.10.2017
 
 ### Added
