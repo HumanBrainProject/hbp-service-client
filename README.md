@@ -52,3 +52,7 @@ sphinx-build -d doc/build/doctree doc/source doc/build/html
 Some RST files in the doc/source directory are not re-generated if they exist already. This might mean that newly added
 methods won't get their documentation added to the class's member list. You may have to edit the RST file by hand, or
 delete it to have sphinx re-generate it. In the latter case, you might want to rearrange the order of the class members.
+
+## Acknowledgement
+
+This open source software code was developed in part or in whole in the Human Brain Project, funded from the European Union’s Horizon 2020 Framework Programme for Research and Innovation under Specific Grant Agreements No. 720270 and No. 785907 (Human Brain Project SGA1 and SGA2).
