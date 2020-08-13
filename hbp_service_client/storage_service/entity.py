@@ -306,6 +306,9 @@ class Entity(object):
 
         self.__process_subtree('__write', destination=destination, relative_root=self)
 
+    def pwd(self, destination=None):
+        return destination or getcwd()
+    
     def __process_subtree(self, method, *args, **kwargs):
         '''Iterate subtree and call private method(**args)(**kwargs) on nodes'''
 
