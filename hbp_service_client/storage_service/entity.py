@@ -23,7 +23,7 @@ class Entity(object):
     _SUBTREE_TYPES = ['project', 'folder']
     __client = None
 
-    def __init__(self, entity_type, uuid, name, description, created_by, modified_by,
+    def __init__(self, entity_type, uuid, name, description, created_by, modified_by,modified_on,
                  content_type=None):
         self.entity_type = entity_type
         self.__uuid = uuid
@@ -31,6 +31,7 @@ class Entity(object):
         self.description = description
         self.created_by = created_by
         self.modified_by = modified_by
+        self.modified_on = modified_on
         self.content_type = content_type
         self.children = []
 
@@ -77,6 +78,7 @@ class Entity(object):
                 description=dictionary['description'],
                 created_by=dictionary['created_by'],
                 modified_by=dictionary['modified_by'],
+                modified_on=dictionary['modified_on'],
                 content_type=dictionary.get('content_type', None))
         except (TypeError, KeyError) as exc:
             raise EntityArgumentException(exc)
